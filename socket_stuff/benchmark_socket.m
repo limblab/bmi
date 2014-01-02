@@ -1,0 +1,5 @@
+% Benchmark
+
+echotcpip('off');
+
+%%
