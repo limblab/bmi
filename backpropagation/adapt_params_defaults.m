@@ -24,9 +24,9 @@ function adapt_params = adapt_params_defaults(varargin)
 
 dec_path = 'Z:\Jango_12a1\SavedFilters\';
 
-N2F = [dec_path 'Jango_2013-12-11_WF_002_N2F_Decoder.mat'];
-N2E = [dec_path 'Jango_2013-12-11_WF_002_N2E_Decoder.mat'];
-E2F = [dec_path 'Jango_2013-12-11_WF_002_E2F_Decoder.mat'];
+N2F = [dec_path 'Jango_2014-01-03_WF_001_N2F950_Decoder.mat'];
+N2E = [dec_path 'Jango_2014-01-03_WF_001_N2E500_Decoder.mat'];
+E2F = [dec_path 'Jango_2014-01-03_WF_001_E2F500_Decoder.mat'];
 % Ehat2F= [dec_path 'Jango_2013-12-11_WF_002_Ehat2F_Decoder.mat'];
 
 adapt_params_defaults = struct( ...
