@@ -13,14 +13,20 @@ function varargout = run_decoder(varargin)
 %% Parameters
 if nargin
     params = varargin{1};
-    params = adapt_params_defaults(params);
+    params = bmi_params_defaults(params);
 else
-    params = adapt_params_defaults;
+    params = bmi_params_defaults;
 end
     
-%% Read Decoders
+%% Read Decoders and other files
 
 [neuron_decoder, emg_decoder] = load_decoders(params);
+
+% load template trajectories
+if params.cursor_assist
+    load(params.cursor_traj);
+    % cursor_traj is a file name to a structure containing the fields 'mean_paths' and 'back_paths'
+end
 
 
 %% Initialization
@@ -30,6 +36,7 @@ bin_count = 0;
 
 % data structure to store inputs
 data = struct('spikes'      , zeros(params.n_lag, params.n_neurons),...
+              'ave_fr'      , 0.0,...
               'words'       , [],...
               'db_buf'      , [],...
               'emgs'        , zeros( params.n_lag_emg, params.n_emgs),...
@@ -41,7 +48,9 @@ data = struct('spikes'      , zeros(params.n_lag, params.n_neurons),...
               'tgt_pos'     , [NaN NaN],...
               'tgt_size'    , [NaN NaN],...
               'pending_tgt_pos' ,[NaN NaN],...
-              'pending_tgt_size',[NaN NaN]...
+              'pending_tgt_size',[NaN NaN],...
+              'effort_flag' , false,...
+              'traj_pct'    , 0.0...
               );
           
 % dataset to store older data
@@ -59,14 +68,15 @@ if ~isdir(params.save_dir)
 end
 
 %% UDP port for XPC
-
-XPC_IP   = '192.168.0.1';
-XPC_PORT = 24999;
-echoudp('on',XPC_PORT);
-xpc = udp(XPC_IP,XPC_PORT);
-set(xpc,'ByteOrder','littleEndian');
-set(xpc,'LocalHost','192.168.0.10');
-fopen(xpc);
+if strcmp(params.output,'xpc')
+    XPC_IP   = '192.168.0.1';
+    XPC_PORT = 24999;
+    echoudp('on',XPC_PORT);
+    xpc = udp(XPC_IP,XPC_PORT);
+    set(xpc,'ByteOrder','littleEndian');
+    set(xpc,'LocalHost','192.168.0.10');
+    fopen(xpc);
+end
 
 %% Setup figures
 
@@ -82,7 +92,7 @@ if params.display_plots
     tgt_handle  = plot(0,0,'bo');
     set(tgt_handle,'LineWidth',2,'MarkerSize',12);
 end
-    
+
 %% Setup data stream
 if params.online
 
@@ -90,14 +100,18 @@ if params.online
     connection = cbmex('open',1);
     if ~connection
         echoudp('off');
-        fclose(xpc);
-        delete(xpc);
+        if exist('xpc','var')
+            fclose(xpc);
+            delete(xpc);
+        end
         close(keep_running);
         error('Connection to Central Failed');
     end
     max_cycles = 0;
     offline_data = [];    
-    % TODO: Trigger Cerebus Recording
+    % TODO: Trigger Cerebus Recording with cbmex('fileconfig')
+    
+    data.ave_fr = calc_ave_fr(params);
     
     % start data buffering
     cbmex('trialconfig',1,'nocontinuous');
@@ -105,6 +119,7 @@ else
     %Binned Data File
     offline_data = LoadDataStruct(params.offlineData);
     max_cycles = length(offline_data.timeframe);
+    data.ave_fr = calc_ave_fr(params,offline_data);
 end
 
 t_buf = tic; %data buffering timer
@@ -126,6 +141,7 @@ try
             
             % Get and Process New Data
             data = get_new_data(params,data,offline_data,bin_count);
+            new_ave_fr = mean(data.spikes(1,:));
             
             %% Predictions
             
@@ -134,6 +150,41 @@ try
             if strcmp(params.mode,'emg_cascade')
                 data.emgs = [predictions; data.emgs(1:end-1,:)];
                 predictions = [1 rowvec(data.emgs(:))']*emg_decoder;
+            end
+            
+            %% Cursor Output
+            if params.cursor_assist
+                % cursor is moved towards outer target automatically if effort is detected.
+                % full target trajectory if ave_fr reaches 1.25x baseline value.
+                if data.tgt_on && data.tgt_id
+                    if ~data.effort_flag && new_ave_fr >= 1.25*data.ave_fr
+                        data.effort_flag = true;
+                        fprintf('effort detected\n');
+                    end
+                    if data.effort_flag
+                        %increase trajectory by increments of 4% (25 bins to complete traj)
+                        cursor_pos = mean_paths(data.traj_pct+1,:,data.tgt_id);
+                        data.traj_pct = data.traj_pct + 4;
+                    else
+                        %tgt on , but no effort detected yet
+                        cursor_pos = predictions;
+                    end
+                elseif data.traj_pct
+                    %tgt off but not back to center yet
+                    cursor_pos = back_paths(data.traj_pct+1,:,data.tgt_id);
+                    data.traj_pct = data.traj_pct + 4;
+                else
+                    %tgt not on yet or back to center
+                    cursor_pos = predictions;
+                end
+            else
+                %normal behavior, cursor mvt based on predictions
+                cursor_pos = predictions;           
+            end
+
+            if exist('xpc','var')
+                % send predictions to xpc
+                fwrite(xpc, [1 1 cursor_pos],'float32');
             end
             
             %% Neurons-to-EMG Adaptation
@@ -158,7 +209,7 @@ try
                                             {{data},'data'},...
                                             {data.tgt_id,'target_id'},...
                                             {predictions,'predictions'});...
-                                    previous_trials(1:end-1,:)];
+                                        previous_trials(1:end-1,:)];
                                 
                 if ~fix_decoder
 
@@ -234,27 +285,7 @@ try
                    adaptation_idx = adaptation_idx + 1;
                 end
             end
-            
-            %% Cursor Output
-            
-            
-%             if ~params.cursor_assist
-%                 cursor_pos = force_pred;
-%             else
-%                 % cursor is moved towards target as a function of
-%                 % average firing rate?
-%                 cursor_pos = force_pred;
-%                 prev_assist_dist = cursor_pos - cursor_pred;
-%                 tgt_dist = target_pos - cursor_pos;
-%                 cursor_pos = cursor_pos + 0.2*tgt_dist;
-%                 assist_dist = cursor_pos - cursor_pred;
-%             end
-            
-            cursor_pos = predictions;
-
-            % send predictions to xpc
-            fwrite(xpc, [1 1 cursor_pos],'float32');
-
+                
             %% Save and display progress
             
             % save results every 30 seconds
@@ -306,8 +337,10 @@ try
         cbmex('close');
     end
     echoudp('off');
-    fclose(xpc);
-    
+    if exist('xpc','var')
+        fclose(xpc);
+    end
+        
     if ishandle(keep_running)
         close(keep_running);
     end
@@ -318,7 +351,9 @@ catch e
         cbmex('close');
     end
     echoudp('off');
-    fclose(xpc);
+    if exist('xpc','var')
+        fclose(xpc);
+    end
     
     close(keep_running);
     close all;
@@ -379,6 +414,30 @@ function [neuron_decoder, emg_decoder] = load_decoders(params)
             error('Invalid decoding mode. Please specifiy params.mode = [''emgcascade'' || ''direct'']');
     end
 
+end
+function ave_fr = calc_ave_fr(varargin)
+    params = varargin{1};
+    if params.online
+        Redo = 'Redo';
+        while(strcmp(Redo,'Redo'))
+            ave_fr = 0.0;
+            h = waitbar(0,'Averaging Firing Rate');
+            cbmex('trialconfig',1,'nocontinuous');
+            for i = 1:10
+                pause(0.5);
+                ts_cell_array = cbmex('trialdata',1);
+                new_spikes = get_new_spikes(ts_cell_array,params.n_neurons,params.binsize);
+                ave_fr = ave_fr + mean(new_spikes);
+                waitbar(i/10,h);
+            end
+            ave_fr = ave_fr/10;
+            close(waitbar);
+            Redo = questdlg(sprintf('Ave FR = %.2f Hz',ave_fr),'Did your monkey behave?','OK','Redo');
+        end
+    else
+        offline_data = varargin{2};
+        ave_fr = mean(mean(offline_data.spikeratedata));
+    end
 end
 function data = get_new_data(params,data,offline_data,bin_count)
     w = Words;
@@ -446,6 +505,7 @@ function data = get_new_data(params,data,offline_data,bin_count)
             if w.IsEndWord(new_words(i,2))
                 data.adapt_trial = false;
                 data.tgt_on      = false;
+                data.effort_flag = false;
             end
         end
     end
