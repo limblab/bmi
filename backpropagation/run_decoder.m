@@ -97,6 +97,10 @@ if params.display_plots
     hold on;
     tgt_handle  = plot(0,0,'bo');
     set(tgt_handle,'LineWidth',2,'MarkerSize',12);
+%     xpred_disp = annotation(gcf,'textbox', [0.65 0.85 0.16 0.05],...
+%     'FitBoxToText','off','String',sprintf('xpred: %.2f',cursor_pos(1)));
+%     ypred_disp = annotation(gcf,'textbox', [0.65 0.79 0.16 0.05],...
+%     'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
 end
 
 %% Setup data stream
@@ -171,14 +175,15 @@ try
             if ~strcmp(params.mode,'direct')
                 % emg cascade
                 data.emgs = [predictions; data.emgs(1:end-1,:)];
-                predictions = [1 rowvec(data.emgs(:))']*emg_decoder.H;
+                predictions = [1 rowvec(data.emgs(:))']*emg_decoder.H;                
             end
             
             %% Cursor Output
             if params.cursor_assist
                 % cursor is moved towards outer target automatically if effort is detected.
                 % full target trajectory if ave_fr reaches 1.25x baseline value.
-                if data.tgt_on && data.tgt_id
+                data.adapt_trial = true; % always adapt during cursor assist
+                if data.tgt_on && data.tgt_id % outer target on
                     if ~data.effort_flag && new_ave_fr >= 1.25*data.ave_fr
                         data.effort_flag = true;
                         fprintf('effort detected\n');
@@ -191,12 +196,12 @@ try
                         %tgt on , but no effort detected yet, move around zeros, within center target
                         cursor_pos = max([-1 -1],min([1 1],cursor_pos + 0.5*rand(1,2) - 0.25));
                     end
-                elseif data.traj_pct
+                elseif data.traj_pct && data.tgt_id
                     %tgt off but not back to center yet
                     cursor_pos = back_paths(101-data.traj_pct,:,data.tgt_id);
                     data.traj_pct = max(0,data.traj_pct-4);
                 else
-                    % tgt not on yet or already completed back path,
+                    % tgt not on yet, already completed back path, or next trial has started already
                     % make the cursor move around zero
                     cursor_pos = max([-1 -1],min([1 1],cursor_pos + 0.5*rand(1,2) - 0.25));
                 end
@@ -234,11 +239,9 @@ try
                                             {predictions,'predictions'});...
                                         previous_trials(1:end-1,:)];              
                 if ~fix_decoder
-
                    % gradient accumulator
                     accum_g = zeros(size(neuron_decoder.H));
                     accum_n = 0;
-
                     for trial = 1:params.batch_length
                         tmp_spikes = previous_trials.data{trial}.spikes;
                         tmp_emgs = previous_trials.data{trial}.emgs;
@@ -248,41 +251,23 @@ try
                             tmp_spikes, tmp_emgs, ...
                             tmp_target_pos(:)', ...
                             params.n_lag, params.n_lag_emg);
+                        
+                        %??? temp: prevent divergence caused possibly by
+                        %floating point error? divide by 0 ????
+                        if any(any(accum_g))>100/params.LR
+                            high_weights = find(accum_g>100/params.LR);
+                            w   = num2str(accum_g(high_weights));
+                            w_i = num2str(high_weights);
+                            fprintf('super high weight(s) : %s\nDetected at indexes %s\n',w,w_i);
+                            accum_g(abs(accum_g)>100/params.LR) = 0;
+                        end
 
                         % count how many gradients we have accumulated
                         accum_n = accum_n + 1;
                     end
                     g = accum_g/accum_n;
                     neuron_decoder.H = neuron_decoder.H - params.LR*g;
-
-
-                    %% update predictions with new decoder
-
-%                     % predict EMG and store it in lagged matrix
-%                     emgs(2:end,:) = emgs(1:(end-1),:);
-%                     emgs(1,:) = [1 rowvec(spikes(1:params.n_lag,:))']*neuron_decoder;
-
-% %                     % Predict EMGs
-% %                     new_emgs = zeros(1,params.n_emgs);
-% %                     for i = 1:params.n_emgs
-% %                         new_emgs(i) = [1 spikes(:)']*rowvec(neuron_decoder(:,i)');
-% %                     end
-% %                     if params.n_lag_emg > 1
-% %                         emgs = [new_emgs emgs(1:end-1,:)];
-% %                     else
-% %                         emgs = new_emgs;
-% %                     end
-% % 
-% %                     % Predict force
-% %                     force_pred = emgs(:)'*params.EMG2F_w;
-% %                     cursor_pos = force_pred;
-% %                    
-% %                    new_emgs = [1 rowvec(spikes(:, 1:n_lag))']*neuron_decoder;
-% %                    emgs = [new_emgs emgs(:,2:end)];
-
-                   %                    force_pred_adapted = emg(:)'*EMG2F_w;
-
-                   adaptation_idx = adaptation_idx + 1;
+                    adaptation_idx = adaptation_idx + 1;
                 end
             end
                 
@@ -313,7 +298,7 @@ try
             % each second show adaptation progress
             if mod(bin_count*params.binsize, 1) == 0
                 disp([sprintf('Time: %d secs, ', bin_count*params.binsize) ...
-                      'Adapting: ' num2str(adapt_bin && ~fix_decoder) ', ' ...
+                      'Adapting: ' num2str(~fix_decoder) ', ' ...
                       'Online: ' num2str(params.online)]);
 %                     'prediction corr: ' num2str(last_20R)]);
             end
@@ -321,8 +306,12 @@ try
             %display targets and cursor plots
             if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(curs_handle)
                 
-                set(curs_handle,'XData',cursor_pos(1),'YData',cursor_pos(2));
-                
+%                 set(curs_handle,'XData',cursor_pos(1),'YData',cursor_pos(2));
+                set(curs_handle,'XData',predictions(1),'YData',predictions(2));
+%                 
+%                 set(xpred_disp,'String',sprintf('xpred: %.2f',predictions(1)))
+%                 set(ypred_disp,'String',sprintf('ypred: %.2f',predictions(2)))
+
                 if data.tgt_on
                     set(tgt_handle,'XData',data.tgt_pos(1),'YData',data.tgt_pos(2),'Visible','on');
                 else
@@ -343,8 +332,8 @@ try
             %check elapsed operation time
             et_op = toc(t_op); 
             if et_op>0.05
-                fprintf('slow matlab processing time: %.1f ms',et_op*1000);
-            end    
+                fprintf('~~~~~~slow processing time: %.1f ms~~~~~~~\n',et_op*1000);
+            end
         end
     end
 
@@ -458,9 +447,11 @@ function ave_fr = calc_ave_fr(varargin)
             h = waitbar(0,'Averaging Firing Rate');
             cbmex('trialconfig',1,'nocontinuous');
             for i = 1:10
+                pause_t = tic;
                 pause(0.5);
                 ts_cell_array = cbmex('trialdata',1);
-                new_spikes = get_new_spikes(ts_cell_array,params.n_neurons,params.binsize);
+                pause_t = toc(pause_t);
+                new_spikes = get_new_spikes(ts_cell_array,params.n_neurons,pause_t);
                 ave_fr = ave_fr + mean(new_spikes);
                 waitbar(i/10,h);
             end
@@ -476,7 +467,6 @@ function ave_fr = calc_ave_fr(varargin)
 end
 function data = get_new_data(params,data,offline_data,bin_count)
     w = Words;
-    CT_size = [3 3];
     if params.online
         % read and flush data buffer
         ts_cell_array = cbmex('trialdata',1);
@@ -506,12 +496,19 @@ function data = get_new_data(params,data,offline_data,bin_count)
 
     if ~isempty(new_words)
         for i=1:size(new_words,1)
+            % new word Start
+            if new_words(i,2) == w.Start
+                data.traj_pct = 0;
+                data.tgt_id   = nan;
+            end
+            
             % new word Ot_On?
             if bitand(hex2dec('F0'),new_words(i,2))==w.OT_On
                 data.tgt_id   = bitand(hex2dec('0F'),new_words(i,2))+1;
                 data.tgt_ts   = new_words(i,1);
-                data.tgt_pos  = data.pending_tgt_pos;
-                data.tgt_size = data.pending_tgt_size;
+%                 data.tgt_pos  = data.pending_tgt_pos;
+%                 data.tgt_size = data.pending_tgt_size;
+                [data.tgt_pos,data.tgt_size] = get_default_tgt_pos_size(data.tgt_id);
                 data.tgt_bin  = bin_count;
                 data.tgt_on   = true;
                 data.pending_tgt_pos = [NaN NaN];
@@ -522,8 +519,9 @@ function data = get_new_data(params,data,offline_data,bin_count)
             if new_words(i,2) == w.CT_On
                 data.tgt_id   = 0;
                 data.tgt_ts   = new_words(i,1);
-                data.tgt_pos  = [0 0];
-                data.tgt_size = CT_size;
+%                 data.tgt_pos  = [0 0];
+%                 data.tgt_size = CT_size;
+                [data.tgt_pos,data.tgt_size] = get_default_tgt_pos_size(data.tgt_id);
                 data.tgt_bin  = bin_count;
                 data.tgt_on   = true;
                 % fprintf('CT_on\n');
@@ -578,49 +576,51 @@ function [new_words, new_target, db_buf] = get_new_words(new_ts,new_words,db_buf
         % behavior words:
         new_words = double(all_words( all_words(:,2) < min_db_val, :));
 
-        % databursts:
-        new_db = all_words( all_words(:,2) >= min_db_val & all_words(:,2) <= max_db_val, :);
-
-        if isempty(new_db)
-            %no databurst this time
-            if ~isempty(db_buf)
-                % we should have received more bytes
-                warning('missing databurst bytes, databurst info discarded');
-            end
-            new_target = [];
-            db_buf = [];
-        else
-            try
-                if ~isempty(db_buf)
-                    % continue filling databurst buffer started previous bin
-                    num_bytes = (db_buf(1,2) - min_db_val) + 16*(db_buf(2,2) - min_db_val);
-                else
-                    num_bytes = (new_db(1,2) - min_db_val) + 16*(new_db(2,2) - min_db_val);
-                end
-
-
-                db_buf = [db_buf; new_db];
-
-                if size(db_buf,1) >= num_bytes*2
-                    if size(db_buf,1)>num_bytes*2
-                        fprintf('extra bytes in databurst (%d out of %d)\n',size(db_buf,1),num_bytes*2);
-                    end
-                    % we have the whole data burst, process and flush.
-                    raw_bytes  = db_buf(1:num_bytes*2, 2);
-                    half_bytes = reshape(raw_bytes,2,[]) - min_db_val;
-                    databurst  = double(16*half_bytes(2,:) + half_bytes(1,:));
-                    new_target = bytes2float(databurst(num_bytes-15:end))';
-                    db_buf = [];
-                else
-                    % partial databurst, wait for next bin for rest of databurst
-                    new_target = [];
-                end
-            catch e
-                warning('error reading databurst, no target info extracted');
-                new_target = [NaN NaN NaN NaN];
-                db_buf = [];
-            end
-        end
+%         % databursts:
+          new_db = [];
+          new_target = [];
+%         new_db = all_words( all_words(:,2) >= min_db_val & all_words(:,2) <= max_db_val, :);
+% 
+%         if isempty(new_db)
+%             %no databurst this time
+%             if ~isempty(db_buf)
+%                 % we should have received more bytes
+%                 warning('missing databurst bytes, databurst info discarded');
+%             end
+%             new_target = [];
+%             db_buf = [];
+%         else
+%             try
+%                 if ~isempty(db_buf)
+%                     % continue filling databurst buffer started previous bin
+%                     num_bytes = (db_buf(1,2) - min_db_val) + 16*(db_buf(2,2) - min_db_val);
+%                 else
+%                     num_bytes = (new_db(1,2) - min_db_val) + 16*(new_db(2,2) - min_db_val);
+%                 end
+% 
+% 
+%                 db_buf = [db_buf; new_db];
+% 
+%                 if size(db_buf,1) >= num_bytes*2
+%                     if size(db_buf,1)>num_bytes*2
+%                         fprintf('extra bytes in databurst (%d out of %d)\n',size(db_buf,1),num_bytes*2);
+%                     end
+%                     % we have the whole data burst, process and flush.
+%                     raw_bytes  = db_buf(1:num_bytes*2, 2);
+%                     half_bytes = reshape(raw_bytes,2,[]) - min_db_val;
+%                     databurst  = double(16*half_bytes(2,:) + half_bytes(1,:));
+%                     new_target = bytes2float(databurst(num_bytes-15:end))';
+%                     db_buf = [];
+%                 else
+%                     % partial databurst, wait for next bin for rest of databurst
+%                     new_target = [];
+%                 end
+%             catch e
+%                 warning('error reading databurst, no target info extracted');
+%                 new_target = [NaN NaN NaN NaN];
+%                 db_buf = [];
+%             end
+%         end
     else
         if ~isempty(db_buf)
             % we should have received more bytes
@@ -629,4 +629,17 @@ function [new_words, new_target, db_buf] = get_new_words(new_ts,new_words,db_buf
         new_target = [];
         db_buf = [];
     end
+end
+function [tgt_pos,tgt_size] = get_default_tgt_pos_size(tgt_id)
+    tgt_size = [4 4];
+    def_tgt_pos  = [ 0      0;...
+                     8      0;... 
+                     5.66   5.66;...
+                     0      8;...
+                     -5.66  5.66;...
+                     -8     0;...
+                     -5.66  -5.66;...
+                     0      -8;...
+                     5.66   -5.66];
+      tgt_pos = def_tgt_pos(tgt_id+1,:);
 end
