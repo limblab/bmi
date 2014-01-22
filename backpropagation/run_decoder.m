@@ -86,7 +86,7 @@ end
 
 %% Setup figures
 
-keep_running = msgbox('Click ''ok'' to stop the program','Adapt');
+keep_running = msgbox('Click ''ok'' to stop the BMI','BMI Controller');
 set(keep_running,'Position',[200 700 125 52]);
 
 if params.display_plots
@@ -96,7 +96,7 @@ if params.display_plots
     axis square; axis equal; axis manual;
     hold on;
     tgt_handle  = plot(0,0,'bo');
-    set(tgt_handle,'LineWidth',2,'MarkerSize',12);
+    set(tgt_handle,'LineWidth',2,'MarkerSize',15);
 %     xpred_disp = annotation(gcf,'textbox', [0.65 0.85 0.16 0.05],...
 %     'FitBoxToText','off','String',sprintf('xpred: %.2f',cursor_pos(1)));
 %     ypred_disp = annotation(gcf,'textbox', [0.65 0.79 0.16 0.05],...
@@ -114,10 +114,9 @@ if params.save_data
     if ~strcmp(params.mode,'direct')
         emg_file = [params.save_dir '\EMGPreds_' date_str '.txt'];
     end
-    if params.cursor_assist
-        curs_pred_file = [params.save_dir '\CursorPreds_' date_str '.txt'];
-    end
-    curs_pos_file = [params.save_dir '\CursorPos_' date_str '.txt'];
+    curs_pred_file = [params.save_dir '\CursorPreds_' date_str '.txt'];
+    % cursor position may be different than prediction is cursor_assist is on
+    curs_pos_file  = [params.save_dir '\CursorPos_' date_str '.txt'];
 end
 
 if params.online
@@ -134,10 +133,17 @@ if params.online
     end
     max_cycles = 0;
     offline_data = [];    
-    % TODO: Trigger Cerebus Recording with cbmex('fileconfig')
-    
+
     data.ave_fr = calc_ave_fr(params);
     
+    % Trigger Cerebus Recording
+    if params.save_data
+        cerebus_file = [params.save_dir '\Cerebus_File_' date_str];
+        cbmex('fileconfig', cerebus_file, '', 0); % open 'file storage' app, or stop ongoing recordings
+        drawnow; %wait until the app opens
+        cbmex('fileconfig', cerebus_file, '', 1); % starts recording.
+    end    
+   
     % start data buffering
     cbmex('trialconfig',1,'nocontinuous');
 else
@@ -223,7 +229,7 @@ try
             end
             
             % adapt trial and within adapt window?
-            if data.adapt_trial && data.tgt_on && strcmp(params.mode,'adapt') && ~any(isnan(data.tgt_pos)) && ... 
+            if data.adapt_trial && data.tgt_on && params.adapt && ~any(isnan(data.tgt_pos)) && ... 
                 (bin_count - data.tgt_bin)*params.binsize >= params.delay && ...
                 (bin_count - data.tgt_bin)*params.binsize <= (params.delay+params.duration)
                 adapt_bin = true;
@@ -289,10 +295,8 @@ try
                 end
                 new_curs = double(cursor_pos);
                 save(curs_pos_file,'new_curs','-append','-ascii');
-                if params.cursor_assist
-                    new_preds = double(predictions);
-                    save(curs_pred_file,'new_preds','-append','-ascii');
-                end
+                new_preds = double(predictions);
+                save(curs_pred_file,'new_preds','-append','-ascii');
             end
             
             % each second show adaptation progress
@@ -338,6 +342,9 @@ try
     end
 
     if params.online
+        if params.save_data
+            cbmex('fileconfig', cerebus_file, '', 0);
+        end
         cbmex('close');
     end
     echoudp('off');
@@ -349,6 +356,9 @@ try
     
 catch e
     if params.online
+        if params.save_data
+            cbmex('fileconfig', cerebus_file, '', 0);
+        end
         cbmex('close');
     end
     echoudp('off');
@@ -362,7 +372,7 @@ end
 
 
 %% optionally Save decoder at the end
-if strcmp(params.mode,'adapt')
+if params.adapt
     YesNo = questdlg('Would you like to save the adapted decoder?',...
                         sprintf('Adapted over %d bins',adaptation_idx),...
                         'Yes','No','Yes');
@@ -379,7 +389,7 @@ end
     
 function [neuron_decoder,emg_decoder,params] = load_decoders(params)
     switch params.mode
-        case {'emg_cascade','adapt'}
+        case 'emg_cascade'
             if strncmp(params.neuron_decoder,'new',3)
                 % create new neuron decoder from scratch
                 neuron_decoder = struct(...
@@ -434,7 +444,7 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
             params.n_emgs = 0;
             params.n_lag_emg = 0;
         otherwise
-            error('Invalid decoding mode. Please specifiy params.mode = [''emgcascade'' | ''direct'' | ''adapt'']');
+            error('Invalid decoding mode. Please specifiy params.mode = [''emgcascade'' | ''direct'' ]');
     end
 
 end
@@ -631,7 +641,7 @@ function [new_words, new_target, db_buf] = get_new_words(new_ts,new_words,db_buf
     end
 end
 function [tgt_pos,tgt_size] = get_default_tgt_pos_size(tgt_id)
-    tgt_size = [4 4];
+    tgt_size = [3 3];
     def_tgt_pos  = [ 0      0;...
                      8      0;... 
                      5.66   5.66;...
