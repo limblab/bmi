@@ -148,7 +148,7 @@ if params.online
     cbmex('trialconfig',1,'nocontinuous');
 else
     %Binned Data File
-    offline_data = LoadDataStruct(params.offlineData);
+    offline_data = LoadDataStruct(params.offline_data);
     max_cycles = length(offline_data.timeframe);
     data.ave_fr = calc_ave_fr(params,offline_data);
 end
