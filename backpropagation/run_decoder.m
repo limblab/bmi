@@ -74,7 +74,7 @@ if ~isdir(params.save_dir)
 end
 
 %% UDP port for XPC
-if strcmp(params.output,'xpc')
+if strcmpi(params.output,'xpc')
     XPC_IP   = '192.168.0.1';
     XPC_PORT = 24999;
     echoudp('on',XPC_PORT);
@@ -153,7 +153,7 @@ else
     data.ave_fr = calc_ave_fr(params,offline_data);
 end
 
-t_buf = tic; %data buffering timer
+t_buf   = tic; %data buffering timer
 
 %% Run cycle
 try
@@ -166,13 +166,14 @@ try
         % reached cycle time?
         if (floor(et_buf/params.binsize)>= bin_count) || ...
              (~params.online && floor(et_buf*params.realtime/params.binsize)>= bin_count)
-         
-            t_op = tic; %operation time
+            cycle_t = t_buf; %this should be equal to bin_size, but may be longer if last cycle operations took too long.
+            t_buf   = tic; % reset buffering timer
+            t_op = tic; % reset operation timer
             bin_count = bin_count +1;
             
             % Get and Process New Data
-            data = get_new_data(params,data,offline_data,bin_count);
-            new_ave_fr = mean(data.spikes(1,:));
+            data = get_new_data(params,data,offline_data,bin_count,cycle_t);
+            new_ave_fr = mean(mean(data.spikes));
             
             %% Predictions
             
@@ -186,31 +187,43 @@ try
             
             %% Cursor Output
             if params.cursor_assist
-                % cursor is moved towards outer target automatically if effort is detected.
-                % full target trajectory if ave_fr reaches 1.25x baseline value.
-                data.adapt_trial = true; % always adapt during cursor assist
-                if data.tgt_on && data.tgt_id % outer target on
-                    if ~data.effort_flag && new_ave_fr >= 1.25*data.ave_fr
-                        data.effort_flag = true;
-                        fprintf('effort detected\n');
-                    end
-                    if data.effort_flag
-                        %increase trajectory by increments of 4% (25 bins to complete traj)
-                        cursor_pos = mean_paths(data.traj_pct+1,:,data.tgt_id);
-                        data.traj_pct = min(100,data.traj_pct+4);
-                    else
-                        %tgt on , but no effort detected yet, move around zeros, within center target
-                        cursor_pos = max([-1 -1],min([1 1],cursor_pos + 0.5*rand(1,2) - 0.25));
-                    end
-                elseif data.traj_pct && data.tgt_id
-                    %tgt off but not back to center yet
-                    cursor_pos = back_paths(101-data.traj_pct,:,data.tgt_id);
-                    data.traj_pct = max(0,data.traj_pct-4);
+                % cursor is moved towards outer target proportionally with ave fr.
+                % maximum displacement is reached at new_ave_fr = 1.3*ave_fr;
+                data.adapt_trial = true;
+                pct_effort = (new_ave_fr-ave_fr)/ave_fr/0.3;
+                if data.tgt_id
+                    cursor_pos = pct_effort*data.tgt_pos;
                 else
-                    % tgt not on yet, already completed back path, or next trial has started already
+                    % tgt not on yet or next trial has started already
                     % make the cursor move around zero
                     cursor_pos = max([-1 -1],min([1 1],cursor_pos + 0.5*rand(1,2) - 0.25));
                 end
+                
+% %                 % cursor is moved towards outer target automatically if effort is detected.
+% %                 % full target trajectory if ave_fr reaches 1.25x baseline value.
+% %                 data.adapt_trial = true; % always adapt during cursor assist
+% %                 if data.tgt_on && data.tgt_id % outer target on
+% %                     if ~data.effort_flag && new_ave_fr >= 1.25*data.ave_fr
+% %                         data.effort_flag = true;
+% %                         fprintf('effort detected\n');
+% %                     end
+% %                     if data.effort_flag
+% %                         %increase trajectory by increments of 4% (25 bins to complete traj)
+% %                         cursor_pos = mean_paths(data.traj_pct+1,:,data.tgt_id);
+% %                         data.traj_pct = min(100,data.traj_pct+4);
+% %                     else
+% %                         %tgt on , but no effort detected yet, move around zeros, within center target
+% %                         cursor_pos = max([-1 -1],min([1 1],cursor_pos + 0.5*rand(1,2) - 0.25));
+% %                     end
+% %                 elseif data.traj_pct && data.tgt_id
+% %                     %tgt off but not back to center yet
+% %                     cursor_pos = back_paths(101-data.traj_pct,:,data.tgt_id);
+% %                     data.traj_pct = max(0,data.traj_pct-4);
+% %                 else
+% %                     % tgt not on yet, already completed back path, or next trial has started already
+% %                     % make the cursor move around zero
+% %                     cursor_pos = max([-1 -1],min([1 1],cursor_pos + 0.5*rand(1,2) - 0.25));
+% %                 end
             else
                 %normal behavior, cursor mvt based on predictions
                 cursor_pos = predictions;           
@@ -222,10 +235,10 @@ try
             end
             
             %% Neurons-to-EMG Adaptation
-            if mod(bin_count*params.binsize,params.adapt_time+params.fixed_time)>=params.adapt_time
-                fix_decoder = 1;
+            if params.adapt_freeze && mod(bin_count*params.binsize,params.adapt_time+params.fixed_time)>=params.adapt_time
+                fix_decoder = true;
             else
-                fix_decoder = 0;
+                fix_decoder = false;
             end
             
             % adapt trial and within adapt window?
@@ -258,15 +271,15 @@ try
                             tmp_target_pos(:)', ...
                             params.n_lag, params.n_lag_emg);
                         
-                        %??? temp: prevent divergence caused possibly by
-                        %floating point error? divide by 0 ????
-                        if any(any(accum_g))>100/params.LR
-                            high_weights = find(accum_g>100/params.LR);
-                            w   = num2str(accum_g(high_weights));
-                            w_i = num2str(high_weights);
-                            fprintf('super high weight(s) : %s\nDetected at indexes %s\n',w,w_i);
-                            accum_g(abs(accum_g)>100/params.LR) = 0;
-                        end
+%                         %??? temp: prevent divergence caused possibly by
+%                         %floating point error? divide by 0 ????
+%                         if any(any(accum_g))>100/params.LR
+%                             high_weights = find(accum_g>100/params.LR);
+%                             w   = num2str(accum_g(high_weights));
+%                             w_i = num2str(high_weights);
+%                             fprintf('super high weight(s) : %s\nDetected at indexes %s\n',w,w_i);
+%                             accum_g(abs(accum_g)>100/params.LR) = 0;
+%                         end
 
                         % count how many gradients we have accumulated
                         accum_n = accum_n + 1;
@@ -475,12 +488,12 @@ function ave_fr = calc_ave_fr(varargin)
         uiwait(msgbox(sprintf('Ave FR = %.2f Hz',ave_fr)));
     end
 end
-function data = get_new_data(params,data,offline_data,bin_count)
+function data = get_new_data(params,data,offline_data,bin_count,bin_dur)
     w = Words;
     if params.online
         % read and flush data buffer
         ts_cell_array = cbmex('trialdata',1);
-        new_spikes = get_new_spikes(ts_cell_array,params.n_neurons,params.binsize);
+        new_spikes = get_new_spikes(ts_cell_array,params.n_neurons,bin_dur);
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
     else
         off_time   = offline_data.timeframe(bin_count);
