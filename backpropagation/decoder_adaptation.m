@@ -10,12 +10,12 @@ end
 if data.adapt_trial && data.tgt_on && params.adapt && ~any(isnan(data.tgt_pos)) && ...
         (bin_count - data.tgt_bin)*params.binsize >= params.delay && ...
         (bin_count - data.tgt_bin)*params.binsize <= (params.delay+params.duration)
-    adapt_bin = true;
+    data.adapt_bin = true;
 else
-    adapt_bin = false;
+    data.adapt_bin = false;
 end
 
-if adapt_bin
+if data.adapt_bin
     % Save data for batch adapt
     previous_trials = [ dataset({bin_count, 'bin_count'}, ...
         {{data},'data'},...
@@ -51,6 +51,5 @@ if adapt_bin
         end
         g = accum_g/accum_n;
         neuron_decoder.H = neuron_decoder.H - params.LR*g;
-        adaptation_idx = adaptation_idx + 1;
     end
 end

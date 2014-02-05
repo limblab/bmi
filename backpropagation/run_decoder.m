@@ -50,7 +50,9 @@ end
 %globals
 ave_op_time = 0.0;
 bin_count = 0;
+reached_cycle_t = false;
 cursor_pos = [0 0];
+w = Words;
 
 % data structure to store inputs
 data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
@@ -59,6 +61,7 @@ data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
               'db_buf'      , [],...
               'emgs'        , zeros( params.n_lag_emg, params.n_emgs),...
               'adapt_trial' , false,...
+              'adapt_bin'   , false,...
               'tgt_on'      , false,...
               'tgt_bin'     , NaN,...
               'tgt_ts'      , NaN,...
@@ -82,9 +85,6 @@ for i=params.batch_length
         {nan(1,params.n_forces),'predictions'})];%#ok<AGROW>
 end
 
-if ~isdir(params.save_dir)
-    mkdir(params.save_dir);
-end
 
 %% Setup figures
 
@@ -105,23 +105,46 @@ if params.display_plots
 %     'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
 end
 
-%% Setup data stream
-
+%% Setup data files and directories for recording
 if params.save_data
-    %save parameters
-    date_str = (datestr(now,'yyyy_mm_dd_HHMMSS'));
-    save([params.save_dir filesep params.save_name '_' date_str '_params.mat'] ,'-struct','params');
-    %files to save all other data:
-    spike_file = [params.save_dir filesep params.save_name '_' date_str '_spikes.txt'];
-    if ~strcmp(params.mode,'direct')
-        emg_file = [params.save_dir '\EMGPreds_' date_str '.txt'];
-    end
-    curs_pred_file = [params.save_dir filesep params.save_name '_' date_str 'curspreds.txt'];
-    % cursor position may be different than prediction is cursor_assist is on
-    curs_pos_file  = [params.save_dir filesep params.save_name '_' date_str 'cursorpos.txt'];
+        
+        if params.online
+            date_str = datestr(now,'yyyy_mm_dd_HHMMSS');
+            filename = [params.save_name '_' date_str];
+        else
+            [path_name,filename,~] = fileparts(params.offline_data);
+            date_str = path_name(find(path_name==filesep,1,'last')+1:end);
+        end
+
+        save_dir = [params.save_dir filesep date_str];
+        if ~isdir(save_dir)
+            mkdir(save_dir);
+        end
+        
+        if params.adapt
+            adapt_dir = [save_dir filesep filename '_adapt_decoders'];
+            conflict_dir = isdir(adapt_dir);
+            num_iter = 1;
+            while conflict_dir
+                num_iter = num_iter+1;
+                adapt_dir = sprintf('%s%d%s',[save_dir filesep filename '_adapt_decoders('],num_iter,')');
+                conflict_dir = isdir(adapt_dir);
+            end
+            mkdir(adapt_dir);
+        end
+        
+        %Setup files for recording parameters and neural and cursor data:
+        save(            fullfile(save_dir, [filename '_params.mat']),'-struct','params');
+        spike_file     = fullfile(save_dir, [filename '_spikes.txt']);
+        if ~strcmp(params.mode,'direct')
+            emg_file   = fullfile(save_dir, [filename '_emgpreds.txt']);
+        end
+        curs_pred_file = fullfile(save_dir, [filename '_curspreds.txt']);
+        curs_pos_file  = fullfile(save_dir, [filename '_cursorpos.txt']);     
 end
 
-if params.online
+%% Start data streaming
+if params.online   
     % Cerebus Stream via Central
     connection = cbmex('open',1);
     if ~connection
@@ -134,23 +157,25 @@ if params.online
         error('Connection to Central Failed');
     end
     max_cycles = 0;
-    offline_data = [];    
+    offline_data = [];
     
-    % Trigger Cerebus Recording
     if params.save_data
-        cerebus_file = [params.save_dir filesep params.save_name  date_str '_'];
-        cbmex('fileconfig', cerebus_file, '', 0); % open 'file storage' app, or stop ongoing recordings
+        cerebus_file   = filename;
+        cbmex('fileconfig', cerebus_file, '', 0);% open 'file storage' app, or stop ongoing recordings
         drawnow; %wait until the app opens
         bin_start_t = 0.0; % time at beginning of next bin
-        cbmex('fileconfig', cerebus_file, '', 1); % starts recording.
+        
+        %start cerebus file recording :
+        cbmex('fileconfig', cerebus_file, '', 1);
+        data.sys_time = cbmex('time');
     end    
     % start data buffering
-    cbmex('trialconfig',1,'nocontinuous');
+    cbmex('trialconfig',1,'nocontinuous'); drawnow;
 else
     %Binned Data File
     offline_data = LoadDataStruct(params.offline_data);
     max_cycles = length(offline_data.timeframe);
-    bin_start_t = offline_data.timeframe(1);
+    bin_start_t = double(offline_data.timeframe(1));
 end
 
 t_buf   = tic; %data buffering timer
@@ -164,12 +189,12 @@ try
         
         if (reached_cycle_t)
             %% timers and counters
-            cycle_t = t_buf; %this should be equal to bin_size, but may be longer if last cycle operations took too long.
+            cycle_t = toc(t_buf); %this should be equal to bin_size, but may be longer if last cycle operations took too long.
             t_buf   = tic; % reset buffering timer
             bin_count = bin_count +1;
             
             %% Get and Process New Data
-            data = get_new_data(params,data,offline_data,bin_count,cycle_t);
+            data = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
             
             %% Predictions
             
@@ -204,7 +229,7 @@ try
             % save adapting decoder every 30 seconds
             if params.adapt && mod(bin_count*params.binsize, 30) == 0
                 %                 save([params.save_dir '\previous_trials_' strrep(strrep(datestr(now),':',''),' ','-')], 'previous_trials','neuron_decoder');
-                save([params.save_dir '\Adapt_decoder_' date_str(now,'yyyy_mm_dd_HHMMSS'))],'-struct','neuron_decoder');
+                save( [adapt_dir '\Adapt_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS'))],'-struct','neuron_decoder');
                 fprintf('Average Matlab Operation Time : %.2fms\n',ave_op_time*1000);
             end
             
@@ -245,7 +270,7 @@ try
                     set(tgt_handle,'Visible','off');
                 end
                 
-                if  adapt_bin && ~fix_decoder
+                if  data.adapt_bin && ~data.fix_decoder
                     display_color = 'r';
                 else
                     display_color = 'k';
@@ -263,8 +288,8 @@ try
                 fprintf('~~~~~~slow processing time: %.1f ms~~~~~~~\n',et_op*1000);
             end
             
-            reached_cycle_t = false;
             bin_start_t = data.sys_time;
+            reached_cycle_t = false;
         end
         
         et_buf = toc(t_buf); %elapsed buffering time
@@ -309,11 +334,11 @@ end
 
 %% optionally Save decoder at the end
 if params.adapt
-    YesNo = questdlg('Would you like to save the adapted decoder?','Yes','No','Yes');
+    YesNo = questdlg('Would you like to save the adapted decoder?','Save Decoder?','Yes','No','Yes');
     if strcmp(YesNo,'Yes')
-        filename = [params.save_dir '\Adapt_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
+        filename = [params.save_dir filesep 'Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
         save(filename,'-struct','neuron_decoder');
-        fprintf('Saved Decoder File :\n%s\n',filename); 
+        fprintf('Saved Decoder File :\n%s\n',filename);
     else
         disp('Decoder not saved');
     end
@@ -383,27 +408,20 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
     end
 
 end
-function data = get_new_data(params,data,offline_data,bin_count,bin_dur)
-    w = Words;
+function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
     if params.online
         % read and flush data buffer
-        ts_cell_array = cbmex('trialdata',1);
-        if params.online
-            data.sys_time = cbmex('time');
-        else
-            data.sys_time = offline_data.timeframe(bin_count);
-        end
-        drawnow;
+        ts_cell_array = cbmex('trialdata',1); drawnow;
+        data.sys_time = cbmex('time'); drawnow;
         new_spikes = get_new_spikes(ts_cell_array,params.n_neurons,bin_dur);
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
     else
-        off_time   = offline_data.timeframe(bin_count);
+        data.sys_time = double(offline_data.timeframe(bin_count));
         new_spikes = offline_data.spikeratedata(bin_count,:)';
-        new_words  = offline_data.words(offline_data.words(:,1)>= off_time & ...
-            offline_data.words(:,1) < off_time+params.binsize,:);
-        new_target = offline_data.targets.corners(offline_data.targets.corners(:,1)>= off_time & ...
-            offline_data.targets.corners(:,1)< off_time+params.binsize,2:end);
-
+        new_words  = offline_data.words(offline_data.words(:,1)>= data.sys_time & ...
+            offline_data.words(:,1) < data.sys_time+params.binsize,:);
+        new_target = offline_data.targets.corners(offline_data.targets.corners(:,1)>= data.sys_time & ...
+            offline_data.targets.corners(:,1)< data.sys_time+params.binsize,2:end);
     end
 
     data.spikes = [new_spikes'; data.spikes(1:end-1,:)];
