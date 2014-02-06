@@ -235,8 +235,13 @@ try
             
             % save raw data
             if params.save_data
+                % spikes are timed from beginning of this bin
+                % because they occured in the past relatively to now
                 tmp_data = [bin_start_t data.spikes(1,:)];
                 save(spike_file,'tmp_data','-append','-ascii');
+                % the rest of the data is timed with end of this bin
+                % because they are predictions made just now.
+                bin_start_t = data.sys_time;
                 if ~strcmp(params.mode,'direct')
                     tmp_data   = [bin_start_t double(data.emgs(1,:))];
                     save(emg_file,'tmp_data','-append','-ascii');
@@ -288,7 +293,6 @@ try
                 fprintf('~~~~~~slow processing time: %.1f ms~~~~~~~\n',et_op*1000);
             end
             
-            bin_start_t = data.sys_time;
             reached_cycle_t = false;
         end
         
