@@ -2,9 +2,9 @@ function [previous_trials,data,neuron_decoder] = decoder_adaptation(params,data,
 
 data.fix_decoder = params.adapt_freeze && mod(data.sys_time,params.adapt_time+params.fixed_time)>=params.adapt_time;
 
-if params.cursor_assist
-    data.adapt_trial = true; % adapt every trial during cursor assist
-end
+% if params.cursor_assist
+%     data.adapt_trial = true; % adapt every trial during cursor assist
+% end
 
 % adapt trial and within adapt window?
 if data.adapt_trial && data.tgt_on && params.adapt && ~any(isnan(data.tgt_pos)) && ...

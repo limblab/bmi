@@ -30,7 +30,7 @@ if params.online
             buf_t = tic;
             %firing rate for new spikes
             for n = 1:params.n_neurons
-                new_spikes(i) = length(ts_cell_array{n,2})/pause_t;
+                new_spikes(n) = length(ts_cell_array{n,2})/pause_t;
             end
             ave_fr = ave_fr + mean(new_spikes);
             waitbar(i/10,h);
@@ -39,6 +39,7 @@ if params.online
         close(h);
         Redo = questdlg(sprintf('Ave FR = %.2f Hz',ave_fr),'Looks good?','OK','Redo','OK');
     end
+    clearxpc;
 else
     offline_data = LoadDataStruct(params.offline_data);
     ave_fr = mean(mean(offline_data.spikeratedata));

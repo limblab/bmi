@@ -110,9 +110,11 @@ if params.save_data
         
         if params.online
             date_str = datestr(now,'yyyy_mm_dd_HHMMSS');
-            filename = [params.save_name '_' date_str];
+            filename = [params.save_name '_' date_str '_'];
+            date_str = datestr(now,'yyyy_mm_dd');
         else
             [path_name,filename,~] = fileparts(params.offline_data);
+            filename = [filename '_'];
             date_str = path_name(find(path_name==filesep,1,'last')+1:end);
         end
 
@@ -122,25 +124,25 @@ if params.save_data
         end
         
         if params.adapt
-            adapt_dir = [save_dir filesep filename '_adapt_decoders'];
+            adapt_dir = [save_dir filesep filename 'adapt_decoders'];
             conflict_dir = isdir(adapt_dir);
             num_iter = 1;
             while conflict_dir
                 num_iter = num_iter+1;
-                adapt_dir = sprintf('%s%d%s',[save_dir filesep filename '_adapt_decoders('],num_iter,')');
+                adapt_dir = sprintf('%s%d%s',[save_dir filesep filename 'adapt_decoders('],num_iter,')');
                 conflict_dir = isdir(adapt_dir);
             end
             mkdir(adapt_dir);
         end
         
         %Setup files for recording parameters and neural and cursor data:
-        save(            fullfile(save_dir, [filename '_params.mat']),'-struct','params');
-        spike_file     = fullfile(save_dir, [filename '_spikes.txt']);
+        save(            fullfile(save_dir, [filename 'params.mat']),'-struct','params');
+        spike_file     = fullfile(save_dir, [filename 'spikes.txt']);
         if ~strcmp(params.mode,'direct')
-            emg_file   = fullfile(save_dir, [filename '_emgpreds.txt']);
+            emg_file   = fullfile(save_dir, [filename 'emgpreds.txt']);
         end
-        curs_pred_file = fullfile(save_dir, [filename '_curspreds.txt']);
-        curs_pos_file  = fullfile(save_dir, [filename '_cursorpos.txt']);     
+        curs_pred_file = fullfile(save_dir, [filename 'curspreds.txt']);
+        curs_pos_file  = fullfile(save_dir, [filename 'cursorpos.txt']);     
 end
 
 %% Start data streaming
@@ -160,7 +162,7 @@ if params.online
     offline_data = [];
     
     if params.save_data
-        cerebus_file   = filename;
+        cerebus_file   = fullfile(save_dir, filename);
         cbmex('fileconfig', cerebus_file, '', 0);% open 'file storage' app, or stop ongoing recordings
         drawnow; %wait until the app opens
         bin_start_t = 0.0; % time at beginning of next bin
@@ -170,7 +172,7 @@ if params.online
         data.sys_time = cbmex('time');
     end    
     % start data buffering
-    cbmex('trialconfig',1,'nocontinuous'); drawnow;
+    cbmex('trialconfig',1,'nocontinuous');
 else
     %Binned Data File
     offline_data = LoadDataStruct(params.offline_data);
@@ -340,7 +342,11 @@ end
 if params.adapt
     YesNo = questdlg('Would you like to save the adapted decoder?','Save Decoder?','Yes','No','Yes');
     if strcmp(YesNo,'Yes')
-        filename = [params.save_dir filesep 'Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
+        dec_dir = [params.save_dir filesep datestr(now,'yyyy_mm_dd')];
+        if ~isdir(dec_dir)
+            mkdir(dec_dir);
+        end
+        filename = [dec_dir filesep 'Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
         save(filename,'-struct','neuron_decoder');
         fprintf('Saved Decoder File :\n%s\n',filename);
     else
@@ -415,8 +421,8 @@ end
 function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
     if params.online
         % read and flush data buffer
-        ts_cell_array = cbmex('trialdata',1); drawnow;
-        data.sys_time = cbmex('time'); drawnow;
+        ts_cell_array = cbmex('trialdata',1);
+        data.sys_time = cbmex('time');
         new_spikes = get_new_spikes(ts_cell_array,params.n_neurons,bin_dur);
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
     else
