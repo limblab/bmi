@@ -3,6 +3,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     dt_hist = 0.05*ones(1,10);
     F_x = 0;
     F_y = 0;
+    forces = [F_x F_y];
     
     x0_default = [pi/4 3*pi/4 0 0];
     x0 = x0_default;
@@ -12,44 +13,46 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x0(2)) arm_params.l(2)*sin(x0(2))];   
     
     while (m_data_1.Data.bmi_running)
-%     while true
         tic
         cycle_counter = cycle_counter+1;
-%         m_data_1.Data.bmi_running
-%         if mod(cycle_counter,100)==0
-%             clc
-%             disp(['Running arm model, cycle ' num2str(cycle_counter)])
-%         end
            
         EMG_data = m_data_1.Data.EMG_data;
         EMG_data = min(EMG_data,1);        
 
         arm_params.X_gain = -2*arm_params.left_handed+1;
 
-%         arm_params.F_end = [0 0];
-         
-%         xpc_data = 1;
-%         i=0;
-        fopen(xpc);
-        xpc_data = fread(xpc);
-        fclose(xpc);
-%         while ~isempty(xpc_data)            
-%             i = i+1;
-%             flushinput(xpc)
-%             xpc_data = fread(xpc);
-%             [i size(xpc_data)]
-%         end
-        
-        if length(xpc_data)>=72
-            F_x = typecast(uint8(xpc_data(41:48)),'double');
-            F_y = typecast(uint8(xpc_data(49:56)),'double');
-%             F_x = typecast(uint8(xpc_data(57:64)),'double');
-%             F_y = typecast(uint8(xpc_data(65:72)),'double');
-        else
-            disp('No udp data read')
+        if isobject(xpc)
+            fopen(xpc);
+            xpc_data = fread(xpc);
+            fclose(xpc);
+
+            if length(xpc_data)>=72
+                F_x = typecast(uint8(xpc_data(41:48)),'double');
+                F_y = typecast(uint8(xpc_data(49:56)),'double');
+            else
+                disp('No udp data read')
+            end
+        else            
+%             cycle_counter = 0
+%             cycle_counter = cycle_counter+1;
+            m_data_1.Data.EMG_data = .99*m_data_1.Data.EMG_data +...
+                .01*rand(size(m_data_1.Data.EMG_data)).*...
+                (2*(cos(cycle_counter/10000+[0 pi/3 1.5*pi pi/4])>0)-1);
+            m_data_1.Data.EMG_data = min(m_data_1.Data.EMG_data,1);
+            m_data_1.Data.EMG_data = max(m_data_1.Data.EMG_data,0);
+            m_data_1.Data.EMG_data
+                        
+            forces = .99*forces +...
+                .01*rand(1,2).*...
+                (2*(cos(2*pi*cycle_counter/1000+[pi/3 1.5*pi])>0)-1);
+            forces = min(forces,1);
+            forces = max(forces,-1);
+            F_x = 5*forces(1);
+            F_y = 5*forces(2);
+            
         end
-        arm_params.F_end = .1*[F_x F_y];
-        clc
+        arm_params.F_end = [F_x F_y];
+%         clc
 
         arm_params.musc_act = EMG_data;
         arm_params.musc_l0 = sqrt(2*arm_params.m_ins.^2)+...
@@ -84,11 +87,13 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
 
         m_data_2.Data.x_hand = xH;
 
-        dt_hist = shift(dt_hist,1);
+        dt_hist = circshift(dt_hist,[0 1]);
         dt_hist(1) = toc;
-%         set(h.h_plot_1,'YData',dt_hist)
-%         set(h.h_plot_2,'XData',[0 F_x],'YData',[0 F_y])
-%         drawnow
+        set(h.h_plot_1,'YData',dt_hist)
+        set(h.h_plot_2,'XData',[0 F_x],'YData',[0 F_y])
+        set(h.h_plot_3,'XData',[arm_params.X_sh(1) arm_params.X_e(1) xH(1)],...
+            'YData',[arm_params.X_sh(2) arm_params.X_e(2) xH(2)])
+        drawnow
     end
     if exist('xpc','var')
         fclose(xpc);
