@@ -71,7 +71,11 @@ Fg = [(m(1)*lc(1)+m(2)*l(1))*g*cos(theta(1));
 T_endpoint = [-(l(1)*sin(theta(1))+l(2)*sin(theta(2))) * F_end(1) + (l(1)*cos(theta(1))-l(2)*cos(theta(2))) * F_end(2);
     -l(2)*sin(theta(2)) * F_end(1) + l(2)*cos(theta(2)) * F_end(2)];
 
-tau =T+ [-theta(3)*c(1);-theta(4)*c(2)]; %input torques,
+% tau =T+ [-theta(3)*c(1);-theta(4)*c(2)]; %input torques,
+% tau =T+ [-sign(theta(3))*sqrt(abs(theta(3)))*c(1);-sign(theta(4))*sqrt(abs(theta(4)))*c(2)]; %input torques,
+% tau_c = [-theta(3)*c(1);-theta(4)*c(2)]; % viscosity
+tau_c = [ -min(max(theta(3),-1),1)*c(1) ; -min(max(theta(4),-1),1)*c(2)];
+tau = T + tau_c;
 xdot(1:2,1)=theta(3:4);
 xdot(3:4,1)= M\(T_endpoint + tau-Fg-C + musc_torque);
 

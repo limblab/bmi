@@ -16,7 +16,7 @@ arm_params.X_sh = [0 -.2];
 % Human
 arm_params.m = [1, 1];
 arm_params.l = [.5, .5]; %segment lengths l1, l2
-arm_params.c = [1, 1];
+arm_params.c = [3, 3];
 arm_params.X_sh = [0 -.7];
 arm_params.F_max = [200 200 200 200];
 
@@ -28,11 +28,11 @@ arm_params.i = [arm_params.m(1)*arm_params.l(1)^2/3, arm_params.m(2)*arm_params.
 % arm_params.Kl = .8;
 arm_params.Ksh = 30; 
 arm_params.Kl = .9;
-    musc_length = 0:.001:.04;
-    figure;
-    plot(musc_length,arm_params.F_max(1).*exp(arm_params.Ksh*(musc_length-arm_params.Kl*2*arm_params.m_ins(1))./(arm_params.Kl*2*arm_params.m_ins(1))));
-    ylim([0 500])
-    xlim([0 .04])
+%     musc_length = 0:.001:.04;
+%     figure;
+%     plot(musc_length,arm_params.F_max(1).*exp(arm_params.Ksh*(musc_length-arm_params.Kl*2*arm_params.m_ins(1))./(arm_params.Kl*2*arm_params.m_ins(1))));
+%     ylim([0 500])
+%     xlim([0 .04])
 
 arm_params.null_angles = [3*pi/4 pi/2];
 % arm_params.Kl = 1;

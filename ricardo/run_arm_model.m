@@ -35,18 +35,28 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         else            
 %             cycle_counter = 0
 %             cycle_counter = cycle_counter+1;
-            m_data_1.Data.EMG_data = .99*m_data_1.Data.EMG_data +...
-                .01*rand(size(m_data_1.Data.EMG_data)).*...
-                (2*(cos(cycle_counter/10000+[0 pi/3 1.5*pi pi/4])>0)-1);
-            m_data_1.Data.EMG_data = min(m_data_1.Data.EMG_data,1);
-            m_data_1.Data.EMG_data = max(m_data_1.Data.EMG_data,0);
-            m_data_1.Data.EMG_data
+%             m_data_1.Data.EMG_data = .9*m_data_1.Data.EMG_data +...
+%                 .1*rand(size(m_data_1.Data.EMG_data)).*...
+%                 (2*(cos(cycle_counter/10000+[0 pi/3 1.5*pi pi/4])>0)-1);
+%             m_data_1.Data.EMG_data =... .9*m_data_1.Data.EMG_data +...
+%                 1.*...
+%                 (.5*(cos(cycle_counter/100+[0 pi/3 1.5*pi pi/4]))+.5);
+%             m_data_1.Data.EMG_data = min(m_data_1.Data.EMG_data,1);
+%             m_data_1.Data.EMG_data = max(m_data_1.Data.EMG_data,0);
+%             m_data_1.Data.EMG_data = .5*ones(size(m_data_1.Data.EMG_data));
+%             m_data_1.Data.EMG_data
                         
-            forces = .99*forces +...
-                .01*rand(1,2).*...
-                (2*(cos(2*pi*cycle_counter/1000+[pi/3 1.5*pi])>0)-1);
+            if mod(cycle_counter,200)==0
+                m_data_1.Data.EMG_data = rand(1,4);
+%                 forces = .99*forces +...
+%                     .01*rand(1,2).*...
+%                     (2*(cos(2*pi*cycle_counter/1000+[pi/3 1.5*pi])>0)-1);
+%                 forces = 2*rand(1,2)-1;
+            end
+            
             forces = min(forces,1);
             forces = max(forces,-1);
+            forces = forces;
             F_x = 5*forces(1);
             F_y = 5*forces(2);
             
