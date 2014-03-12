@@ -10,7 +10,40 @@ clearxpc
 %
 % INPUTS : Additional parameters: "params" structure -> see adapt_params_defaults.m
 
+%% Open new Matlab instance and create files for data transfer across instances
+delete('data_1.dat')
+delete('data_2.dat')
 
+EMG_data = zeros(1,4);
+bmi_running = 1;
+fid = fopen('data_1.dat','w');
+fwrite(fid, EMG_data, 'double');
+fwrite(fid, bmi_running, 'double');
+fclose(fid);
+
+model_running = 0;
+x_hand = zeros(1,2);
+fid = fopen('data_2.dat','w');
+fwrite(fid, model_running, 'double');
+fwrite(fid, x_hand, 'double');
+fclose(fid);
+
+m_data_1 = memmapfile('data_1.dat',...
+'Format',{'double',[1 4],'EMG_data';...
+'double',[1 1],'bmi_running'},'Writable',true);
+
+m_data_2 = memmapfile('data_2.dat',...
+'Format',{'double',[1 1],'model_running';...
+'double',[1 2],'x_hand'},'Writable',true);
+tic
+
+m_data_1.Data.bmi_running = 1;
+dos('start matlab -sd "C:\Users\system administrator\Desktop\bmi\ricardo" -r arm_model_container');
+
+while(~m_data_2.Data.model_running)
+    pause(.1)
+end
+toc
 %% Parameters
 if nargin
     params = varargin{1};
@@ -95,9 +128,11 @@ keep_running = msgbox('Click ''ok'' to stop the BMI','BMI Controller');
 set(keep_running,'Position',[200 700 125 52]);
 
 if params.display_plots
+    subplot(211)
     curs_handle = plot(0,0,'ko');
     set(curs_handle,'MarkerSize',6,'MarkerFaceColor','k','MarkerEdgeColor','k');
-    xlim([-12 12]); ylim([-12 12]);
+%     xlim([-12 12]); ylim([-12 12]);
+    xlim([-100 100]); ylim([-100 100]);
     axis square; axis equal; axis manual;
     hold on;
     tgt_handle  = plot(0,0,'bo');
@@ -106,6 +141,16 @@ if params.display_plots
     'FitBoxToText','off','String',sprintf('xpred: %.2f',cursor_pos(1)));
     ypred_disp = annotation(gcf,'textbox', [0.65 0.79 0.16 0.05],...
     'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
+    subplot(223)
+    hold on
+    colors = jet(4);
+    emg_line_handle = nan(1,4);
+    for iH = 1:4
+        emg_line_handle(iH) = plot(0,0,'Color',colors(iH,:));
+    end
+    subplot(224)
+    emg_bar_handle = bar(zeros(1,4));
+    ylim([0 1])
 end
 
 %% Setup data files and directories for recording
@@ -177,7 +222,6 @@ if params.online
     % start data buffering
 %     cbmex('trialconfig',1,'nocontinuous');
     cbmex('trialconfig',1);
-    config = cbmex('config', 4);
     data.labels = cbmex('chanlabel',1:156);
 else
     %Binned Data File
@@ -196,10 +240,12 @@ try
                 ~params.online && bin_count < max_cycles) )
         
         if (reached_cycle_t)
+            clc
             %% timers and counters
             cycle_t = toc(t_buf); %this should be equal to bin_size, but may be longer if last cycle operations took too long.
             t_buf   = tic; % reset buffering timer
-            bin_count = bin_count +1;
+            bin_count = bin_count +1;           
+            
             
             %% Get and Process New Data
             data = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
@@ -222,18 +268,29 @@ try
 %                 %normal behavior, cursor mvt based on predictions
 %                 cursor_pos = predictions;
 %             end
-            if ~exist('x0','var')
-                x0 = zeros(1,4);
+%             if ~exist('x0','var')
+%                 x0 = zeros(1,4);
+%             end
+            if ~exist('EMG_max','var')
+                EMG_max = .1*ones(1,4);
+                EMG_min = 1*ones(1,4);
             end
-            [data,x0,xH] = run_arm_model(data,x0);
-            predictions = xH(1:2);
+            [EMG_data,EMG_max,EMG_min,EMG_raw] = process_emg(data,EMG_max,EMG_min);
+           
+            m_data_1.Data.EMG_data = EMG_data;
+%             m_data_1.Data.x0_ins_1 = 
+            predictions = .3*100*m_data_2.Data.x_hand;
+            
+%             [data,x0,xH] = run_arm_model(data,x0);
 
-            predictions = [0 0];
+%             predictions = xH(1:2);
+
+%             predictions = [0 0];
             cursor_pos = predictions;
 
             if exist('xpc','var')
                 % send predictions to xpc
-                fwrite(xpc, [1 1 cursor_pos],'float32');
+                fwrite(xpc, [1 1 cursor_pos],'float32');                
                 fprintf('%.2f\t%.2f\n',cursor_pos);
             end
             
@@ -281,6 +338,10 @@ try
             %display targets and cursor plots
             if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(curs_handle)
                 
+                for iH = 1:4
+                    set(emg_line_handle(iH),'XData',1:length(EMG_raw(:,iH)),'YData',EMG_raw(:,iH))
+                end
+                set(emg_bar_handle,'YData',EMG_data)
 %                 set(curs_handle,'XData',cursor_pos(1),'YData',cursor_pos(2));
                 set(curs_handle,'XData',predictions(1),'YData',predictions(2));
 %                 
@@ -330,6 +391,7 @@ try
         end
         cbmex('close');
     end
+    m_data_1.Data.bmi_running = 0;
     echoudp('off');
     fclose('all');
     if ishandle(keep_running)
@@ -344,6 +406,7 @@ catch e
         end
         cbmex('close');
     end
+    m_data_1.Data.bmi_running = 0;
     echoudp('off');
     fclose('all');
     if ishandle(keep_running)
@@ -460,11 +523,12 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
     data.spikes = [new_spikes'; data.spikes(1:end-1,:)];
     num_new_words = size(new_words,1);
     data.words  = [new_words;     data.words(1:end-num_new_words,:)];
-    data.analog = [new_analog; data.analog(1:end-1,:)];    
-    
-    if size(data.analog,1)>analog_fs*3
-        data.analog = data.analog(1:analog_fs*3,:);
-    end
+    data.analog = new_analog;
+%     data.analog = [new_analog; data.analog(1:end-1,:)];    
+%     
+%     if size(data.analog,1)>analog_fs*3
+%         data.analog = data.analog(1:analog_fs*3,:);
+%     end
 
     if ~isempty(new_target)
         data.pending_tgt_pos  = [ (new_target(3)+new_target(1))/2 ...

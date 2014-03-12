@@ -71,7 +71,7 @@ Fg = [(m(1)*lc(1)+m(2)*l(1))*g*cos(theta(1));
 T_endpoint = [-(l(1)*sin(theta(1))+l(2)*sin(theta(2))) * F_end(1) + (l(1)*cos(theta(1))-l(2)*cos(theta(2))) * F_end(2);
     -l(2)*sin(theta(2)) * F_end(1) + l(2)*cos(theta(2)) * F_end(2)];
 
-tau =T+[-theta(3)*c(1);-theta(4)*c(2)]; %input torques,
+tau =T+ [-theta(3)*c(1);-theta(4)*c(2)]; %input torques,
 xdot(1:2,1)=theta(3:4);
 xdot(3:4,1)= M\(T_endpoint + tau-Fg-C + musc_torque);
 
