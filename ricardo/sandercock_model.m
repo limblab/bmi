@@ -1,4 +1,4 @@
-function xdot = sandercock_model(t,theta,arm_params)
+function [xdot,out_var] = sandercock_model(t,theta,arm_params)
 
 %parameters
 g = arm_params.g;
@@ -73,10 +73,12 @@ T_endpoint = [-(l(1)*sin(theta(1))+l(2)*sin(theta(2))) * F_end(1) + (l(1)*cos(th
 
 % tau =T+ [-theta(3)*c(1);-theta(4)*c(2)]; %input torques,
 % tau =T+ [-sign(theta(3))*sqrt(abs(theta(3)))*c(1);-sign(theta(4))*sqrt(abs(theta(4)))*c(2)]; %input torques,
-% tau_c = [-theta(3)*c(1);-theta(4)*c(2)]; % viscosity
-tau_c = [ -min(max(theta(3),-1),1)*c(1) ; -min(max(theta(4),-1),1)*c(2)];
+tau_c = [-theta(3)*c(1);-theta(4)*c(2)]; % viscosity
+% tau_c = [ -min(max(theta(3),-1),1)*c(1) ; -min(max(theta(4),-1),1)*c(2)];
 tau = T + tau_c;
 xdot(1:2,1)=theta(3:4);
 xdot(3:4,1)= M\(T_endpoint + tau-Fg-C + musc_torque);
+
+out_var = [musc_force(:);F_end(:)]';
 
 end

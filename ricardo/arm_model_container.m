@@ -1,5 +1,5 @@
 % function arm_model_container
-    online = 0;
+    online = 1;
     if online
         XPC_IP = '192.168.0.1';
         XPC_PORT = 24998;
@@ -17,13 +17,17 @@
 
         m_data_2 = memmapfile('data_2.dat',...
         'Format',{'double',[1 1],'model_running';...
-        'double',[1 2],'x_hand'},'Writable',true);
+        'double',[1 2],'x_hand';...
+        'double',[1 4],'musc_force';...
+        'double',[1 2],'F_end'},'Writable',true);
     else
         xpc = [];
         m_data_1.Data.EMG_data = zeros(1,4);
         m_data_1.Data.bmi_running = 2;
         m_data_2.Data.model_running = 0;
         m_data_2.Data.x_hand = [0 0];
+        m_data_2.Data.musc_force = zeros(1,4);
+        m_data_2.Data.F_end = zeros(1,2);
     end
 
     %% Let know other instance that we're ready

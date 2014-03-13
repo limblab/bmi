@@ -10,15 +10,16 @@ arm_params.g = 0;
 % Monkey
 arm_params.m = [.2, .1];
 arm_params.l = [.2, .18]; %segment lengths l1, l2
-arm_params.F_max = [200 200 100 100];
+arm_params.F_max = [400 400 200 200];
 arm_params.X_sh = [0 -.2];
+arm_params.c = [1, 1];
 
 % Human
 arm_params.m = [1, 1];
 arm_params.l = [.5, .5]; %segment lengths l1, l2
-arm_params.c = [3, 3];
+arm_params.c = [1, 1];
 arm_params.X_sh = [0 -.7];
-arm_params.F_max = [200 200 200 200];
+arm_params.F_max = [400 400 400 400];
 
 arm_params.m_ins = [.02 .02 .02 .02];
 arm_params.lc = arm_params.l/2; %distance from center
@@ -26,8 +27,8 @@ arm_params.i = [arm_params.m(1)*arm_params.l(1)^2/3, arm_params.m(2)*arm_params.
 
 % arm_params.Ksh = 3;
 % arm_params.Kl = .8;
-arm_params.Ksh = 30; 
-arm_params.Kl = .9;
+arm_params.Ksh = 60; 
+arm_params.Kl = 1;
 %     musc_length = 0:.001:.04;
 %     figure;
 %     plot(musc_length,arm_params.F_max(1).*exp(arm_params.Ksh*(musc_length-arm_params.Kl*2*arm_params.m_ins(1))./(arm_params.Kl*2*arm_params.m_ins(1))));

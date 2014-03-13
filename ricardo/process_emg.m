@@ -1,8 +1,8 @@
-function [EMG_data,EMG_max,EMG_min,EMG_raw] = process_emg(data,EMG_max,EMG_min)
+function [EMG_data,EMG_max,EMG_min,EMG_raw,strings_to_match] = process_emg(data,EMG_max,EMG_min)
 
 emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
 emg_labels = data.labels(emg_channels);
-strings_to_match = {'EMG_AD';'EMG_PD';'EMG_BI';'EMG_TRI'};    
+strings_to_match = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'};    
 for iLabel = 1:length(strings_to_match)
     idx(iLabel) = find(strcmp(emg_labels,strings_to_match(iLabel)));
 end

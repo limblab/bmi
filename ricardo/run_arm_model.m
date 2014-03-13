@@ -75,7 +75,10 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         t_temp = [0 dt_hist(1)];
         
         old_X_h = arm_params.X_h;
-        [~,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0);
+        [t,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0);
+        [~,out_var] = sandercock_model(t,x(end,:),arm_params);
+        m_data_2.Data.musc_force = out_var(1:4);
+        m_data_2.Data.F_end = out_var(5:6);
         
         arm_params.theta = x(end,1:2);
         arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x(end,1)) arm_params.l(1)*sin(x(end,1))];

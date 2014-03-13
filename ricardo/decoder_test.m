@@ -23,9 +23,13 @@ fclose(fid);
 
 model_running = 0;
 x_hand = zeros(1,2);
+musc_force = zeros(1,4);
+F_end = zeros(1,2);
 fid = fopen('data_2.dat','w');
 fwrite(fid, model_running, 'double');
 fwrite(fid, x_hand, 'double');
+fwrite(fid, musc_force, 'double');
+fwrite(fid, F_end, 'double');
 fclose(fid);
 
 m_data_1 = memmapfile('data_1.dat',...
@@ -34,7 +38,9 @@ m_data_1 = memmapfile('data_1.dat',...
 
 m_data_2 = memmapfile('data_2.dat',...
 'Format',{'double',[1 1],'model_running';...
-'double',[1 2],'x_hand'},'Writable',true);
+'double',[1 2],'x_hand';...
+'double',[1 4],'musc_force';...
+'double',[1 2],'F_end'},'Writable',true);
 tic
 
 m_data_1.Data.bmi_running = 1;
@@ -52,6 +58,7 @@ else
     params = bmi_params_defaults;
 end
 
+params.output = 'xpc';
 %% UDP port for XPC
 if strcmpi(params.output,'xpc')
     XPC_IP   = '192.168.0.1';
@@ -73,11 +80,11 @@ end
 % end
 
 % load template trajectories
-if params.cursor_assist
-    % cursor_traj is a file name to a structure containing the fields
-    % 'mean_paths' and 'back_paths', each of size < 101 x 2 x n_tgt >
-    cursor_traj = load(params.cursor_traj);
-end
+% if params.cursor_assist
+%     % cursor_traj is a file name to a structure containing the fields
+%     % 'mean_paths' and 'back_paths', each of size < 101 x 2 x n_tgt >
+%     cursor_traj = load(params.cursor_traj);
+% end
 
 %% Initialization
 
@@ -131,16 +138,16 @@ if params.display_plots
     subplot(211)
     curs_handle = plot(0,0,'ko');
     set(curs_handle,'MarkerSize',6,'MarkerFaceColor','k','MarkerEdgeColor','k');
-%     xlim([-12 12]); ylim([-12 12]);
+    %     xlim([-12 12]); ylim([-12 12]);
     xlim([-100 100]); ylim([-100 100]);
     axis square; axis equal; axis manual;
     hold on;
     tgt_handle  = plot(0,0,'bo');
     set(tgt_handle,'LineWidth',2,'MarkerSize',15);
     xpred_disp = annotation(gcf,'textbox', [0.65 0.85 0.16 0.05],...
-    'FitBoxToText','off','String',sprintf('xpred: %.2f',cursor_pos(1)));
+        'FitBoxToText','off','String',sprintf('xpred: %.2f',cursor_pos(1)));
     ypred_disp = annotation(gcf,'textbox', [0.65 0.79 0.16 0.05],...
-    'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
+        'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
     subplot(223)
     hold on
     colors = jet(4);
@@ -153,46 +160,22 @@ if params.display_plots
     ylim([0 1])
 end
 
-%% Setup data files and directories for recording
 if params.save_data
-        
-        if params.online
-            date_str = datestr(now,'yyyy_mm_dd_HHMMSS');
-            filename = [params.save_name '_' date_str '_'];
-            date_str = datestr(now,'yyyy_mm_dd');
-        else
-            [path_name,filename,~] = fileparts(params.offline_data);
-            filename = [filename '_'];
-            date_str = path_name(find(path_name==filesep,1,'last')+1:end);
-        end
-
-        save_dir = [params.save_dir filesep date_str];
-        if ~isdir(save_dir)
-            mkdir(save_dir);
-        end
-        
-%         if params.adapt
-%             adapt_dir = [save_dir filesep filename 'adapt_decoders'];
-%             conflict_dir = isdir(adapt_dir);
-%             num_iter = 1;
-%             while conflict_dir
-%                 num_iter = num_iter+1;
-%                 adapt_dir = sprintf('%s%d%s',[save_dir filesep filename 'adapt_decoders('],num_iter,')');
-%                 conflict_dir = isdir(adapt_dir);
-%             end
-%             mkdir(adapt_dir);
-%         end
-        
-        %Setup files for recording parameters and neural and cursor data:
-        save(            fullfile(save_dir, [filename 'params.mat']),'-struct','params');
-        spike_file     = fullfile(save_dir, [filename 'spikes.txt']);
-        if ~strcmp(params.mode,'direct')
-            emg_file   = fullfile(save_dir, [filename 'emgpreds.txt']);
-        end
-        curs_pred_file = fullfile(save_dir, [filename 'curspreds.txt']);
-        curs_pos_file  = fullfile(save_dir, [filename 'cursorpos.txt']);     
+    if params.online
+        date_str = datestr(now,'yyyy_mm_dd_HHMMSS');
+        filename = [params.save_name '_' date_str '_'];
+        date_str = datestr(now,'yyyy_mm_dd');
+    else
+        [path_name,filename,~] = fileparts(params.offline_data);
+        filename = [filename '_'];
+        date_str = path_name(find(path_name==filesep,1,'last')+1:end);
+    end
+    
+    save_dir = [params.save_dir filesep date_str];
+    if ~isdir(save_dir)
+        mkdir(save_dir);
+    end
 end
-
 %% Start data streaming
 if params.online   
     % Cerebus Stream via Central
@@ -230,6 +213,68 @@ else
     bin_start_t = double(offline_data.timeframe(1));
 end
 
+%% Setup data files and directories for recording
+if params.save_data        
+%     datafile = matfile(fullfile(save_dir, [filename 'data.mat']));
+%     save(fullfile(save_dir, [filename 'data.mat']),'-v7.3');
+%     datafile.params = params;
+%     datafile.spikes = [];
+%     datafile.analog = [];
+%     datafile.emg = [];
+%     datafile.cursorpos = [];
+%     datafile.curspreds = [];
+%     datafile.musc_torque = [];
+%     datafile.F_end = [];
+%     datafile.t = [];
+%     datafile.chan_labels = data.labels;
+    
+    %         if params.adapt
+    %             adapt_dir = [save_dir filesep filename 'adapt_decoders'];
+    %             conflict_dir = isdir(adapt_dir);
+    %             num_iter = 1;
+    %             while conflict_dir
+    %                 num_iter = num_iter+1;
+    %                 adapt_dir = sprintf('%s%d%s',[save_dir filesep filename 'adapt_decoders('],num_iter,')');
+    %                 conflict_dir = isdir(adapt_dir);
+    %             end
+    %             mkdir(adapt_dir);
+    %         end
+       
+%     
+    data_file = fullfile(save_dir, [filename 'data.txt']);        
+    data_temp = get_new_data(params,data,offline_data,bin_count,1,w);
+    [~,~,~,~,emg_chans] = process_emg(data_temp,zeros(1,4),zeros(1,4));
+    
+    headers = 't_bin_start,';
+    for i = 1:params.n_neurons
+%         headers = [headers 'spikes_chan' num2str(i) ','];
+        spike_chans{i} = ['spikes_chan' num2str(i)];
+    end
+    
+    headers = ['t_bin_start',spike_chans,'pred_x','pred_y',...
+        emg_chans,'F_x','F_y','musc_force_1','musc_force_2','musc_force_3','musc_force_4'];
+%     headers = headers(1:end-1);    
+%     headers = [headers '\r\n'];
+    fid_data = fopen(data_file,'a');
+    
+     %Setup files for recording parameters and neural and cursor data:
+    save(fullfile(save_dir, [filename 'params.mat']),'-struct','params');
+    save(fullfile(save_dir, [filename 'params.mat']),'headers','-append');
+%     fprintf(fid_data,'%s',headers);
+%     fclose(fid);
+% %     params.save_vars = {'bin_start_t','spikes
+% %     headers = ['t_bin_start' spike_chans analog_chans];
+% %     save(data_file,'headers','-ascii');
+%     
+%     spike_file     = fullfile(save_dir, [filename 'spikes.txt']);
+%     if ~strcmp(params.mode,'direct')
+%         emg_file   = fullfile(save_dir, [filename 'emgpreds.txt']);
+%     end
+%     curs_pred_file = fullfile(save_dir, [filename 'curspreds.txt']);
+%     curs_pos_file  = fullfile(save_dir, [filename 'cursorpos.txt']);
+end
+
+%%
 t_buf   = tic; %data buffering timer
 drawnow;
 
@@ -275,18 +320,39 @@ try
                 EMG_max = .1*ones(1,4);
                 EMG_min = 1*ones(1,4);
             end
-            [EMG_data,EMG_max,EMG_min,EMG_raw] = process_emg(data,EMG_max,EMG_min);
+            [EMG_data,EMG_max,EMG_min,EMG_raw,~] = process_emg(data,EMG_max,EMG_min);
            
             m_data_1.Data.EMG_data = EMG_data;
 %             m_data_1.Data.x0_ins_1 = 
             predictions = .3*100*m_data_2.Data.x_hand;
             
+            cursor_pos = predictions; 
+
+%             datafile.t = [datafile.t; bin_start_t];
+            bin_start_t = data.sys_time;
+            
+%              headers = ['t_bin_start',spike_chans,'pred_x','pred_y',...
+%                 emg_chans,'F_x','F_y','musc_force_1','musc_force_2','musc_force_3','musc_force_4'];
+            
+            tmp_data = [bin_start_t data.spikes(1,:) predictions EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force];
+            save(data_file,'tmp_data','-append','-ascii');
+
+%             datafile.spikes(end+1,1:96) = data.spikes(1,:);
+            
+%             datafile.spikes = [datafile.spikes; data.spikes(1,:)];   
+%             datafile.analog = [datafile.analog; data.analog(1,:)];
+%             datafile.musc_force = [datafile.musc_force; m_data_2.Data.musc_force];
+%             datafile.F_end = [datafile.F_end; m_data_2.Data.F_end];
+%             datafile.cursorpos = [datafile.cursorpos; cursor_pos];
+%             datafile.curspreds = [datafile.curspreds; predictions];
+%             datafile.emg = [datafile.emg; EMG_data];
+%             
 %             [data,x0,xH] = run_arm_model(data,x0);
 
 %             predictions = xH(1:2);
 
 %             predictions = [0 0];
-            cursor_pos = predictions;
+
 
             if exist('xpc','var')
                 % send predictions to xpc
@@ -308,7 +374,7 @@ try
 %                 fprintf('Average Matlab Operation Time : %.2fms\n',ave_op_time*1000);
 %             end
             
-%             % save raw data
+            % save raw data
 %             if params.save_data
 %                 % spikes are timed from beginning of this bin
 %                 % because they occured in the past relatively to now
@@ -589,12 +655,14 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
 end                
 function new_spikes = get_new_spikes(ts_cell_array,n_neurons,binsize)
 
-    new_spikes = zeros(n_neurons,1);
+%     new_spikes = zeros(n_neurons,1);
 
     %firing rate for new spikes
-    for i = 1:n_neurons
-        new_spikes(i) = length(ts_cell_array{i,2})/binsize;
-    end
+%     for i = 1:n_neurons
+%         new_spikes(i) = length(ts_cell_array{i,2})/binsize;
+%     end
+    % TODO: get spikes for sorted channels
+    new_spikes = cellfun(@length,ts_cell_array(1:n_neurons,2))/binsize;
 
     %remove artifact (80% of neurons have spikes for this bin)
     while (length(nonzeros(new_spikes))>.8*n_neurons)
