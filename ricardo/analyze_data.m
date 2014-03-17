@@ -1,3 +1,13 @@
+filename = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\2014_03_14\Jango_WF_Adapt_2014_03_14_090744_';
+delimiter = ' ';
+formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
+fileID = fopen([filename 'data.txt'],'r');
+dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'MultipleDelimsAsOne', true, 'EmptyValue' ,NaN, 'ReturnOnError', false);
+fclose(fileID);
+data = [dataArray{1:end-1}];
+load([filename 'params.mat'])
+clearvars filename delimiter formatSpec fileID dataArray ans;
+
 t = data(:,1);
 F = [data(:,strcmp(headers,'F_x')) data(:,strcmp(headers,'F_y'))];
 X = [data(:,strcmp(headers,'pred_x')) data(:,strcmp(headers,'pred_y'))];

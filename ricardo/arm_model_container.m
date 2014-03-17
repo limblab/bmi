@@ -19,7 +19,9 @@
         'Format',{'double',[1 1],'model_running';...
         'double',[1 2],'x_hand';...
         'double',[1 4],'musc_force';...
-        'double',[1 2],'F_end'},'Writable',true);
+        'double',[1 2],'F_end';...
+        'double',[1 2],'shoulder_pos';...
+        'double',[1 2],'elbow_pos'},'Writable',true);
     else
         xpc = [];
         m_data_1.Data.EMG_data = zeros(1,4);
@@ -28,6 +30,8 @@
         m_data_2.Data.x_hand = [0 0];
         m_data_2.Data.musc_force = zeros(1,4);
         m_data_2.Data.F_end = zeros(1,2);
+        m_data_2.Data.shoulder_pos = zeros(1,2);
+        m_data_2.Data.elbow_pos = zeros(1,2);
     end
 
     %% Let know other instance that we're ready

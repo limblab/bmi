@@ -56,7 +56,6 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
             
             forces = min(forces,1);
             forces = max(forces,-1);
-            forces = forces;
             F_x = 5*forces(1);
             F_y = 5*forces(2);
             
@@ -85,7 +84,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x(end,2)) arm_params.l(2)*sin(x(end,2))];   
                 
         % If model becomes unstable, restart
-        if abs(arm_params.X_h(1:2)-old_X_h(1:2))>.1
+        if (abs(arm_params.X_h(1:2)-old_X_h(1:2))>.1 | (abs(arm_params.X_h) > 0.2))
             x0 = x0_default;
             [~,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0);
             arm_params.theta = x(end,1:2);
@@ -97,8 +96,10 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         
         xH = arm_params.X_h;
         xH(1) = arm_params.X_gain * xH(1);
-
+        
         m_data_2.Data.x_hand = xH;
+        m_data_2.Data.elbow_pos = 100*arm_params.X_e;
+        m_data_2.Data.shoulder_pos = 100*arm_params.X_sh;
 
         dt_hist = circshift(dt_hist,[0 1]);
         dt_hist(1) = toc;

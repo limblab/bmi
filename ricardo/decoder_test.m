@@ -25,11 +25,15 @@ model_running = 0;
 x_hand = zeros(1,2);
 musc_force = zeros(1,4);
 F_end = zeros(1,2);
+shoulder_pos = zeros(1,2);
+elbow_pos = zeros(1,2);
 fid = fopen('data_2.dat','w');
 fwrite(fid, model_running, 'double');
 fwrite(fid, x_hand, 'double');
 fwrite(fid, musc_force, 'double');
 fwrite(fid, F_end, 'double');
+fwrite(fid, shoulder_pos, 'double');
+fwrite(fid, elbow_pos, 'double');
 fclose(fid);
 
 m_data_1 = memmapfile('data_1.dat',...
@@ -40,7 +44,9 @@ m_data_2 = memmapfile('data_2.dat',...
 'Format',{'double',[1 1],'model_running';...
 'double',[1 2],'x_hand';...
 'double',[1 4],'musc_force';...
-'double',[1 2],'F_end'},'Writable',true);
+'double',[1 2],'F_end';...
+'double',[1 2],'shoulder_pos';...
+'double',[1 2],'elbow_pos'},'Writable',true);
 tic
 
 m_data_1.Data.bmi_running = 1;
@@ -324,7 +330,7 @@ try
            
             m_data_1.Data.EMG_data = EMG_data;
 %             m_data_1.Data.x0_ins_1 = 
-            predictions = .3*100*m_data_2.Data.x_hand;
+            predictions = 100*m_data_2.Data.x_hand;
             
             cursor_pos = predictions; 
 
@@ -356,7 +362,7 @@ try
 
             if exist('xpc','var')
                 % send predictions to xpc
-                fwrite(xpc, [1 1 cursor_pos],'float32');                
+                fwrite(xpc, [1 1 cursor_pos m_data_2.Data.shoulder_pos m_data_2.Data.elbow_pos],'float32');                
                 fprintf('%.2f\t%.2f\n',cursor_pos);
             end
             

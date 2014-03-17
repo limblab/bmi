@@ -8,18 +8,18 @@ arm_params.num_training_sets = 2000;
 arm_params.g = 0;
 
 % Monkey
-arm_params.m = [.2, .1];
+arm_params.m = [.5, .5];
 arm_params.l = [.2, .18]; %segment lengths l1, l2
-arm_params.F_max = [400 400 200 200];
+arm_params.F_max = [500 500 500 500];
 arm_params.X_sh = [0 -.2];
-arm_params.c = [1, 1];
+arm_params.c = [5, 5];
 
 % Human
 arm_params.m = [1, 1];
 arm_params.l = [.5, .5]; %segment lengths l1, l2
-arm_params.c = [1, 1];
+arm_params.c = [30, 30];
 arm_params.X_sh = [0 -.7];
-arm_params.F_max = [400 400 400 400];
+arm_params.F_max = [3000 3000 3000 3000];
 
 arm_params.m_ins = [.02 .02 .02 .02];
 arm_params.lc = arm_params.l/2; %distance from center
