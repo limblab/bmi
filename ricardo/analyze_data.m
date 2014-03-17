@@ -1,4 +1,4 @@
-filename = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\2014_03_14\Jango_WF_Adapt_2014_03_14_090744_';
+filename = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\2014_03_14\Jango_WF_Adapt_2014_03_14_161137_';
 delimiter = ' ';
 formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
 fileID = fopen([filename 'data.txt'],'r');
