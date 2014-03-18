@@ -7,6 +7,7 @@ function [cursor_pos,data] = cursor_assist(data,cursor_pos,cursor_traj)
  if data.tgt_on && data.tgt_id % outer target on
      if ~data.effort_flag && current_ave_fr >= 1.25*data.ave_fr
          data.effort_flag = true;
+%          fprintf('Effort Detected');
      end
      if data.effort_flag
          %increase trajectory by increments of 4% (25 bins to complete traj)

@@ -1,5 +1,5 @@
 function [g1_new, g2_new] = backpropagation_through_time(S2EMG_w, ...
-    EMG2F_w, S, EMG, F, S_lag, EMG_lag)
+    EMG2F_w, S, EMG, F, S_lag, EMG_lag, lambda)
 %BPTT Computes the backpropagation gradient when there is a recurrent 
 % EMG has, in each row, a lagged history of EMG, where the first row
 % is the newest value and the last row is the oldest.
@@ -29,6 +29,8 @@ for t = 1:EMG_lag
 end
 
 g1_new = -g/EMG_lag;
+g1_new(2:end, :) = g1_new(2:end, :) - lambda*S2EMG_w(2:end, :);
+
 g2_new = -[EMG2F_w(:, 1)*df(1) EMG2F_w(:, 2)*df(2)];
 
 end
