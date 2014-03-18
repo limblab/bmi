@@ -26,13 +26,6 @@ function bmi_params = bmi_params_defaults(varargin)
 %   'save_dir'      : path in which to save updated decoder
 %   'offline_data'  : binnedData file to be replayed (when 'online'=false)
 
-% dec_path = '\\citadel\data\Jango_12a1\SavedFilters\';
-dec_path = 'E:\Data-lab1\12A1-Jango\SavedFilters\';
-% dec_path = '\\citadel\data\Jaco_8I1\SavedFilters\';
-
-% N2F = [dec_path 'Jango_2014-01-03_WF_001_N2F950_Decoder.mat'];
-N2E = [dec_path 'Jango_WF_2014-03-17_001_N2E_Decoder.mat'];
-
 % online decoders 03/04
 % N2E = 'new_zeros';
 % N2E = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\2014_02_26\Adapted_decoder_2014_02_26_175948_End.mat';
@@ -41,19 +34,7 @@ N2E = [dec_path 'Jango_WF_2014-03-17_001_N2E_Decoder.mat'];
 % N2E = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\2014_02_27\Adapted_decoder_2014_02_27_152235_End.mat';
 % E2F = [dec_path 'Jango_2014-01-03_WF_001_E2F500_Decoder.mat'];
 E2F = [dec_path 'Jango_WF_2014-03-17_001_E2F_Decoder.mat'];
-
-% N2E = 'E:\Data-lab1\8I1-Jaco\CerebusData\Adaptation\2014_03_04\Adapted_decoder_2014_03_04_164555_End.mat';
-% N2E = 'E:\Data-lab1\8I1-Jaco\CerebusData\Adaptation\2014_03_06\Adapted_decoder_2014_03_06_172017_End.mat';
-% E2F = [dec_path 'Jaco_2014_03_03_WF_R10T4_001_E2F_Decoder.mat'];
-
-% offline decoders 03/03
-% N2E = [dec_path 'Jaco_2014_03_03_WF_R10T4_001_N2E_Decoder.mat'];
-% E2F = [dec_path 'Jaco_2014_03_03_WF_R10T4_001_E2F_Decoder.mat'];
-% N2E = [dec_path 'Jango_2014_02_26_N2E_offline.mat'];
-% E2F = [dec_path 'Jango_WF_Adapt_2014_02_26001_E2F_Decoder.mat'];
-
-% E2F = [dec_path 'E2F_4EMGs_1bin_Fake_Decoder.mat'];
-% Ehat2F= [dec_path 'Jango_2013-12-11_WF_002_Ehat2F_Decoder.mat'];
+E2F.H = zeros(61,2);
 
 bmi_params_defaults = struct( ...
     'mode'          ,'emg_cascade',...
@@ -76,7 +57,7 @@ bmi_params_defaults = struct( ...
     'db_size'       ,34,...
     'ave_fr'        ,10,...
     ...
-    'lambda'        ,1e-6,...
+    'lambda'        ,0.0015,...
     'LR'            ,1e-9,...
     'batch_length'  ,1,...
     'delay'         ,0.1,...
