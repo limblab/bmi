@@ -28,10 +28,10 @@ EMG_data = mean(EMG_raw);
 EMG_max = max(.99*EMG_max,1*EMG_data);
 EMG_min = min(1.01*EMG_min,EMG_data+.1);
 % EMG_data = min(EMG_data,2000);
-% EMG_max(1:end) = 1000;
+EMG_max(1:end) = 5000;
 % EMG_data = (EMG_data-EMG_min)./(EMG_max-EMG_min);
-% EMG_data = EMG_data./EMG_max;
-EMG_data = EMG_data./[4000 4000 2000 2000];
+EMG_data = EMG_data./EMG_max;
+% EMG_data = EMG_data./[4000 4000 2000 2000];
 disp(num2str(EMG_data))
 disp(num2str(EMG_min))
 disp(num2str(EMG_max))

@@ -1,5 +1,11 @@
 function varargout = decoder_test(varargin)
 clearxpc
+current_location = mfilename('fullpath');
+[current_folder,~,~] = fileparts(current_location);
+cd(current_folder)
+add_these = strfind(current_folder,'\');
+add_these = current_folder(1:add_these(end)-1);
+addpath(genpath(add_these))
 % run_decoder: This function connects to the Cerebus stream via
 % the Central application, produces prediction by a two step
 % process in which spike trains predict emgs and emgs predict forces.

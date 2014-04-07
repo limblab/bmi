@@ -36,26 +36,8 @@
 
     %% Let know other instance that we're ready
     m_data_2.Data.model_running = 1;
-    
-    h = [];
-    
-    close all
-    h.h_fig = figure;
-    subplot(221)
-    h.h_plot_1 = plot(1:10,zeros(1,10),'-');    
-    ylim([0 0.1])
-    subplot(222)
-    plot(0,0,'.k')
-    h.h_plot_2 = plot([0 0],[0 0],'-r');
-    xlim([-10 10])
-    ylim([-10 10])    
-    axis square
-    subplot(223)    
-    h.h_plot_3 = plot(0,0,'-k');    
-    xlim([-1 1])
-    ylim([-1 1]) 
-    axis square
-    drawnow
+    arm_params = get_default_arm_params;
+    h = create_arm_model_figure;
     
     run_arm_model(m_data_1,m_data_2,xpc,h)
     

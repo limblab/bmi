@@ -6,13 +6,14 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     forces = [F_x F_y];
     
     x0_default = [pi/4 3*pi/4 0 0];
-    x0 = x0_default;
-    arm_params = get_arm_params();
-    arm_params.theta = x0(1:2);
-    arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x0(1)) arm_params.l(1)*sin(x0(1))];
-    arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x0(2)) arm_params.l(2)*sin(x0(2))];   
+    x0 = x0_default;   
     
     while (m_data_1.Data.bmi_running)
+        arm_params = evalin('base','arm_params');
+        arm_params.theta = x0(1:2);
+        arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x0(1)) arm_params.l(1)*sin(x0(1))];
+        arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x0(2)) arm_params.l(2)*sin(x0(2))];   
+    
         tic
         cycle_counter = cycle_counter+1;
            
@@ -60,15 +61,28 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
             F_y = 5*forces(2);
             
         end
+        
         arm_params.F_end = [F_x F_y];
 %         clc
-
+        if arm_params.X_h(1) < -.12
+            arm_params.F_end(1) = 5;
+        end
+        if arm_params.X_h(1) > .12
+            arm_params.F_end(1) = -5;
+        end
+        if arm_params.X_h(2) < -.1
+            arm_params.F_end(2) = 5;
+        end
+        if arm_params.X_h(2) > .1
+            arm_params.F_end(2) = -5;
+        end
+        
         arm_params.musc_act = EMG_data;
         arm_params.musc_l0 = sqrt(2*arm_params.m_ins.^2)+...
                         0*sqrt(2*arm_params.m_ins.^2)/5.*...
                         (rand(1,length(arm_params.m_ins))-.5);
-        arm_params.theta_ref = [3*pi/4 pi/2]; 
-        arm_params.X_s = [0 0];
+%         arm_params.theta_ref = [3*pi/4 pi/2]; 
+%         arm_params.X_s = [0 0];
 
 %         t_temp = [0 mean(dt_hist)];
         t_temp = [0 dt_hist(1)];
