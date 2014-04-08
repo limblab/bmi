@@ -18,7 +18,11 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         cycle_counter = cycle_counter+1;
            
         EMG_data = m_data_1.Data.EMG_data;
-        EMG_data = min(EMG_data,1);        
+        EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
+        EMG_data(isnan(EMG_data)) = 0;
+        EMG_data = min(EMG_data,1);
+        EMG_data = max(EMG_data,0);
+%         EMG_data = min(EMG_data,1);
 
         arm_params.X_gain = -2*arm_params.left_handed+1;
 
@@ -121,6 +125,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         set(h.h_plot_2,'XData',[0 F_x],'YData',[0 F_y])
         set(h.h_plot_3,'XData',[arm_params.X_sh(1) arm_params.X_e(1) xH(1)],...
             'YData',[arm_params.X_sh(2) arm_params.X_e(2) xH(2)])
+        set(h.h_emg_bar,'YData',EMG_data)
         drawnow
     end
     if exist('xpc','var')

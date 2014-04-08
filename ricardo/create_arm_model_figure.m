@@ -3,25 +3,29 @@ function h = create_arm_model_figure
 
     close all
     h.h_fig = figure;
-    subplot(221)
-    h.h_plot_1 = plot(1:10,zeros(1,10),'-');    
+    subplot(321)
+    h.h_plot_1 = plot(1:10,zeros(1,10),'-');
     ylim([0 0.1])
-    subplot(222)
+    subplot(322)
     plot(0,0,'.k')
     h.h_plot_2 = plot([0 0],[0 0],'-r');
     xlim([-10 10])
     ylim([-10 10])    
     axis square
-    subplot(223)    
+    subplot(323)    
     h.h_plot_3 = plot(0,0,'-k');    
     xlim([-1 1])
     ylim([-1 1]) 
     axis square
+    subplot(325)    
+    h.h_emg_bar = bar(zeros(1,4));
+    ylim([0 1])
+    
     drawnow
 
     arm_params = evalin('base','arm_params');
 
-    h.controls = uipanel('Position',[.55 .05 .4 .4],'Units','normalized');
+    h.controls = uipanel('Position',[.55 .05 .4 .55],'Units','normalized');
 
     h.textboxes = uipanel('Units','normalized','Position',[0 .1 1 .4],...
         'Parent',h.controls);
