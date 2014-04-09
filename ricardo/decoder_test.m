@@ -1,4 +1,4 @@
-function varargout = decoder_test(varargin)
+function decoder_test(varargin)
 current_location = mfilename('fullpath');
 [current_folder,~,~] = fileparts(current_location);
 cd(current_folder)
@@ -56,7 +56,7 @@ w = Words;
 
 % data structure to store inputs
 % data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
-data = get_default_data;
+data = get_default_data(params);
           
 % % dataset to store older data for batch adaptation
 % previous_trials = dataset();
