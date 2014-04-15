@@ -1,7 +1,8 @@
 function handles = setup_datafiles(params,handles,data,offline_data,w)
 
 if params.save_data 
-    handles.data_file = fullfile(handles.save_dir, [handles.filename 'data.txt']);        
+    handles = get_new_filename(params,handles);
+    handles.data_file = fullfile(handles.save_dir, [handles.filename '_data.txt']);        
     data_temp = get_new_data(params,data,offline_data,0,1,w);
     [~,~,emg_chans] = process_emg(data_temp);
 
@@ -17,10 +18,15 @@ if params.save_data
     fid_data = fopen(handles.data_file,'a');
 
      %Setup files for recording parameters and neural and cursor data:
-    save(fullfile(handles.save_dir, [handles.filename 'params.mat']),'-struct','params');
-    save(fullfile(handles.save_dir, [handles.filename 'params.mat']),'headers','-append');
+    save(fullfile(handles.save_dir, [handles.filename '_params.mat']),'-struct','params');
+    save(fullfile(handles.save_dir, [handles.filename '_params.mat']),'headers','-append');
     for iHeader = 1:length(headers)
         fprintf(fid_data,'%s',[headers{iHeader} ' ']);
     end
+    fprintf(fid_data,'\n');
     fclose(fid_data);
+    
+    handles.cerebus_file = fullfile(handles.save_dir, handles.filename);
+    cbmex('fileconfig', handles.cerebus_file, '', 0)
+    drawnow
 end

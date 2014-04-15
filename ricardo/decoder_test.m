@@ -89,7 +89,7 @@ else
 end
 
 %% Setup data files and directories for recording
-handles = setup_datafiles(params,handles,data,offline_data,w);
+% handles = setup_datafiles(params,handles,data,offline_data,w);
 
 %%
 t_buf = tic; %data buffering timer

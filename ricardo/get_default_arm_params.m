@@ -8,9 +8,9 @@ arm_params.m = [.5, .5];
 arm_params.l = [.2, .2]; %segment lengths l1, l2
 arm_params.F_max = [1000 1000 1000 1000];
 arm_params.X_sh = [.05 -.3];
-arm_params.c = [10, 10];
+arm_params.c = [5, 5];
 arm_params.emg_min = zeros(1,4);
-arm_params.emg_max = 2000*ones(1,4);
+arm_params.emg_max = 1000*ones(1,4);
 
 % % Human
 % arm_params.m = [1, 1];
