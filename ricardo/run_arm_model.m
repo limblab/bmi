@@ -7,8 +7,10 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     
     x0_default = [pi/4 3*pi/4 0 0];
     x0 = x0_default;   
-    
+    i = 0;
+    xpc_data = zeros(512,1);
     while (m_data_1.Data.bmi_running)
+        i = i+1;
         arm_params = evalin('base','arm_params');
         arm_params.theta = x0(1:2);
         arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x0(1)) arm_params.l(1)*sin(x0(1))];
@@ -25,7 +27,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
 %         EMG_data = min(EMG_data,1);
 
         arm_params.X_gain = -2*arm_params.left_handed+1;
-
+            
         if isobject(xpc)
             fopen(xpc);
             xpc_data = fread(xpc);
@@ -128,11 +130,11 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         set(h.h_emg_bar,'YData',EMG_data)
         drawnow
     end
-    if exist('xpc','var')
+    if ~isempty('xpc')
         fclose(xpc);
         delete(xpc);
         clear xpc;
         close all
-        exit
+%         exit
     end
 end

@@ -105,7 +105,7 @@ try
         if (reached_cycle_t)
             if get(handles.record,'Value') && ~recording
                 recording = 1;
-                handles = setup_datafiles(params,handles,data,offline_data,w);
+                [params,handles] = setup_datafiles(params,handles,data,offline_data,w);
                 cbmex('fileconfig', handles.cerebus_file, '', 1);
                 data.sys_time = cbmex('time');
             end

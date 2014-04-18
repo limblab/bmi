@@ -6,9 +6,11 @@ if online
     set(xpc,'ByteOrder','littleEndian');
     set(xpc,'LocalHost','192.168.0.10');
     set(xpc,'LocalPort',24998);
-    set(xpc,'Timeout',.1);
+    set(xpc,'Timeout',.05);
     set(xpc,'InputBufferSize',512);
     set(xpc,'InputDatagramPacketSize',512);
+    set(xpc, 'ReadAsyncMode', 'continuous');
+%     fopen(xpc);
 
     m_data_1 = memmapfile('data_1.dat',...
     'Format',{'double',[1 4],'EMG_data';...
