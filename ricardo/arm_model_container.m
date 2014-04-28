@@ -7,8 +7,8 @@ if online
     set(xpc,'LocalHost','192.168.0.10');
     set(xpc,'LocalPort',24998);
     set(xpc,'Timeout',.05);
-    set(xpc,'InputBufferSize',512);
-    set(xpc,'InputDatagramPacketSize',512);
+    set(xpc,'InputBufferSize',100);
+    set(xpc,'InputDatagramPacketSize',100);
     set(xpc, 'ReadAsyncMode', 'continuous');
 %     fopen(xpc);
 

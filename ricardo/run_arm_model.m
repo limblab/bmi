@@ -1,6 +1,6 @@
 function run_arm_model(m_data_1,m_data_2,xpc,h)    
     cycle_counter = 0;    
-    dt_hist = 0.05*ones(1,10);
+    dt_hist = 0.01*ones(1,10);
     F_x = 0;
     F_y = 0;
     forces = [F_x F_y];
@@ -8,8 +8,9 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     x0_default = [pi/4 3*pi/4 0 0];
     x0 = x0_default;   
     i = 0;
-    xpc_data = zeros(512,1);
-    while (m_data_1.Data.bmi_running)
+    xpc_data = zeros(512,1);    
+    options = odeset('RelTol',1e-2,'AbsTol',1e-2);
+    while ((m_data_1.Data.bmi_running)) % && i < 300)
         i = i+1;
         arm_params = evalin('base','arm_params');
         arm_params.theta = x0(1:2);
@@ -29,9 +30,11 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         arm_params.X_gain = -2*arm_params.left_handed+1;
             
         if isobject(xpc)
-            fopen(xpc);
-            xpc_data = fread(xpc);
-            fclose(xpc);
+            if mod(i,1) == 0
+                fopen(xpc);
+                xpc_data = fread(xpc);
+                fclose(xpc);
+            end
 
             if length(xpc_data)>=72
                 F_x = typecast(uint8(xpc_data(41:48)),'double');
@@ -90,11 +93,12 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
 %         arm_params.theta_ref = [3*pi/4 pi/2]; 
 %         arm_params.X_s = [0 0];
 
-%         t_temp = [0 mean(dt_hist)];
-        t_temp = [0 dt_hist(1)];
+        t_temp = [0 mean(dt_hist)];
+%         t_temp = [0 dt_hist(1)];
+%         t_temp = [0 0.01];
         
         old_X_h = arm_params.X_h;
-        [t,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0);
+        [t,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0,options);
         [~,out_var] = sandercock_model(t,x(end,:),arm_params);
         m_data_2.Data.musc_force = out_var(1:4);
         m_data_2.Data.F_end = out_var(5:6);
@@ -121,20 +125,22 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         m_data_2.Data.elbow_pos = 100*arm_params.X_e;
         m_data_2.Data.shoulder_pos = 100*arm_params.X_sh;
 
-        dt_hist = circshift(dt_hist,[0 1]);
-        dt_hist(1) = toc;
-        set(h.h_plot_1,'YData',dt_hist)
-        set(h.h_plot_2,'XData',[0 F_x],'YData',[0 F_y])
-        set(h.h_plot_3,'XData',[arm_params.X_sh(1) arm_params.X_e(1) xH(1)],...
-            'YData',[arm_params.X_sh(2) arm_params.X_e(2) xH(2)])
-        set(h.h_emg_bar,'YData',EMG_data)
-        drawnow
+        if mod(i,1)==0
+            dt_hist = circshift(dt_hist,[0 1]);
+            dt_hist(1) = toc;
+            set(h.h_plot_1,'YData',dt_hist)
+            set(h.h_plot_2,'XData',[0 F_x],'YData',[0 F_y])
+            set(h.h_plot_3,'XData',[arm_params.X_sh(1) arm_params.X_e(1) xH(1)],...
+                'YData',[arm_params.X_sh(2) arm_params.X_e(2) xH(2)])
+            set(h.h_emg_bar,'YData',EMG_data)
+            drawnow
+        end
     end
     if ~isempty('xpc')
         fclose(xpc);
         delete(xpc);
         clear xpc;
         close all
-%         exit
+        exit
     end
 end
