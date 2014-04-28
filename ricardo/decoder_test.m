@@ -32,7 +32,7 @@ xpc = open_xpc_udp(params);
 
 %% Read Decoders and other files
 
-% [neuron_decoder, emg_decoder,params] = load_decoders(params);
+[neuron_decoder, ~,params] = load_decoders(params);
 % if ~strcmp(params.mode,'direct')
 %     spike_buf_size = params.n_lag + params.n_lag_emg - 1; 
 % else
@@ -121,11 +121,14 @@ try
             
             %% Get and Process New Data
             data = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
-%             data.spikes
             
-%             %% Predictions
-%            
-%             predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
+            %% Predictions
+            if params.mode('N2E')
+                predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;                         
+            else
+                predictions = [];
+            end
+            [EMG_data,~,~] = process_emg(params,data,predictions);
 %             
 %             if ~strcmp(params.mode,'direct')
 %                 % emg cascade
@@ -144,17 +147,15 @@ try
 %                 x0 = zeros(1,4);
 %             end
 
-            [EMG_data,~,~] = process_emg(data);
-            m_data_1.Data.EMG_data = EMG_data;
-            predictions = 100*m_data_2.Data.x_hand;
             
-            cursor_pos = predictions; 
+            m_data_1.Data.EMG_data = EMG_data;
+            cursor_pos = 100*m_data_2.Data.x_hand;                       
 
 %             datafile.t = [datafile.t; bin_start_t];
             bin_start_t = data.sys_time;
 
             if recording
-                tmp_data = [bin_start_t data.spikes(1,:) predictions EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force]; 
+                tmp_data = [bin_start_t data.spikes(1,:) cursor_pos EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force]; 
                 save(handles.data_file,'tmp_data','-append','-ascii');
             end
 

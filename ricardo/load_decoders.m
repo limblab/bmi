@@ -1,4 +1,3 @@
-%% Accessory Functions :
 function [neuron_decoder,emg_decoder,params] = load_decoders(params)
     switch params.mode
         case 'emg_cascade'
@@ -44,19 +43,33 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
             end
             params.n_forces = size(emg_decoder.H,2);
         case 'direct'
-%             neuron_decoder = LoadDataStruct(params.neuron_decoder);
-%             if ~isfield(neuron_decoder, 'H')
-%                 error('Invalid Decoder');
-%             end
-%             % overwrite parameters according to loaded decoder            
-%             params.n_lag = round(neuron_decoder.fillen/neuron_decoder.binsize);
-%             params.n_neurons = size(neuron_decoder.neuronIDs,1);
-%             params.binsize   = neuron_decoder.binsize;
-%             emg_decoder = [];
-%             params.n_emgs = 0;
-%             params.n_lag_emg = 0;
+            neuron_decoder = LoadDataStruct(params.neuron_decoder);
+            if ~isfield(neuron_decoder, 'H')
+                error('Invalid Decoder');
+            end
+            % overwrite parameters according to loaded decoder            
+            params.n_lag = round(neuron_decoder.fillen/neuron_decoder.binsize);
+            params.n_neurons = size(neuron_decoder.neuronIDs,1);
+            params.binsize   = neuron_decoder.binsize;
+            emg_decoder = [];
+            params.n_emgs = 0;
+            params.n_lag_emg = 0;
+        case 'EMG'
+            neuron_decoder = [];
+            emg_decoder = [];           
+        case 'N2E'
+            neuron_decoder = LoadDataStruct(params.neuron_decoder);
+            if ~isfield(neuron_decoder, 'H')
+                error('Invalid Decoder');
+            end
+            % overwrite parameters according to loaded decoder            
+            params.n_lag = round(neuron_decoder.fillen/neuron_decoder.binsize);
+            params.n_neurons = size(neuron_decoder.neuronIDs,1);
+            params.binsize   = neuron_decoder.binsize;
+            emg_decoder = [];
+            params.n_emgs = 0;
+            params.n_lag_emg = 0;      
         otherwise
             error('Invalid decoding mode. Please specifiy params.mode = [''emgcascade'' | ''direct'' ]');
     end
-
 end

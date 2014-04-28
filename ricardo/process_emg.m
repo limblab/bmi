@@ -1,26 +1,36 @@
-function [EMG_data,EMG_raw,strings_to_match] = process_emg(data)
+function [EMG_data,EMG_raw,strings_to_match] = process_emg(params,data,predictions)
 % function [EMG_data,EMG_max,EMG_min,EMG_raw,strings_to_match] = process_emg(data,EMG_max,EMG_min)
 
-emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
-emg_labels = data.labels(emg_channels);
-strings_to_match = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'};    
-for iLabel = 1:length(strings_to_match)
-    idx(iLabel) = find(strcmp(emg_labels,strings_to_match(iLabel)));
+strings_to_match = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'}; 
+
+if strcmp(params.mode,'EMG')
+    emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
+    emg_labels = data.labels(emg_channels);
+    for iLabel = 1:length(strings_to_match)
+        idx(iLabel) = find(strcmp(emg_labels,strings_to_match(iLabel)));
+    end
+    [~,chan_idx,~] = intersect(data.analog_channels,emg_channels);
+    EMG_data = data.analog(:,chan_idx);
+    % EMG_data(:,1:2) = 0;
+    EMG_raw = abs(EMG_data);
+    EMG_data = mean(EMG_raw);
+
+    if size(EMG_data,2) == max(idx)
+        EMG_data = EMG_data(:,idx);
+    else
+        EMG_data = zeros(1,max(idx));
+        EMG_raw = zeros(10,max(idx));
+    end
+elseif strcmp(params.mode,'N2E')
+    emg_labels = params.emg_channels;
+    for iLabel = 1:length(strings_to_match)
+        idx(iLabel) = find(strcmp(emg_labels,strings_to_match(iLabel)));
+    end    
+    EMG_raw = predictions(idx);
+    EMG_data = predictions(idx);    
 end
+    
 
-[~,chan_idx,~] = intersect(data.analog_channels,emg_channels);
-EMG_data = data.analog(:,chan_idx);
-
-% EMG_data(:,1:2) = 0;
-EMG_raw = abs(EMG_data);
-EMG_data = mean(EMG_raw);
-
-if size(EMG_data,2) == max(idx)
-    EMG_data = EMG_data(:,idx);
-else
-    EMG_data = zeros(1,max(idx));
-    EMG_raw = zeros(10,max(idx));
-end
 
 % EMG_data = min(EMG_data,2000);
 % EMG_data(:,1:2) = 0;
