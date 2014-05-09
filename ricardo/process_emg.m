@@ -6,8 +6,8 @@ strings_to_match = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'};
 if strcmp(params.mode,'EMG')
     emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
     emg_labels = data.labels(emg_channels);
-    for iLabel = 1:length(strings_to_match)
-        idx(iLabel) = find(strcmp(emg_labels,strings_to_match(iLabel)));
+    for iString = 1:length(strings_to_match)
+        idx(iString) = find(strcmp(emg_labels,strings_to_match(iString)));
     end
     [~,chan_idx,~] = intersect(data.analog_channels,emg_channels);
     EMG_data = data.analog(:,chan_idx);
@@ -22,9 +22,13 @@ if strcmp(params.mode,'EMG')
         EMG_raw = zeros(10,max(idx));
     end
 elseif strcmp(params.mode,'N2E')
-    emg_labels = params.emg_channels;
-    for iLabel = 1:length(strings_to_match)
-        idx(iLabel) = find(strcmp(emg_labels,strings_to_match(iLabel)));
+%     emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
+    temp = params.neuron_decoder.outnames;  
+    for iLabel = 1:size(temp,1)
+        emg_labels{iLabel} = ['EMG_' deblank(temp(iLabel,:))];        
+    end
+    for iString = 1:length(strings_to_match)
+        idx(iString) = find(strcmp(emg_labels,strings_to_match(iString)));
     end    
     EMG_raw = predictions(idx);
     EMG_data = predictions(idx);    

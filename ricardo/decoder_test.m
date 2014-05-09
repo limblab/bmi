@@ -31,8 +31,9 @@ params.output = 'xpc';
 xpc = open_xpc_udp(params);
 
 %% Read Decoders and other files
-
+neuron_decoder = [];
 [neuron_decoder, ~,params] = load_decoders(params);
+params.neuron_decoder = neuron_decoder;
 % if ~strcmp(params.mode,'direct')
 %     spike_buf_size = params.n_lag + params.n_lag_emg - 1; 
 % else
@@ -123,7 +124,7 @@ try
             data = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
             
             %% Predictions
-            if params.mode('N2E')
+            if strcmp(params.mode,'N2E')
                 predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;                         
             else
                 predictions = [];
@@ -226,10 +227,10 @@ try
             %display targets and cursor plots
             if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(handles.curs_handle)                
                
-                set(handles.curs_handle,'XData',predictions(1),'YData',predictions(2));
+                set(handles.curs_handle,'XData',cursor_pos(1),'YData',cursor_pos(2));
 %                 
-                set(handles.xpred_disp,'String',sprintf('xpred: %.2f',predictions(1)))
-                set(handles.ypred_disp,'String',sprintf('ypred: %.2f',predictions(2)))
+                set(handles.xpred_disp,'String',sprintf('xpred: %.2f',cursor_pos(1)))
+                set(handles.ypred_disp,'String',sprintf('ypred: %.2f',cursor_pos(2)))
 
                 if data.tgt_on
                     set(handles.tgt_handle,'XData',data.tgt_pos(1),'YData',data.tgt_pos(2),'Visible','on');

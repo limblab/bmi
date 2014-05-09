@@ -4,7 +4,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
 %         ts_cell_array = cbmex('trialdata',1);
         [ts_cell_array, time, continuous_cell_array] = cbmex('trialdata', 1);
         data.sys_time = cbmex('time');
-        new_spikes = get_new_spikes(ts_cell_array,params.n_neurons,bin_dur);
+        new_spikes = get_new_spikes(ts_cell_array,params,bin_dur);
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
         analog_fs = max([continuous_cell_array{:,2}]);
         new_analog = get_new_analog(continuous_cell_array);       
@@ -88,7 +88,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
         end
     end
 end                
-function new_spikes = get_new_spikes(ts_cell_array,n_neurons,binsize)
+function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
 
 %     new_spikes = zeros(n_neurons,1);
 
@@ -96,11 +96,21 @@ function new_spikes = get_new_spikes(ts_cell_array,n_neurons,binsize)
 %     for i = 1:n_neurons
 %         new_spikes(i) = length(ts_cell_array{i,2})/binsize;
 %     end
-    % TODO: get spikes for sorted channels
-    new_spikes = cellfun(@length,ts_cell_array(1:n_neurons,2))/binsize;
 
+%     new_spikes = cellfun(@length,ts_cell_array(1:params.n_neurons,2))/binsize;
+    if isfield(params,'neuron_decoder')
+        new_spikes = zeros(size(params.neuron_decoder.neuronIDs,1),1);
+        for iNeuron = 1:size(params.neuron_decoder.neuronIDs,1)
+    %         ts_row_idx = find((strcmp(ts_cell_array(:,1),['elec' num2str(params.neuron_decoder.neuronIDs(iNeuron,1))])));
+            ts_col_idx = params.neuron_decoder.neuronIDs(iNeuron,2)+2; 
+            new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),['elec' num2str(params.neuron_decoder.neuronIDs(iNeuron,1))])),...
+                ts_col_idx})/binsize;
+        end
+    else
+        new_spikes = zeros(size(params.neuron_decoder.neuronIDs,1),1);
+    end
     %remove artifact (80% of neurons have spikes for this bin)
-    while (length(nonzeros(new_spikes))>.8*n_neurons)
+    while (length(nonzeros(new_spikes))>.8*params.n_neurons)
         warning('artifact detected, spikes removed');
         new_spikes(new_spikes>0) = new_spikes(new_spikes>0) - 1/binsize;
     end
