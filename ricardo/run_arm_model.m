@@ -10,9 +10,19 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     i = 0;
     xpc_data = zeros(512,1);    
     options = odeset('RelTol',1e-2,'AbsTol',1e-2);
+    arm_params_base = [];
     while ((m_data_1.Data.bmi_running)) % && i < 300)
         i = i+1;
+        old_arm_params = arm_params_base;
+
         arm_params = evalin('base','arm_params');
+        arm_params_base = arm_params;
+        
+        if ~isequal(old_arm_params,arm_params_base)
+            save('temp_arm_params','arm_params');
+            disp('Saved arm parameters')
+        end        
+
         arm_params.theta = x0(1:2);
         arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x0(1)) arm_params.l(1)*sin(x0(1))];
         arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x0(2)) arm_params.l(2)*sin(x0(2))];   
@@ -135,6 +145,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
             set(h.h_emg_bar,'YData',EMG_data)
             drawnow
         end
+        
     end
     if ~isempty('xpc')
         fclose(xpc);

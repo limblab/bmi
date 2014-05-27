@@ -156,7 +156,9 @@ try
             bin_start_t = data.sys_time;
 
             if recording
-                tmp_data = [bin_start_t data.spikes(1,:) cursor_pos EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force]; 
+                tmp_data = [bin_start_t data.spikes(1,:) cursor_pos ...
+                    m_data_2.Data.shoulder_pos m_data_2.Data.elbow_pos ...
+                    EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force]; 
                 save(handles.data_file,'tmp_data','-append','-ascii');
             end
 
