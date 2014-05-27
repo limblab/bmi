@@ -37,12 +37,25 @@ musc_end_2 = [x_gain*arm_params.m_ins(1)*cos(theta(1))...
     X_e(2)+arm_params.m_ins(3)*sin(theta(2))...
     X_e(2)+arm_params.m_ins(4)*sin(theta(2))];
 
+musc_vel = [arm_params.m_ins(1)*theta(3)*-sin(theta(1)) arm_params.m_ins(2)*theta(3)*-sin(theta(1))...
+    arm_params.m_ins(3)*theta(4)*-sin(theta(2)) arm_params.m_ins(4)*theta(4)*-sin(theta(2));...
+    arm_params.m_ins(1)*theta(3)*cos(theta(1)) arm_params.m_ins(2)*theta(3)*cos(theta(1))...
+    arm_params.m_ins(3)*theta(4)*cos(theta(2)) arm_params.m_ins(4)*theta(4)*cos(theta(2))];
+musc_vel = sqrt(sum(musc_vel.^2))./arm_params.musc_l0;
+% Negative musc_vel is muscle shortening.
+musc_vel(1) = -sign(theta(3))*musc_vel(1);
+musc_vel(2) = sign(theta(3))*musc_vel(2);
+musc_vel(3) = -sign(theta(4))*musc_vel(3);
+musc_vel(4) = sign(theta(4))*musc_vel(4);
 
 musc_length = sqrt(sum((musc_end_1 - musc_end_2).^2));
 
 active_musc_force = arm_params.musc_act.*arm_params.F_max.*...
     (1-4*((musc_length-arm_params.musc_l0)./arm_params.musc_l0).^2) +...
     (musc_length-arm_params.musc_l0).*arm_params.musc_act.*arm_params.k_gain;
+
+f = [.82 .5 .43 58]; % from Heliot2010
+active_musc_force = active_musc_force.*(f(1) + f(2)*atan(f(3)+f(4)*musc_vel));
 active_musc_force = max(0,active_musc_force);
 
 passive_musc_force = arm_params.F_max.*exp(arm_params.Ksh*(musc_length-arm_params.Kl*2*arm_params.m_ins)./(arm_params.Kl*2*arm_params.m_ins));
