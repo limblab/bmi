@@ -104,7 +104,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
             for iNeuron = 1:size(params.neuron_decoder.neuronIDs,1)
         %         ts_row_idx = find((strcmp(ts_cell_array(:,1),['elec' num2str(params.neuron_decoder.neuronIDs(iNeuron,1))])));
                 ts_col_idx = params.neuron_decoder.neuronIDs(iNeuron,2)+2; 
-                new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),['elec' num2str(params.neuron_decoder.neuronIDs(iNeuron,1))])),...
+                new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),['chan' num2str(params.neuron_decoder.neuronIDs(iNeuron,1))])),...
                     ts_col_idx})/binsize;
                 if params.neuron_decoder.neuronIDs(iNeuron,2) == 0
                     new_spikes(iNeuron) = 0;
@@ -117,10 +117,10 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
         new_spikes = zeros(params.n_neurons,1);
     end
     %remove artifact (80% of neurons have spikes for this bin)
-    while (length(nonzeros(new_spikes))>.8*length(unique(params.neuron_decoder.neuronIDs(:,1))))
-        warning('artifact detected, spikes removed');
-        new_spikes(new_spikes>0) = new_spikes(new_spikes>0) - 1/binsize;
-    end
+%     while (length(nonzeros(new_spikes))>.8*length(unique(params.neuron_decoder.neuronIDs(:,1))))
+%         warning('artifact detected, spikes removed');
+%         new_spikes(new_spikes>0) = new_spikes(new_spikes>0) - 1/binsize;
+%     end
     
     % remove artifacts (high freq thresh x-ing)
     % by capping FR at 400 Hz
