@@ -72,6 +72,10 @@ musc_length = sqrt(sum((musc_end_1 - musc_end_2).^2));
 active_musc_force = arm_params.musc_act.*arm_params.F_max.*...
     (1-4*((musc_length-arm_params.musc_l0)./arm_params.musc_l0).^2) +...
     (musc_length-arm_params.musc_l0).*arm_params.musc_act.*arm_params.k_gain;
+
+% Make active force flat when muscle is longer than l0.
+active_musc_force(musc_length>arm_params.musc_l0) = arm_params.musc_act(musc_length>arm_params.musc_l0).*...
+    arm_params.F_max(musc_length>arm_params.musc_l0);
     
 f = [.82 .5 .43 58]; % from Heliot2010
 active_musc_force = active_musc_force.*(f(1) + f(2)*atan(f(3)+f(4)*musc_vel));
@@ -79,11 +83,12 @@ active_musc_force = max(0,active_musc_force);
 
 passive_musc_force = arm_params.F_max.*exp(arm_params.Ksh*(musc_length-arm_params.Kl*2*arm_params.m_ins)./(arm_params.Kl*2*arm_params.m_ins));
 
-   
-%     musc_length = 0:.001:arm_params.musc_l0(1)*2;
+% %%     Code for plotting force-length relationship:
+%     arm_params = get_default_arm_params;    
 %     arm_params.musc_l0 = sqrt(2*arm_params.m_ins.^2)+...
 %         0*sqrt(2*arm_params.m_ins.^2)/5.*...
 %         (rand(1,length(arm_params.m_ins))-.5);
+%     musc_length = 0:.001:arm_params.musc_l0(1)*2;
 %     
 %     figure;
 %     alpha = 1;
@@ -91,6 +96,7 @@ passive_musc_force = arm_params.F_max.*exp(arm_params.Ksh*(musc_length-arm_param
 %         (1-4*((musc_length-arm_params.musc_l0(1))./arm_params.musc_l0(1)).^2) +...
 %         (musc_length-arm_params.musc_l0(1)).*ones(size(arm_params.F_max(1))).*arm_params.k_gain;
 %     active_force_plot(active_force_plot<0) = 0;
+%     active_force_plot(musc_length>arm_params.musc_l0(1)) = alpha.*arm_params.F_max(1);
 %     passive_force_plot = arm_params.F_max(1).*exp(arm_params.Ksh*...
 %         (musc_length-arm_params.Kl*2*arm_params.m_ins(1))./(arm_params.Kl*2*arm_params.m_ins(1)));
 %     passive_force_plot(passive_force_plot<0) = 0;
@@ -101,8 +107,9 @@ passive_musc_force = arm_params.F_max.*exp(arm_params.Ksh*(musc_length-arm_param
 %     legend('Passive','Active','Passive + active')
 %     xlabel('Muscle length (m)')
 %     ylabel('Muscle force (N)')
-%     ylim([0 1000])
+%     ylim([0 1500])
 
+%%
 passive_musc_force = max(0,passive_musc_force);
 
 musc_force = active_musc_force + passive_musc_force;
