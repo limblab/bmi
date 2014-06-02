@@ -33,7 +33,7 @@ arm_params.Kl = 1;
 %     ylim([0 500])
 %     xlim([0 .04])
 
-arm_params.null_angles = [3*pi/4 pi/2];
+arm_params.null_angles = [pi/4 3*pi/4];
 % arm_params.Kl = 1;
 arm_params.k_gain = 23;
 
@@ -44,3 +44,12 @@ arm_params.dt = 0.05;
 
 arm_params.left_handed = 0;
 % arm_params.monkey_offset = [(-2*arm_params.left_handed+1)*.08 -sqrt(sum(arm_params.l.^2))]; 
+
+% Prosthetic arm
+arm_params.P_gain = 1;
+arm_params.Vmax = 1;
+arm_params.emg_thres = .2;
+arm_params.max_torque = 1;
+
+% Control mode
+arm_params.control_mode = 'dynamic';

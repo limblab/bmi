@@ -62,11 +62,18 @@ function show_params(h_param_list,event,h)
     idx = get(h_param_list,'Value');   
     strings = get(h_param_list,'String');
     values = arm_params.(strings{idx});
-    for iBox = 1:length(values)
-        set(h.textbox(iBox),'String',num2str(values(iBox)),'Enable','on')
-    end
-    for iBox = length(values)+1:8
-        set(h.textbox(iBox),'String',[],'Enable','off')
+    if isnumeric(values)
+        for iBox = 1:length(values)
+            set(h.textbox(iBox),'String',num2str(values(iBox)),'Enable','on')
+        end
+        for iBox = length(values)+1:8
+            set(h.textbox(iBox),'String',[],'Enable','off')
+        end
+    else
+        set(h.textbox(1),'String',num2str(values),'Enable','on')        
+        for iBox =2:8
+            set(h.textbox(iBox),'String',[],'Enable','off')
+        end
     end
 end
 
@@ -75,8 +82,12 @@ function set_params(h_set_params,event,h)
     idx = get(h.param_list,'Value');
     strings = get(h.param_list,'String');
     values = [];
-    for iBox = 1:length(arm_params.(strings{idx}))
-        values(iBox) = str2double(get(h.textbox(iBox),'String'));
+    if isnumeric(arm_params.(strings{idx}))
+        for iBox = 1:length(arm_params.(strings{idx}))
+            values(iBox) = str2double(get(h.textbox(iBox),'String'));
+        end        
+    else
+        values = get(h.textbox(1),'String');
     end
     arm_params.(strings{idx}) = values;
     assignin('base','arm_params',arm_params)

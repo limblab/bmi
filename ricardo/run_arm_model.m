@@ -83,18 +83,18 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         
         arm_params.F_end = [F_x F_y];
 %         clc
-        if arm_params.X_h(1) < -.12
-            arm_params.F_end(1) = 10;
-        end
-        if arm_params.X_h(1) > .12
-            arm_params.F_end(1) = -10;
-        end
-        if arm_params.X_h(2) < -.1
-            arm_params.F_end(2) = 10;
-        end
-        if arm_params.X_h(2) > .1
-            arm_params.F_end(2) = -10;
-        end
+%         if arm_params.X_h(1) < -.12
+%             arm_params.F_end(1) = 10;
+%         end
+%         if arm_params.X_h(1) > .12
+%             arm_params.F_end(1) = -10;
+%         end
+%         if arm_params.X_h(2) < -.1
+%             arm_params.F_end(2) = 10;
+%         end
+%         if arm_params.X_h(2) > .1
+%             arm_params.F_end(2) = -10;
+%         end
         
         arm_params.musc_act = EMG_data;
         arm_params.musc_l0 = sqrt(2*arm_params.m_ins.^2)+...
@@ -108,8 +108,16 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
 %         t_temp = [0 0.01];
         
         old_X_h = arm_params.X_h;
-        [t,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0,options);
-        [~,out_var] = sandercock_model(t,x(end,:),arm_params);
+        
+        switch(arm_params.control_mode)
+            case 'dynamic'
+                [t,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0,options);
+                [~,out_var] = sandercock_model(t,x(end,:),arm_params);
+            case 'prosthesis'
+                [t,x] = ode45(@(t,x0) prosthetic_arm_model(t,x0,arm_params),t_temp,x0,options);
+                [~,out_var] = prosthetic_arm_model(t,x(end,:),arm_params);
+        end
+        
         m_data_2.Data.musc_force = out_var(1:4);
         m_data_2.Data.F_end = out_var(5:6);
         
