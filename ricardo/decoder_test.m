@@ -18,15 +18,7 @@ clearxpc
 
 [m_data_1, m_data_2] = open_dynamic_arm_instance;
 
-%% Parameters
-if nargin
-    params = varargin{1};
-    params = bmi_params_defaults(params);
-else
-    params = bmi_params_defaults;
-end
-
-params.output = 'xpc';
+params = evalin('base','params');
 
 xpc = open_xpc_udp(params);
 
@@ -34,18 +26,7 @@ xpc = open_xpc_udp(params);
 neuron_decoder = [];
 [neuron_decoder, ~,params] = load_decoders(params);
 params.neuron_decoder = neuron_decoder;
-% if ~strcmp(params.mode,'direct')
-%     spike_buf_size = params.n_lag + params.n_lag_emg - 1; 
-% else
-%     spike_buf_size = params.n_lag;
-% end
 
-% load template trajectories
-% if params.cursor_assist
-%     % cursor_traj is a file name to a structure containing the fields
-%     % 'mean_paths' and 'back_paths', each of size < 101 x 2 x n_tgt >
-%     cursor_traj = load(params.cursor_traj);
-% end
 
 %% Initialization
 
@@ -98,6 +79,7 @@ drawnow;
 
 %% Run cycle
 try
+    params = evalin('base','params');
     recording = 0;
     while(~get(handles.stop_bmi,'Value') && ... 
             ( params.online || ...

@@ -6,7 +6,7 @@ function handles = setup_display_plots(params,handles)
         handles.curs_handle = plot(0,0,'ko');
         set(handles.curs_handle,'MarkerSize',6,'MarkerFaceColor','k','MarkerEdgeColor','k');
         %     xlim([-12 12]); ylim([-12 12]);
-        xlim([-100 100]); ylim([-100 100]);
+        xlim([-20 20]); ylim([-20 20]);
         axis square; axis equal; axis manual;
         hold on;    
         handles.tgt_handle  = plot(0,0,'bo');
@@ -17,12 +17,27 @@ function handles = setup_display_plots(params,handles)
             'FitBoxToText','off','String',sprintf('ypred: %.2f',0));
         subplot(122)
         axis off
-        handles.control_panel = uipanel('Position',[.5 0 .5 1]);
+        handles.control_panel = uipanel('Units','normalized','Position',[.5 0 .5 1]);
         handles.stop_bmi = uicontrol('Style','toggle','String','Stop BMI',...
             'Parent',handles.control_panel,'Units','normalized','Position',[.1 .85 .3 .1]);    
         handles.record = uicontrol('Style','toggle','String','Start recording',...
             'Parent',handles.control_panel,'Units','normalized','Position',[.1 .7 .3 .1],'Value',0,...
             'Callback',@togglebutton_Callback);   
+        handles.mode_select_group = uibuttongroup('Parent',handles.control_panel,...
+            'Units','normalized','Position',[.1 .1 .8 .5],'SelectionChangeFcn',@selcbk);
+        handles.radio_button_n2e = uicontrol('Units','normalized','Style','radiobutton',...
+            'Parent',handles.mode_select_group,...
+            'String','N2E','Position',[.1 .8 .8 .2]);
+        handles.radio_button_emg = uicontrol('Units','normalized','Style','radiobutton',...
+            'Parent',handles.mode_select_group,...
+            'String','EMG','Position',[.1 .6 .8 .2]);
+        handles.radio_button_vel = uicontrol('Units','normalized','Style','radiobutton',...
+            'Parent',handles.mode_select_group,...
+            'String','Vel','Position',[.1 .4 .8 .2]);
+        temp = strcmp(get(get(handles.mode_select_group,'Children'),'String'),params.mode);
+        temp2 = get(handles.mode_select_group,'Children');
+        temp2 = temp2(temp);
+        set(handles.mode_select_group,'SelectedObject',temp2);
     end
 end
 
@@ -33,4 +48,10 @@ function togglebutton_Callback(hObject,eventdata)
     elseif button_state == get(hObject,'Min')
         set(hObject,'String','Start recording')
     end
+end
+
+function selcbk(source,eventdata)
+    params = evalin('base','params');
+    params.mode = get(eventdata.NewValue,'String');    
+    assignin('base','params',params);
 end

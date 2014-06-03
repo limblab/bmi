@@ -28,7 +28,7 @@ function h = create_arm_model_figure
     h.controls = uipanel('Position',[.55 .05 .4 .55],'Units','normalized');
 
     h.textboxes = uipanel('Units','normalized','Position',[0 .1 1 .4],...
-        'Parent',h.controls);
+        'Parent',h.controls,'Visible','off');
     h.textbox(1) = uicontrol('Style','edit','Units','normalized',...
         'Parent',h.textboxes,'Position',[0 .5 .25 .5]);
     h.textbox(2) = uicontrol('Style','edit','Units','normalized',...
@@ -45,6 +45,17 @@ function h = create_arm_model_figure
         'Parent',h.textboxes,'Position',[.5 0 .25 .5]);
     h.textbox(8) = uicontrol('Style','edit','Units','normalized',...
         'Parent',h.textboxes,'Position',[.75 0 .25 .5]);
+    
+    h.radio_button_panel = uipanel('Units','normalized','Position',[0 .1 1 .4],...
+        'Parent',h.controls,'Visible','off');
+    h.radio_button_group = uibuttongroup('Units','normalized','Parent',h.radio_button_panel,...
+        'Position',[0 0 1 1]);
+    h.radio_button_dynamic = uicontrol('Units','normalized','Style','radiobutton',...
+        'Parent',h.radio_button_group,...
+        'String','dynamic','Position',[.1 .7 .8 .2]);
+    h.radio_button_prosthesis = uicontrol('Units','normalized','Style','radiobutton',...
+        'Parent',h.radio_button_group,...
+        'String','prosthesis','Position',[.1 .4 .8 .2]);
   
     h.param_list = uicontrol('Style','listbox','Units','normalized',...
         'Position',[0 .5 1 .5],...
@@ -63,6 +74,8 @@ function show_params(h_param_list,event,h)
     strings = get(h_param_list,'String');
     values = arm_params.(strings{idx});
     if isnumeric(values)
+        set(h.textboxes,'Visible','on')
+        set(h.radio_button_panel,'Visible','off')
         for iBox = 1:length(values)
             set(h.textbox(iBox),'String',num2str(values(iBox)),'Enable','on')
         end
@@ -70,6 +83,8 @@ function show_params(h_param_list,event,h)
             set(h.textbox(iBox),'String',[],'Enable','off')
         end
     else
+        set(h.textboxes,'Visible','off')
+        set(h.radio_button_panel,'Visible','on')
         set(h.textbox(1),'String',num2str(values),'Enable','on')        
         for iBox =2:8
             set(h.textbox(iBox),'String',[],'Enable','off')
