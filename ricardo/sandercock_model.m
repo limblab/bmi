@@ -132,7 +132,7 @@ T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_
 
 % tau =T+ [-theta(3)*c(1);-theta(4)*c(2)]; %input torques,
 % tau =T+ [-sign(theta(3))*sqrt(abs(theta(3)))*c(1);-sign(theta(4))*sqrt(abs(theta(4)))*c(2)]; %input torques,
-tau_c = [-theta(3)*c(1);-theta(4)*c(2)]; % viscosity
+tau_c = [-theta(3)*c(1);-(theta(4)-theta(3))*c(2)]; % viscosity
 % tau_c = [ -min(max(theta(3),-1),1)*c(1) ; -min(max(theta(4),-1),1)*c(2)];
 tau = T(:) + tau_c;
 xdot(1:2,1)=theta(3:4);
