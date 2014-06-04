@@ -14,8 +14,8 @@ function h = create_arm_model_figure
     axis square
     subplot(323)    
     h.h_plot_3 = plot(0,0,'-k');    
-    xlim([-1 1])
-    ylim([-1 1]) 
+    xlim([-50 50])
+    ylim([-50 50]) 
     axis square
     subplot(325)    
     h.h_emg_bar = bar(zeros(1,4));

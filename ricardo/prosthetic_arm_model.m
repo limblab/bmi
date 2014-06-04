@@ -13,7 +13,6 @@ if numel(F_end)>2
     [~,idx] = min(abs(F_end(1,:)-t));
     F_end = F_end(2:3,idx);
 end
-x_gain = -2*arm_params.left_handed+1;
 
 xdot = zeros(4,1);
 theta = reshape(theta,[],1);
@@ -23,7 +22,7 @@ sin_theta_2 = sin(theta(2));
 cos_theta_1 = cos(theta(1));
 cos_theta_2 = cos(theta(2));
 
-X_e = [x_gain*l(1)*cos_theta_1 l(1)*sin_theta_1];
+X_e = [l(1)*cos_theta_1 l(1)*sin_theta_1];
 
 %     emg = 0:.001:1;
 %     thres = .2;
@@ -35,7 +34,7 @@ X_e = [x_gain*l(1)*cos_theta_1 l(1)*sin_theta_1];
 %     plot(emg,vel)
 %     P_gain = 1;
     
-emg_diff = x_gain*[arm_params.musc_act(1)-arm_params.musc_act(2);...
+emg_diff = [arm_params.musc_act(1)-arm_params.musc_act(2);...
     arm_params.musc_act(3)-arm_params.musc_act(4)];
 
 Kv = sqrt(arm_params.Vmax)/(1-arm_params.emg_thres);

@@ -12,7 +12,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     options = odeset('RelTol',1e-2,'AbsTol',1e-2);
     arm_params_base = [];
     while ((m_data_1.Data.bmi_running)) % && i < 300)
-        i = i+1;
+        i = i+1;                
         old_arm_params = arm_params_base;
 
         arm_params = evalin('base','arm_params');
@@ -23,6 +23,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
             disp('Saved arm parameters')
         end        
 
+        arm_params.x_gain = -2*arm_params.left_handed+1;
         arm_params.theta = x0(1:2);
         arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x0(1)) arm_params.l(1)*sin(x0(1))];
         arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x0(2)) arm_params.l(2)*sin(x0(2))];   
@@ -36,8 +37,6 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         EMG_data = min(EMG_data,1);
         EMG_data = max(EMG_data,0);
 %         EMG_data = min(EMG_data,1);
-
-        arm_params.X_gain = -2*arm_params.left_handed+1;
             
         if isobject(xpc)
             if mod(i,1) == 0
@@ -84,10 +83,10 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         arm_params.F_end = [F_x F_y];
 %         clc
         if arm_params.X_h(1) < -.12
-            arm_params.F_end(1) = 10;
+            arm_params.F_end(1) = arm_params.x_gain*10;
         end
         if arm_params.X_h(1) > .12
-            arm_params.F_end(1) = -10;
+            arm_params.F_end(1) = arm_params.x_gain*-10;
         end
         if arm_params.X_h(2) < -.1
             arm_params.F_end(2) = 10;
@@ -109,6 +108,9 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         
         old_X_h = arm_params.X_h;
         
+        arm_params.F_end(1) = arm_params.x_gain*arm_params.F_end(1);
+        arm_params.T = arm_params.x_gain*arm_params.T;
+        
         switch(arm_params.control_mode)
             case 'dynamic'
                 [t,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0,options);
@@ -117,9 +119,12 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
                 [t,x] = ode45(@(t,x0) prosthetic_arm_model(t,x0,arm_params),t_temp,x0,options);
                 [~,out_var] = prosthetic_arm_model(t,x(end,:),arm_params);
         end
+        musc_force = out_var(1:4);
+        F_end = out_var(5:6);
+        F_end(1) = arm_params.x_gain*F_end(1);
         
-        m_data_2.Data.musc_force = out_var(1:4);
-        m_data_2.Data.F_end = out_var(5:6);
+        m_data_2.Data.musc_force = musc_force;
+        m_data_2.Data.F_end = F_end;
         
         arm_params.theta = x(end,1:2);
         arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x(end,1)) arm_params.l(1)*sin(x(end,1))];
@@ -136,20 +141,24 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         
         x0 = x(end,:);
         
-        xH = arm_params.X_h;
-        xH(1) = arm_params.X_gain * xH(1);
+        xH = 100*arm_params.X_h;
+        xH(1) = arm_params.x_gain * xH(1);
+        xE = 100*arm_params.X_e;
+        xE(1) = arm_params.x_gain * xE(1);
+        xS = 100*arm_params.X_sh;
+        xS(1) = arm_params.x_gain * xS(1);
         
         m_data_2.Data.x_hand = xH;
-        m_data_2.Data.elbow_pos = 100*arm_params.X_e;
-        m_data_2.Data.shoulder_pos = 100*arm_params.X_sh;
+        m_data_2.Data.elbow_pos = xE;
+        m_data_2.Data.shoulder_pos = xS;
 
         if mod(i,1)==0
             dt_hist = circshift(dt_hist,[0 1]);
             dt_hist(1) = toc;
             set(h.h_plot_1,'YData',dt_hist)
             set(h.h_plot_2,'XData',[0 F_x],'YData',[0 F_y])
-            set(h.h_plot_3,'XData',[arm_params.X_sh(1) arm_params.X_e(1) xH(1)],...
-                'YData',[arm_params.X_sh(2) arm_params.X_e(2) xH(2)])
+            set(h.h_plot_3,'XData',[xS(1) xE(1) xH(1)],...
+                'YData',[xS(2) xE(2) xH(2)])
             set(h.h_emg_bar,'YData',EMG_data)
             drawnow
         end

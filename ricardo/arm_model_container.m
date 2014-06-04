@@ -1,4 +1,4 @@
-online = 1;
+online = 0;
 if online
     XPC_IP = '192.168.0.1';
     XPC_PORT = 24998;
@@ -28,7 +28,7 @@ else
     m_data_1.Data.EMG_data = zeros(1,4);
     m_data_1.Data.bmi_running = 2;
     m_data_2.Data.model_running = 0;
-    m_data_2.Data.file_name = repmat(' ',1,200);
+%     m_data_2.Data.file_name = repmat(' ',1,200);
     m_data_2.Data.x_hand = [0 0];
     m_data_2.Data.musc_force = zeros(1,4);
     m_data_2.Data.F_end = zeros(1,2);
