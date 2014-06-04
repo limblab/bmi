@@ -49,7 +49,7 @@ function h = create_arm_model_figure
     h.radio_button_panel = uipanel('Units','normalized','Position',[0 .1 1 .4],...
         'Parent',h.controls,'Visible','off');
     h.radio_button_group = uibuttongroup('Units','normalized','Parent',h.radio_button_panel,...
-        'Position',[0 0 1 1]);
+        'Position',[0 0 1 1],'SelectedObject',[]);
     h.radio_button_dynamic = uicontrol('Units','normalized','Style','radiobutton',...
         'Parent',h.radio_button_group,...
         'String','dynamic','Position',[.1 .7 .8 .2]);
@@ -85,10 +85,16 @@ function show_params(h_param_list,event,h)
     else
         set(h.textboxes,'Visible','off')
         set(h.radio_button_panel,'Visible','on')
-        set(h.textbox(1),'String',num2str(values),'Enable','on')        
-        for iBox =2:8
-            set(h.textbox(iBox),'String',[],'Enable','off')
-        end
+        
+        temp = strcmp(arm_params.control_mode,...
+            get(get(h.radio_button_group,'Children'),'String'));
+        temp2 = get(h.radio_button_group,'Children');
+        current_selection = temp2(temp);
+        set(h.radio_button_group,'SelectedObject',current_selection)
+%         set(h.textbox(1),'String',num2str(values),'Enable','on')        
+%         for iBox =2:8
+%             set(h.textbox(iBox),'String',[],'Enable','off')
+%         end
     end
 end
 
@@ -102,7 +108,7 @@ function set_params(h_set_params,event,h)
             values(iBox) = str2double(get(h.textbox(iBox),'String'));
         end        
     else
-        values = get(h.textbox(1),'String');
+        values = get(get(h.radio_button_group,'SelectedObject'),'String');
     end
     arm_params.(strings{idx}) = values;
     assignin('base','arm_params',arm_params)

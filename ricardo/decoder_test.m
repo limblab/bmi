@@ -26,7 +26,7 @@ xpc = open_xpc_udp(params);
 neuron_decoder = [];
 [neuron_decoder, ~,params] = load_decoders(params);
 params.neuron_decoder = neuron_decoder;
-
+assignin('base','params',params);
 
 %% Initialization
 

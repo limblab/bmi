@@ -83,18 +83,18 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         
         arm_params.F_end = [F_x F_y];
 %         clc
-%         if arm_params.X_h(1) < -.12
-%             arm_params.F_end(1) = 10;
-%         end
-%         if arm_params.X_h(1) > .12
-%             arm_params.F_end(1) = -10;
-%         end
-%         if arm_params.X_h(2) < -.1
-%             arm_params.F_end(2) = 10;
-%         end
-%         if arm_params.X_h(2) > .1
-%             arm_params.F_end(2) = -10;
-%         end
+        if arm_params.X_h(1) < -.12
+            arm_params.F_end(1) = 10;
+        end
+        if arm_params.X_h(1) > .12
+            arm_params.F_end(1) = -10;
+        end
+        if arm_params.X_h(2) < -.1
+            arm_params.F_end(2) = 10;
+        end
+        if arm_params.X_h(2) > .1
+            arm_params.F_end(2) = -10;
+        end
         
         arm_params.musc_act = EMG_data;
         arm_params.musc_l0 = sqrt(2*arm_params.m_ins.^2)+...

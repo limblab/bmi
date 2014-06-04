@@ -48,6 +48,7 @@ controller_torque(abs(controller_torque)>arm_params.max_torque) =...
 
 constraint_torque = -sign([theta(1);theta(2)]-arm_params.null_angles').*...
     exp(30*(abs([theta(1);theta(2)]-arm_params.null_angles'))/(pi/2)-27);
+constraint_torque = 0*constraint_torque;
 
  %matrix equations 
 M = [m(2)*lc(1)^2+m(2)*l(1)^2+i(1), m(2)*l(1)*lc(2)^2*cos(theta(1)-theta(2));
