@@ -45,9 +45,8 @@ controller_torque = arm_params.P_gain*(emg_to_vel - [theta(3);theta(4)-theta(3)]
 controller_torque(abs(controller_torque)>arm_params.max_torque) =...
     sign(controller_torque(abs(controller_torque)>arm_params.max_torque))*arm_params.max_torque;
 
-constraint_torque = -sign([theta(1);theta(2)]-arm_params.null_angles').*...
-    exp(30*(abs([theta(1);theta(2)]-arm_params.null_angles'))/(pi/2)-27);
-constraint_torque = 0*constraint_torque;
+angle_diff = [theta(1)-arm_params.null_angles(1);theta(2)-(theta(1)+diff(arm_params.null_angles))];
+constraint_torque = -sign(angle_diff).*exp(30*(abs(angle_diff))/(pi/2)-27);
 
  %matrix equations 
 M = [m(2)*lc(1)^2+m(2)*l(1)^2+i(1), m(2)*l(1)*lc(2)^2*cos(theta(1)-theta(2));
