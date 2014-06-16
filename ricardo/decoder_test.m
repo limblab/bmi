@@ -132,7 +132,7 @@ try
 
             
             m_data_1.Data.EMG_data = EMG_data;
-            cursor_pos = 100*m_data_2.Data.x_hand;                       
+            cursor_pos = m_data_2.Data.x_hand;                       
 
 %             datafile.t = [datafile.t; bin_start_t];
             bin_start_t = data.sys_time;

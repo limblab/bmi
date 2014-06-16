@@ -1,4 +1,4 @@
-online = 0;
+online = 1;
 if online
     XPC_IP = '192.168.0.1';
     XPC_PORT = 24998;
