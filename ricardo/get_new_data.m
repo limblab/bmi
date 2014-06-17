@@ -98,6 +98,12 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
 %     end
 
 %     new_spikes = cellfun(@length,ts_cell_array(1:params.n_neurons,2))/binsize;
+    if ~isempty(strfind(ts_cell_array(:,1),'elec'))
+        [~,elec_map_idx,data_idx] = intersect(params.elec_map(:,4),ts_cell_array(:,1));
+        chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);        
+        ts_cell_array(data_idx,1) = chan_names(elec_map_idx)';
+    end
+    
     if isfield(params,'neuron_decoder')
         if ~isempty(params.neuron_decoder)
             new_spikes = zeros(size(params.neuron_decoder.neuronIDs,1),1);
