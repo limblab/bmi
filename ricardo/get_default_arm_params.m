@@ -51,5 +51,10 @@ arm_params.Vmax = 1;
 arm_params.emg_thres = .2;
 arm_params.max_torque = 1;
 
+% Perreault arm
+arm_params.emg_to_torque_gain = [10;10];
+arm_params.joint_stiffness_min = [0;0];
+arm_params.joint_stiffness_max = [0;0];
+
 % Control mode
 arm_params.control_mode = 'dynamic';
