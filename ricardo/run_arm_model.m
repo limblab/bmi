@@ -118,6 +118,9 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
             case 'prosthesis'
                 [t,x] = ode45(@(t,x0) prosthetic_arm_model(t,x0,arm_params),t_temp,x0,options);
                 [~,out_var] = prosthetic_arm_model(t,x(end,:),arm_params);
+            case 'perreault'
+                [t,x] = ode45(@(t,x0) perreault_arm_model(t,x0,arm_params),t_temp,x0,options);
+                [~,out_var] = perreault_arm_model(t,x(end,:),arm_params);
         end
         musc_force = out_var(1:4);
         F_end = out_var(5:6);
