@@ -1,0 +1,56 @@
+function measure_force_offsets()
+% function measure_force_offsets()
+% Take a measurement of the force handle while it's being unused to get the
+% offsets before a recording session, and save to
+% '\\citadel\data\TestData\force_offset_cal.dat'
+% Drawing from 'decoder_test.m', but with a hacked 'params' variable
+current_location = mfilename('fullpath');
+[current_folder,~,~] = fileparts(current_location);
+cd(current_folder)
+add_these = strfind(current_folder,'\');
+add_these = current_folder(1:add_these(end)-1);
+addpath(genpath(add_these))
+clearxpc
+
+calibration_pause = 0.5; % seconds to collect data across
+%% Initialize 'params'
+% Only initialize required values.
+params.online = 1;
+params.output = 'xpc';
+params.display_plots = 0;
+params.save_data = 0;
+
+%% Initialize xPC connection
+xpc = open_xpc_udp(params);
+handles = setup_display_plots(params);
+handles = get_new_filename(params,handles);
+handles = start_cerebus_stream(params,handles,xpc);
+
+%% Get data
+A = cbmex('trialconfig',1);
+if ~A, disp('Not recording. Why?'); end
+pause(calibration_pause); % Let data accumulate in buffer
+[spike_data,~,continuous_data] = cbmex('trialdata',1);
+cbmex('close');
+
+%% Extract data
+chanNames = spike_data(:,1);
+continuous_data{:,1} = chanNames([continuous_data{:,1}]); % Replace chan numbers with names
+dataColumn = 3; % Column in 'continuous_data' that contains data values (no need to keep chan names or sampling rates)
+handleforce = continuous_data(strncmp(continuous_data(:,1),'ForceHandle',11),dataColumn); % Only take force data - 'ForceHandle[1-6]' - not EMGs
+mean_forces = cellfun(@mean, handleforce, 'uni', 0); % Calculate mean value of each
+mean_forces = cell2mat(mean_forces(:)'); % Convert cell to row vector
+
+% Sanity check
+force_diff = cellfun(@diff, handleforce, 'uni', 0);
+mean_diff = cellfun(@mean, force_diff, 'uni', 0);
+mean_diff = cell2mat(mean_diff(:)');
+fprintf('Mean "diff" of calibration values:\n');
+disp(mean_diff);
+
+%% Save data file, to be accessed as a memmapfile
+fid = fopen('\\citadel\data\TestData\force_offset_cal.dat','w');
+fwrite(fid,mean_forces,'double');
+fclose(fid);
+echoudp('off');
+

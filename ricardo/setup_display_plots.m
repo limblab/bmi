@@ -38,6 +38,8 @@ function handles = setup_display_plots(params,handles)
         temp2 = get(handles.mode_select_group,'Children');
         temp2 = temp2(temp);
         set(handles.mode_select_group,'SelectedObject',temp2);
+    else
+        handles = [];
     end
 end
 
