@@ -7,6 +7,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     
     x0_default = [pi/4 3*pi/4 0 0];
     x0 = x0_default;   
+    x0_b = [x0 x0];
     i = 0;
     xpc_data = zeros(512,1);    
     options = odeset('RelTol',1e-2,'AbsTol',1e-2);
@@ -113,14 +114,24 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         
         switch(arm_params.control_mode)
             case 'dynamic'
-                [t,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0,options);
+                [t,x] = ode45(@(t,x0) sandercock_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = sandercock_model(t,x(end,:),arm_params);
             case 'prosthesis'
-                [t,x] = ode45(@(t,x0) prosthetic_arm_model(t,x0,arm_params),t_temp,x0,options);
+                [t,x] = ode45(@(t,x0) prosthetic_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = prosthetic_arm_model(t,x(end,:),arm_params);
             case 'perreault'
-                [t,x] = ode45(@(t,x0) perreault_arm_model(t,x0,arm_params),t_temp,x0,options);
+                [t,x] = ode45(@(t,x0_b) perreault_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
                 [~,out_var] = perreault_arm_model(t,x(end,:),arm_params);
+                x0 = x0_b(1:4);
+%                 x = x(:,1:4);
+            case 'miller'
+                if ~isfield(arm_params,'musc_length_old')
+                    arm_params.musc_length_old = [];
+                end
+                [t,x] = ode45(@(t,x0) miller_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [~,out_var] = miller_arm_model(t,x(end,:),arm_params);
+                arm_params.musc_length_old = out_var(7:8);
+                out_var
         end
         musc_force = out_var(1:4);
         F_end = out_var(5:6);
@@ -143,6 +154,11 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         end
         
         x0 = x(end,:);
+        if strcmp(arm_params.control_mode,'perreault')
+            x0_b = x(end,:);
+        else
+            x0_b = [x0 x0];
+        end
         
         xH = 100*arm_params.X_h;
         xH(1) = arm_params.x_gain * xH(1);

@@ -43,9 +43,9 @@ muscle_torque = arm_params.emg_to_torque_gain.*emg_diff;
 
 emg_coactivation = [min(arm_params.musc_act(1),arm_params.musc_act(2));...
     min(arm_params.musc_act(3),arm_params.musc_act(4))];
-joint_error = [theta(5)-theta(1) theta(6)-theta(2)];
-joint_stiffness = emg_coactivation.*(arm_params.joint_stiffness_max-arm_params.joint_stiffness_min)+...
-    arm_params.joint_stiffness_min;
+joint_error = [theta(5)-theta(1);theta(6)-theta(2)];
+joint_stiffness = emg_coactivation.*(arm_params.joint_stiffness_max(:)-arm_params.joint_stiffness_min(:))+...
+    arm_params.joint_stiffness_min(:);
 muscle_stiffness_torque = joint_stiffness.*joint_error;
 
 constraint_angle_diff = [theta(1)-arm_params.null_angles(1);theta(2)-(theta(1)+diff(arm_params.null_angles))];
@@ -70,13 +70,13 @@ T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_
 tau_c = [-theta(3)*c(1);-(theta(4)-theta(3))*c(2)]; % viscosity
 tau = T(:) + tau_c;
 xdot(1:2,1)=theta(3:4);
-xdot(3:4,1)= M\(T_endpoint + tau-C + muscle_torque + muscle_stiffness_torque + constraint_torque);
+xdot(3:4,1)= M\(T_endpoint + tau - C + muscle_torque + muscle_stiffness_torque + constraint_torque);
 
 tau_c_b = [-theta(7)*c(1);-(theta(8)-theta(7))*c(2)]; % viscosity
 tau_b = tau_c_b;
 xdot(5:6,1)=theta(7:8);
 xdot(7:8,1)= M_b\(tau_b-C_b + muscle_torque + muscle_stiffness_torque + constraint_torque);
 
-out_var = [muscle_torque(:);muscle_stiffness_torque(:);F_end(:)]';
+out_var = [muscle_torque(:);muscle_stiffness_torque(:);F_end(:);xdot(:)]';
 
 end
