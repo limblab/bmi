@@ -81,6 +81,24 @@ drawnow;
 try
     params = evalin('base','params');
     recording = 0;
+    %% Get force handle calibration data
+    % Load force offsets measured during calibration routine (run
+    % before monkey is in chair, with handle in rotated position.)
+    % Calibration routine: 'measure_force_offsets.m'
+    %     1 x 6 array of force handle offsets
+    % force_offsets = [306.5423 -847.5678 132.1442 -177.3951 -451.7461 360.2517]; %these offsets computed Jan 14, 2013
+    % force_offsets = [373.2183 -1017.803 -87.8063 -107.1702 -709.7454 21.6321];
+    m_force = memmapfile('\\citadel\data\TestData\force_offset_cal.dat',...
+                         'Format',{'double', [1 6], 'offsets';...
+                         'double', [6 2], 'fhcal';...
+                         'double', [2 2], 'rotcal'},'Repeat',Inf);%,'Writable','True');
+                         % (make 'writable==True' to adjust offsets through session)
+    m_force = m_force.Data;
+    fhcal = m_force.fhcal;
+    rotcal = m_force.rotcal;
+    force_offsets = m_force.offsets;
+    Fy_invert = 1;
+    
     while(~get(handles.stop_bmi,'Value') && ... 
             ( params.online || ...
                 ~params.online && bin_count < max_cycles) )
@@ -100,7 +118,7 @@ try
             %% timers and counters
             cycle_t = toc(t_buf); %this should be equal to bin_size, but may be longer if last cycle operations took too long.
             t_buf   = tic; % reset buffering timer
-            bin_count = bin_count +1;     
+            bin_count = bin_count +1;
             
             %% Get and Process New Data
             data = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
@@ -130,9 +148,16 @@ try
 %                 x0 = zeros(1,4);
 %             end
 
-            
-            m_data_1.Data.EMG_data = EMG_data;
-            cursor_pos = m_data_2.Data.x_hand;                       
+            if isfield(params,'mode') && strncmpi(params.mode,'iso',3) % ...if task was isometric
+                % fhcal, rotcal, force_offsets
+                force_data = data.handleforce;
+                % Convert force to cursor position
+                %       still need to add gain ("params.forcegain"?)
+                cursor_pos = (force_data - force_offsets)*fhcal*rotcal;%*params.forcegain;
+            else % ...if task was a movement task
+                m_data_1.Data.EMG_data = EMG_data;
+                cursor_pos = m_data_2.Data.x_hand;                       
+            end
 
 %             datafile.t = [datafile.t; bin_start_t];
             bin_start_t = data.sys_time;

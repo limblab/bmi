@@ -10,30 +10,16 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
         new_analog = get_new_analog(continuous_cell_array);       
         data.analog_channels = [continuous_cell_array{:,1}]';
         
-        % Let's do the force stuff now (turn force into cursor position)
+        % Let's do the force stuff now (get force data)
         % From 'calc_from_raw.m', "elseif opts.rothandle" section:
           handleforce = continuous_cell_array;
-          handleforce{:,1} = ts_cell_array([handleforce{:,1}],1); % replace channel numbers with names
-          handleforce = handleforce(strncmp(handleforce(:,1), 'ForceHandle', 11),:); % only take force data - "ForceHandle[1-6]", not EMGs
-          % Fx,Fy,scaleX,scaleY from ATI calibration file:
-          % \\citadel\limblab\Software\ATI FT - March
-          % 2011\Calibration\FT7520.cal
-          % fhcal = [Fx;Fy]./[scaleX;scaleY]
-          % force_offsets acquired empirically by recording static
-          % handle.
-          fhcal = [-0.0129 0.0254 -0.1018 -6.2876 -0.1127 6.2163;...
-                  -0.2059 7.1801 -0.0804 -3.5910 0.0641 -3.6077]'./1000;
-          rotcal = [-1 0; 0 1];  
-%           force_offsets = [306.5423 -847.5678 132.1442 -177.3951 -451.7461 360.2517]; %these offsets computed Jan 14, 2013
-%           force_offsets = [373.2183 -1017.803 -87.8063 -107.1702 -709.7454 21.6321];
-          % Load force offsets measured during calibration routine (run
-          % before monkey is in chair, with handle in rotated position.)
-          % Calibration routine: 'measure_force_offsets.m'
-          %     1 x 6 array of force handle offsets
-          m_frc_offsets = memmapfile('\\citadel\data\TestData\force_offset_cal.dat',...
-                                     'Format',{'double', [1 6]});%,'Writable','True'); (add 'writable' to adjust through session)
-          Fy_invert = 1;
-                
+          label_idcs = strncmp(ts_cell_array(:,1),'ForceHandle',11);
+          handleforce{:,1} = ts_cell_array(label_idcs,1); % replace channel numbers with names
+          handleforce = handleforce(strncmp(handleforce(:,1), 'ForceHandle', 11),3); % only take force data - "ForceHandle[1-6]", not EMGs
+          % Pass only mean force value for period: each cell of
+          % 'handleforce' should be a 1-D array of force values, so take
+          % mean of each
+          data.handleforce = cell2mat(cellfun(@mean, handleforce, 'uni', 0));
     else
         data.sys_time = double(offline_data.timeframe(bin_count));
         new_spikes = offline_data.spikeratedata(bin_count,:)';

@@ -45,12 +45,23 @@ mean_forces = cell2mat(mean_forces(:)'); % Convert cell to row vector
 force_diff = cellfun(@diff, handleforce, 'uni', 0);
 mean_diff = cellfun(@mean, force_diff, 'uni', 0);
 mean_diff = cell2mat(mean_diff(:)');
-fprintf('Mean "diff" of calibration values:\n');
+disp('Mean "diff" of calibration values:');
 disp(mean_diff);
 
+% Fx,Fy,scaleX,scaleY from ATI calibration file:
+% \\citadel\limblab\Software\ATI FT - March2011\Calibration\FT7520.cal
+% fhcal = [Fx;Fy]./[scaleX;scaleY]
+% force_offsets acquired empirically by recording static
+% handle.
+fhcal = [-0.0129 0.0254 -0.1018 -6.2876 -0.1127 6.2163;...
+         -0.2059 7.1801 -0.0804 -3.5910 0.0641 -3.6077]'./1000;
+rotcal = [-1 0; 0 1];
+
 %% Save data file, to be accessed as a memmapfile
-fid = fopen('\\citadel\data\TestData\force_offset_cal.dat','w');
+fid = fopen('\\citadel\data\TestData\force_offset_cal.dat','a');
 fwrite(fid,mean_forces,'double');
+fwrite(fid,fhcal,'double');
+fwrite(fid,rotcal,'double');
 fclose(fid);
 echoudp('off');
 
