@@ -131,7 +131,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
                 [t,x] = ode45(@(t,x0) miller_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = miller_arm_model(t,x(end,:),arm_params);
                 arm_params.musc_length_old = out_var(7:8);
-                out_var
+%                 out_var
         end
         musc_force = out_var(1:4);
         F_end = out_var(5:6);

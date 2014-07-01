@@ -12,10 +12,10 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
         
         % Let's do the force stuff now (get force data)
         % From 'calc_from_raw.m', "elseif opts.rothandle" section:
-          handleforce = continuous_cell_array;
-          label_idcs = strncmp(ts_cell_array(:,1),'ForceHandle',11);
-          handleforce{:,1} = ts_cell_array(label_idcs,1); % replace channel numbers with names
-          handleforce = handleforce(strncmp(handleforce(:,1), 'ForceHandle', 11),3); % only take force data - "ForceHandle[1-6]", not EMGs
+          analog_data = continuous_cell_array;
+%           label_idcs = strncmp(ts_cell_array(:,1),'ForceHandle',11);
+          analog_data(:,1) = ts_cell_array([continuous_cell_array{:,1}]',1); % replace channel numbers with names
+          handleforce = analog_data(strncmp(analog_data(:,1), 'ForceHandle', 11),3); % only take force data - "ForceHandle[1-6]", not EMGs
           % Pass only mean force value for period: each cell of
           % 'handleforce' should be a 1-D array of force values, so take
           % mean of each

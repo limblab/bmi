@@ -28,14 +28,14 @@ handles = start_cerebus_stream(params,handles,xpc);
 
 %% Get data
 A = cbmex('trialconfig',1);
-if ~A, disp('Not recording. Why?'); end
+% if ~A, disp('Not recording. Why?'); end
 pause(calibration_pause); % Let data accumulate in buffer
 [spike_data,~,continuous_data] = cbmex('trialdata',1);
 cbmex('close');
 
 %% Extract data
 chanNames = spike_data(:,1);
-continuous_data{:,1} = chanNames([continuous_data{:,1}]); % Replace chan numbers with names
+continuous_data(:,1) = chanNames([continuous_data{:,1}]); % Replace chan numbers with names
 dataColumn = 3; % Column in 'continuous_data' that contains data values (no need to keep chan names or sampling rates)
 handleforce = continuous_data(strncmp(continuous_data(:,1),'ForceHandle',11),dataColumn); % Only take force data - 'ForceHandle[1-6]' - not EMGs
 mean_forces = cellfun(@mean, handleforce, 'uni', 0); % Calculate mean value of each
@@ -58,10 +58,10 @@ fhcal = [-0.0129 0.0254 -0.1018 -6.2876 -0.1127 6.2163;...
 rotcal = [-1 0; 0 1];
 
 %% Save data file, to be accessed as a memmapfile
-fid = fopen('\\citadel\data\TestData\force_offset_cal.dat','a');
+delete('force_offset_cal.dat')
+fid = fopen('force_offset_cal.dat','a');
 fwrite(fid,mean_forces,'double');
 fwrite(fid,fhcal,'double');
 fwrite(fid,rotcal,'double');
 fclose(fid);
-echoudp('off');
-
+clearxpc

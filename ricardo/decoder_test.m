@@ -50,6 +50,21 @@ data = get_default_data(params);
 %         {nan(1,params.n_forces),'predictions'})];%#ok<AGROW>
 % end
 
+measure_force_offsets
+% delete('force_offset_cal.dat')
+% offsets = zeros(1,6);
+% fhcal = zeros(6,2);
+% rotcal = zeros(2,2);
+% fid = fopen('force_offset_cal.dat','w');
+% fwrite(fid, offsets, 'double');
+% fwrite(fid, fhcal, 'double');
+% fwrite(fid, rotcal, 'double');
+% fclose(fid);
+m_force = memmapfile('force_offset_cal.dat',...
+                     'Format',{'double', [1 6], 'offsets';...
+                     'double', [6 2], 'fhcal';...
+                     'double', [2 2], 'rotcal'},'Repeat',Inf);%,'Writable','True');
+%                          % (make 'writable==True' to adjust offsets through session)
 
 %% Setup figures
 
@@ -88,15 +103,11 @@ try
     %     1 x 6 array of force handle offsets
     % force_offsets = [306.5423 -847.5678 132.1442 -177.3951 -451.7461 360.2517]; %these offsets computed Jan 14, 2013
     % force_offsets = [373.2183 -1017.803 -87.8063 -107.1702 -709.7454 21.6321];
-    m_force = memmapfile('\\citadel\data\TestData\force_offset_cal.dat',...
-                         'Format',{'double', [1 6], 'offsets';...
-                         'double', [6 2], 'fhcal';...
-                         'double', [2 2], 'rotcal'},'Repeat',Inf);%,'Writable','True');
-                         % (make 'writable==True' to adjust offsets through session)
-    m_force = m_force.Data;
-    fhcal = m_force.fhcal;
-    rotcal = m_force.rotcal;
-    force_offsets = m_force.offsets;
+   
+    m_force_data = m_force.Data;
+    fhcal = m_force_data.fhcal;
+    rotcal = m_force_data.rotcal;
+    force_offsets = m_force_data.offsets;
     Fy_invert = 1;
     
     while(~get(handles.stop_bmi,'Value') && ... 

@@ -31,9 +31,8 @@ function bmi_params = bmi_params_defaults(varargin)
 % N2E = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\2014_02_26\Adapted_decoder_2014_02_26_175948_End.mat';
 % N2E = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\2014_02_26\Adapted_decoder_2014_02_26_183740_End.mat';
 % N2E = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\2014_02_27\Adapted_decoder_2014_02_27_144436_End.mat';
-% N2E = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\2014_02_27\Adapted_decoder_2014_02_27_152235_End.mat';
+N2E = '';
 % E2F = [dec_path 'Jango_2014-01-03_WF_001_E2F500_Decoder.mat'];
-E2F = [dec_path 'Jango_WF_2014-03-17_001_E2F_Decoder.mat'];
 E2F.H = zeros(61,2);
 
 bmi_params_defaults = struct( ...

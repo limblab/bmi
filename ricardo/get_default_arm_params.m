@@ -46,10 +46,10 @@ arm_params.left_handed = 0;
 % arm_params.monkey_offset = [(-2*arm_params.left_handed+1)*.08 -sqrt(sum(arm_params.l.^2))]; 
 
 % Prosthetic arm
-arm_params.P_gain = 1;
-arm_params.Vmax = 1;
-arm_params.emg_thres = .2;
-arm_params.max_torque = 1;
+arm_params.P_gain = 10;
+arm_params.Vmax = 10;
+arm_params.emg_thres = .1;
+arm_params.max_torque = 10;
 
 % Perreault arm
 arm_params.emg_to_torque_gain = [10;10];
