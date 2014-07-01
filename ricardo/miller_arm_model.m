@@ -61,6 +61,7 @@ end
 
 musc_length_diff = abs(arm_params.musc_length_old - musc_length);
 
+% From Cui et al, 2008
 musc_stiffness = 23.4*arm_params.musc_act.*arm_params.F_max*502E6*2E-6./...
     (23.4*arm_params.musc_act.*arm_params.F_max*.05 +...
     502E6*2E-6*.05);

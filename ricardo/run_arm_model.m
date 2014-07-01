@@ -113,15 +113,15 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         arm_params.T = arm_params.x_gain*arm_params.T;
         
         switch(arm_params.control_mode)
-            case 'dynamic'
+            case 'hill'
                 [t,x] = ode45(@(t,x0) sandercock_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = sandercock_model(t,x(end,:),arm_params);
             case 'prosthesis'
                 [t,x] = ode45(@(t,x0) prosthetic_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = prosthetic_arm_model(t,x(end,:),arm_params);
-            case 'perreault'
-                [t,x] = ode45(@(t,x0_b) perreault_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
-                [~,out_var] = perreault_arm_model(t,x(end,:),arm_params);
+            case 'hu'
+                [t,x] = ode45(@(t,x0_b) hu_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
+                [~,out_var] = hu_arm_model(t,x(end,:),arm_params);
                 x0 = x0_b(1:4);
 %                 x = x(:,1:4);
             case 'miller'
@@ -131,6 +131,9 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
                 [t,x] = ode45(@(t,x0) miller_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = miller_arm_model(t,x(end,:),arm_params);
                 arm_params.musc_length_old = out_var(7:8);
+            case 'perreault'
+                [t,x] = ode45(@(t,x0) perreault_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [~,out_var] = perreault_arm_model(t,x(end,:),arm_params);
 %                 out_var
         end
         musc_force = out_var(1:4);
@@ -154,7 +157,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         end
         
         x0 = x(end,:);
-        if strcmp(arm_params.control_mode,'perreault')
+        if strcmp(arm_params.control_mode,'hu')
             x0_b = x(end,:);
         else
             x0_b = [x0 x0];
