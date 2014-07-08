@@ -12,6 +12,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     xpc_data = zeros(512,1);    
     options = odeset('RelTol',1e-2,'AbsTol',1e-2);
     arm_params_base = [];
+    flag_reset = 0;
     while ((m_data_1.Data.bmi_running)) % && i < 300)
         i = i+1;                
         old_arm_params = arm_params_base;
@@ -31,8 +32,12 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     
         tic
         cycle_counter = cycle_counter+1;
-           
-        EMG_data = m_data_1.Data.EMG_data;
+        if arm_params.online   
+            EMG_data = m_data_1.Data.EMG_data;
+        else
+            temp_t = [.05*cycle_counter .05*cycle_counter .05*cycle_counter .05*cycle_counter];
+            EMG_data = 500+500*[cos(temp_t(1)) cos(temp_t(2)+pi/2) cos(temp_t(3)+pi/4) cos(temp_t(4)+3*pi/4)];
+        end
         EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
         EMG_data(isnan(EMG_data)) = 0;
         EMG_data = min(EMG_data,1);
@@ -66,13 +71,13 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
 %             m_data_1.Data.EMG_data = .5*ones(size(m_data_1.Data.EMG_data));
 %             m_data_1.Data.EMG_data
                         
-            if mod(cycle_counter,200)==0
-                m_data_1.Data.EMG_data = rand(1,4);
-%                 forces = .99*forces +...
-%                     .01*rand(1,2).*...
-%                     (2*(cos(2*pi*cycle_counter/1000+[pi/3 1.5*pi])>0)-1);
-%                 forces = 2*rand(1,2)-1;
-            end
+%             if mod(cycle_counter,200)==0
+%                 m_data_1.Data.EMG_data = rand(1,4);
+% %                 forces = .99*forces +...
+% %                     .01*rand(1,2).*...
+% %                     (2*(cos(2*pi*cycle_counter/1000+[pi/3 1.5*pi])>0)-1);
+% %                 forces = 2*rand(1,2)-1;
+%             end
             
             forces = min(forces,1);
             forces = max(forces,-1);
@@ -146,7 +151,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         arm_params.theta = x(end,1:2);
         arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x(end,1)) arm_params.l(1)*sin(x(end,1))];
         arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x(end,2)) arm_params.l(2)*sin(x(end,2))];   
-                
+                        
         % If model becomes unstable, restart
         if (abs(arm_params.X_h(1:2)-old_X_h(1:2))>.1 | (abs(arm_params.X_h) > 0.2))
             x0 = x0_default;
@@ -154,13 +159,15 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
             arm_params.theta = x(end,1:2);
             arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x(end,1)) arm_params.l(1)*sin(x(end,1))];
             arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x(end,2)) arm_params.l(2)*sin(x(end,2))];   
+            flag_reset = 1;
         end
         
         x0 = x(end,:);
-        if strcmp(arm_params.control_mode,'hu')
+        if strcmp(arm_params.control_mode,'hu') && ~flag_reset
             x0_b = x(end,:);
         else
             x0_b = [x0 x0];
+            flag_reset = 0;
         end
         
         xH = 100*arm_params.X_h;
@@ -170,6 +177,16 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         xS = 100*arm_params.X_sh;
         xS(1) = arm_params.x_gain * xS(1);
         
+        if numel(x0) > numel(x0_default)
+            xE2 = arm_params.X_sh + [arm_params.l(1)*cos(x(end,5)) arm_params.l(1)*sin(x(end,5))];            
+            xH2 = xE2 + [arm_params.l(2)*cos(x(end,6)) arm_params.l(2)*sin(x(end,6))]; 
+            xE2 = 100 * xE2;
+            xH2 = 100 * xH2;
+        else
+            xE2 = [100*arm_params.X_sh 100*arm_params.X_sh];
+            xH2 = [100*arm_params.X_sh 100*arm_params.X_sh];
+        end
+        
         m_data_2.Data.x_hand = xH;
         m_data_2.Data.elbow_pos = xE;
         m_data_2.Data.shoulder_pos = xS;
@@ -177,10 +194,12 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         if mod(i,1)==0
             dt_hist = circshift(dt_hist,[0 1]);
             dt_hist(1) = toc;
-            set(h.h_plot_1,'YData',dt_hist)
-            set(h.h_plot_2,'XData',[0 F_x],'YData',[0 F_y])
-            set(h.h_plot_3,'XData',[xS(1) xE(1) xH(1)],...
+            set(h.h_plot_dt,'YData',dt_hist)
+            set(h.h_plot_force,'XData',[0 F_x],'YData',[0 F_y])
+            set(h.h_plot_arm,'XData',[xS(1) xE(1) xH(1)],...
                 'YData',[xS(2) xE(2) xH(2)])
+            set(h.h_plot_arm_2,'XData',[xS(1) xE2(1) xH2(1)],...
+                'YData',[xS(2) xE2(2) xH2(2)])
             set(h.h_emg_bar,'YData',EMG_data)
             drawnow
         end

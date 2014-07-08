@@ -1,5 +1,6 @@
-online = 1;
-if online
+arm_params = get_default_arm_params;
+arm_params.online = 0;
+if arm_params.online
     XPC_IP = '192.168.0.1';
     XPC_PORT = 24998;
     xpc = udp(XPC_IP,XPC_PORT);
@@ -39,7 +40,7 @@ end
 % Let know other instance that we're ready
 m_data_2.Data.model_running = 1;
 
-arm_params = get_default_arm_params;
+
 h = create_arm_model_figure;
 
 run_arm_model(m_data_1,m_data_2,xpc,h)

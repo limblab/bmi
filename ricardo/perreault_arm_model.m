@@ -1,4 +1,4 @@
-function [xdot,out_var] = hu_arm_model(t,theta,arm_params)
+function [xdot,out_var] = perreault_arm_model(t,theta,arm_params)
 
 %parameters
 g = 0;

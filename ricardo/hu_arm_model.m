@@ -36,10 +36,10 @@ cos_theta_2_b = cos(theta(6));
 % 
 % T = -pinv(J)*F;
 
-emg_diff = [arm_params.musc_act(1)-arm_params.musc_act(2);...
+emg_diff = [arm_params.musc_act(1)-arm_params.musc_act(2)...
     arm_params.musc_act(3)-arm_params.musc_act(4)];
 
-muscle_torque = arm_params.emg_to_torque_gain.*emg_diff;
+muscle_torque = (arm_params.emg_to_torque_gain.*emg_diff)';
 
 emg_coactivation = [arm_params.musc_act(1)+arm_params.musc_act(2);...
     arm_params.musc_act(3)+arm_params.musc_act(4)];
@@ -78,7 +78,7 @@ xdot(3:4,1)= M\(T_endpoint + tau - C + muscle_torque + muscle_stiffness_torque +
 tau_c_b = [-theta(7)*c(1);-(theta(8)-theta(7))*c(2)]; % viscosity
 tau_b = tau_c_b;
 xdot(5:6,1)=theta(7:8);
-xdot(7:8,1)= M_b\(tau_b-C_b + muscle_torque + muscle_stiffness_torque + constraint_torque_b);
+xdot(7:8,1)= M_b\(tau_b-C_b + muscle_torque + constraint_torque_b);
 
 out_var = [muscle_torque(:);muscle_stiffness_torque(:);F_end(:);xdot(:)]';
 
