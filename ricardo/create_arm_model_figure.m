@@ -29,6 +29,7 @@ function h = create_arm_model_figure
     % EMG bar graph
     subplot(325)    
     h.h_emg_bar = bar(zeros(1,4));
+    set(gca,'XTickLabels',{'AD','PD','Bi','Tri'})
     ylim([0 1])
     
     drawnow
