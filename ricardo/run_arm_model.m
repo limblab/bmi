@@ -1,4 +1,4 @@
-function run_arm_model(m_data_1,m_data_2,xpc,h)    
+function run_arm_model(m_data_1,m_data_2,h)    
     cycle_counter = 0;    
     dt_hist = 0.01*ones(1,10);
     F_x = 0;
@@ -9,7 +9,7 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
     x0 = x0_default;   
     x0_b = [x0 x0];
     i = 0;
-    xpc_data = zeros(512,1);    
+%     xpc_data = zeros(512,1);    
     options = odeset('RelTol',1e-2,'AbsTol',1e-2);
     arm_params_base = [];
     flag_reset = 0;
@@ -44,47 +44,49 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
         EMG_data = max(EMG_data,0);
 %         EMG_data = min(EMG_data,1);
             
-        if isobject(xpc)
-            if mod(i,1) == 0
-                fopen(xpc);
-                xpc_data = fread(xpc);
-                fclose(xpc);
-            end
-
-            if length(xpc_data)>=72
-                F_x = typecast(uint8(xpc_data(41:48)),'double');
-                F_y = typecast(uint8(xpc_data(49:56)),'double');
-            else
-                disp('No udp data read')
-            end
-        else            
-%             cycle_counter = 0
-%             cycle_counter = cycle_counter+1;
-%             m_data_1.Data.EMG_data = .9*m_data_1.Data.EMG_data +...
-%                 .1*rand(size(m_data_1.Data.EMG_data)).*...
-%                 (2*(cos(cycle_counter/10000+[0 pi/3 1.5*pi pi/4])>0)-1);
-%             m_data_1.Data.EMG_data =... .9*m_data_1.Data.EMG_data +...
-%                 1.*...
-%                 (.5*(cos(cycle_counter/100+[0 pi/3 1.5*pi pi/4]))+.5);
-%             m_data_1.Data.EMG_data = min(m_data_1.Data.EMG_data,1);
-%             m_data_1.Data.EMG_data = max(m_data_1.Data.EMG_data,0);
-%             m_data_1.Data.EMG_data = .5*ones(size(m_data_1.Data.EMG_data));
-%             m_data_1.Data.EMG_data
-                        
-%             if mod(cycle_counter,200)==0
-%                 m_data_1.Data.EMG_data = rand(1,4);
-% %                 forces = .99*forces +...
-% %                     .01*rand(1,2).*...
-% %                     (2*(cos(2*pi*cycle_counter/1000+[pi/3 1.5*pi])>0)-1);
-% %                 forces = 2*rand(1,2)-1;
+        F_x = m_data_1.Data.force_xpc(1);
+        F_y = m_data_1.Data.force_xpc(2);
+%         if isobject(xpc)
+%             if mod(i,1) == 0
+%                 fopen(xpc);
+%                 xpc_data = fread(xpc);
+%                 fclose(xpc);
 %             end
-            
-            forces = min(forces,1);
-            forces = max(forces,-1);
-            F_x = 5*forces(1);
-            F_y = 5*forces(2);
-            
-        end
+% 
+%             if length(xpc_data)>=72
+%                 F_x = typecast(uint8(xpc_data(41:48)),'double');
+%                 F_y = typecast(uint8(xpc_data(49:56)),'double');
+%             else
+%                 disp('No udp data read')
+%             end
+%         else            
+% %             cycle_counter = 0
+% %             cycle_counter = cycle_counter+1;
+% %             m_data_1.Data.EMG_data = .9*m_data_1.Data.EMG_data +...
+% %                 .1*rand(size(m_data_1.Data.EMG_data)).*...
+% %                 (2*(cos(cycle_counter/10000+[0 pi/3 1.5*pi pi/4])>0)-1);
+% %             m_data_1.Data.EMG_data =... .9*m_data_1.Data.EMG_data +...
+% %                 1.*...
+% %                 (.5*(cos(cycle_counter/100+[0 pi/3 1.5*pi pi/4]))+.5);
+% %             m_data_1.Data.EMG_data = min(m_data_1.Data.EMG_data,1);
+% %             m_data_1.Data.EMG_data = max(m_data_1.Data.EMG_data,0);
+% %             m_data_1.Data.EMG_data = .5*ones(size(m_data_1.Data.EMG_data));
+% %             m_data_1.Data.EMG_data
+%                         
+% %             if mod(cycle_counter,200)==0
+% %                 m_data_1.Data.EMG_data = rand(1,4);
+% % %                 forces = .99*forces +...
+% % %                     .01*rand(1,2).*...
+% % %                     (2*(cos(2*pi*cycle_counter/1000+[pi/3 1.5*pi])>0)-1);
+% % %                 forces = 2*rand(1,2)-1;
+% %             end
+%             
+%             forces = min(forces,1);
+%             forces = max(forces,-1);
+%             F_x = 5*forces(1);
+%             F_y = 5*forces(2);
+%             
+%         end
         
         arm_params.F_end = [F_x F_y];
 %         clc
@@ -204,12 +206,6 @@ function run_arm_model(m_data_1,m_data_2,xpc,h)
             drawnow
         end
         
-    end
-    if ~isempty('xpc')
-        fclose(xpc);
-        delete(xpc);
-        clear xpc;
-        close all
-        exit
-    end
+    end   
+    quit
 end

@@ -78,6 +78,16 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
             emg_decoder = [];
             params.n_emgs = 0;
             params.n_lag_emg = 0;      
+        case 'Iso'
+            neuron_decoder = [];
+            neuron_decoder.H = [];
+            % overwrite parameters according to loaded decoder            
+            params.n_lag = [];
+            params.n_neurons = [];
+            params.binsize   = .05;
+            emg_decoder = [];
+            params.n_emgs = [];
+            params.n_lag_emg = [];  
         otherwise
             error('Invalid decoding mode. Please specifiy params.mode = [''emgcascade'' | ''direct'' ]');
     end

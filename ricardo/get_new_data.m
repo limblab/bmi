@@ -1,4 +1,4 @@
-function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
+function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc)
     if params.online
         % read and flush data buffer
 %         ts_cell_array = cbmex('trialdata',1);
@@ -9,17 +9,23 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
         analog_fs = max([continuous_cell_array{:,2}]);
         new_analog = get_new_analog(continuous_cell_array);       
         data.analog_channels = [continuous_cell_array{:,1}]';
+        new_xpc_data = get_new_xpc_data(xpc);
         
         % Let's do the force stuff now (get force data)
         % From 'calc_from_raw.m', "elseif opts.rothandle" section:
-          analog_data = continuous_cell_array;
-%           label_idcs = strncmp(ts_cell_array(:,1),'ForceHandle',11);
-          analog_data(:,1) = ts_cell_array([continuous_cell_array{:,1}]',1); % replace channel numbers with names
-          handleforce = analog_data(strncmp(analog_data(:,1), 'ForceHandle', 11),3); % only take force data - "ForceHandle[1-6]", not EMGs
-          % Pass only mean force value for period: each cell of
-          % 'handleforce' should be a 1-D array of force values, so take
-          % mean of each
-          data.handleforce = cell2mat(cellfun(@mean, handleforce, 'uni', 0));
+        analog_data = continuous_cell_array;
+        %           label_idcs = strncmp(ts_cell_array(:,1),'ForceHandle',11);
+        analog_data(:,1) = ts_cell_array([continuous_cell_array{:,1}]',1); % replace channel numbers with names
+        handleforce = analog_data(strncmp(analog_data(:,1), 'ForceHandle', 11),3); % only take force data - "ForceHandle[1-6]", not EMGs        
+%         force(:,1) = temp(:,1).*cos(-th_2_adj)' - temp(:,2).*sin(th_2_adj)';
+%         force(:,2) = temp(:,1).*sin(th_2_adj)' + temp(:,2).*cos(th_2_adj)';
+        % Pass only mean force value for period: each cell of
+        % 'handleforce' should be a 1-D array of force values, so take
+        % mean of each
+        data.handleforce = cell2mat(cellfun(@mean, handleforce, 'uni', 0));
+        data.handleforce = (data.handleforce' - params.force_offsets)*params.fhcal*params.rotcal;
+        data.handleforce = [data.handleforce(1)*cos(2*pi-new_xpc_data.theta(2)) - data.handleforce(2)*sin(2*pi-new_xpc_data.theta(2)) ...
+            data.handleforce(1)*sin(2*pi-new_xpc_data.theta(2)) + data.handleforce(2)*cos(2*pi-new_xpc_data.theta(2))];
     else
         data.sys_time = double(offline_data.timeframe(bin_count));
         new_spikes = offline_data.spikeratedata(bin_count,:)';
@@ -116,7 +122,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
     end
     
     if isfield(params,'neuron_decoder')
-        if ~isempty(params.neuron_decoder)
+        if ~isempty(params.neuron_decoder.H)
             new_spikes = zeros(size(params.neuron_decoder.neuronIDs,1),1);
             for iNeuron = 1:size(params.neuron_decoder.neuronIDs,1)
         %         ts_row_idx = find((strcmp(ts_cell_array(:,1),['elec' num2str(params.neuron_decoder.neuronIDs(iNeuron,1))])));
@@ -128,10 +134,10 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
                 end
             end
         else
-            new_spikes = zeros(params.n_neurons,1);
+            new_spikes = 0;
         end
     else
-        new_spikes = zeros(params.n_neurons,1);
+        new_spikes = 0;
     end
     %remove artifact (80% of neurons have spikes for this bin)
 %     while (length(nonzeros(new_spikes))>.8*length(unique(params.neuron_decoder.neuronIDs(:,1))))
@@ -239,4 +245,18 @@ function new_analog = get_new_analog(continuous_cell_array)
            new_analog(:,iChan) = resample(double(continuous_cell_array{iChan,3}),max_cellsz,cellsz(iChan));
        end
    end 
+end
+function new_xpc_data = get_new_xpc_data(xpc)
+    fopen(xpc.xpc_read);
+    xpc_data = fread(xpc.xpc_read);
+    fclose(xpc.xpc_read);
+
+    if length(xpc_data)>=72
+        new_xpc_data.Force = [typecast(uint8(xpc_data(41:48)),'double') typecast(uint8(xpc_data(49:56)),'double')];
+        new_xpc_data.theta = [typecast(uint8(xpc_data(57:64)),'double') typecast(uint8(xpc_data(65:72)),'double')];
+    else
+        new_xpc_data.Force = nan(1,2);
+        new_xpc_data.theta = nan(1,2);
+        disp('No udp data read')
+    end
 end

@@ -6,9 +6,11 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance
 
     EMG_data = zeros(1,4);
     bmi_running = 1;
+    force_xpc = zeros(1,2);
     fid = fopen('data_1.dat','w');
     fwrite(fid, EMG_data, 'double');
     fwrite(fid, bmi_running, 'double');
+    fwrite(fid, force_xpc, 'double');
     fclose(fid);
 
     model_running = 0;
@@ -28,7 +30,8 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance
 
     m_data_1 = memmapfile('data_1.dat',...
     'Format',{'double',[1 4],'EMG_data';...
-    'double',[1 1],'bmi_running'},'Writable',true);
+    'double',[1 1],'bmi_running';...
+    'double',[1 2],'force_xpc'},'Writable',true);
 
     m_data_2 = memmapfile('data_2.dat',...
     'Format',{'double',[1 1],'model_running';...

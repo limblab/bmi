@@ -1,21 +1,22 @@
 arm_params = get_default_arm_params;
-arm_params.online = 0;
+arm_params.online = 1;
 if arm_params.online
-    XPC_IP = '192.168.0.1';
-    XPC_PORT = 24998;
-    xpc = udp(XPC_IP,XPC_PORT);
-    set(xpc,'ByteOrder','littleEndian');
-    set(xpc,'LocalHost','192.168.0.10');
-    set(xpc,'LocalPort',24998);
-    set(xpc,'Timeout',.05);
-    set(xpc,'InputBufferSize',100);
-    set(xpc,'InputDatagramPacketSize',100);
-    set(xpc, 'ReadAsyncMode', 'continuous');
+%     XPC_IP = '192.168.0.1';
+%     XPC_PORT = 24998;
+%     xpc = udp(XPC_IP,XPC_PORT);
+%     set(xpc,'ByteOrder','littleEndian');
+%     set(xpc,'LocalHost','192.168.0.10');
+%     set(xpc,'LocalPort',24998);
+%     set(xpc,'Timeout',.05);
+%     set(xpc,'InputBufferSize',100);
+%     set(xpc,'InputDatagramPacketSize',100);
+%     set(xpc, 'ReadAsyncMode', 'continuous');
 %     fopen(xpc);
 
     m_data_1 = memmapfile('data_1.dat',...
     'Format',{'double',[1 4],'EMG_data';...
-    'double',[1 1],'bmi_running'},'Writable',true);
+    'double',[1 1],'bmi_running';...
+    'double',[1 2],'force_xpc'},'Writable',true);
 
     m_data_2 = memmapfile('data_2.dat',...
     'Format',{'double',[1 1],'model_running';...
@@ -25,10 +26,11 @@ if arm_params.online
     'double',[1 2],'shoulder_pos';...
     'double',[1 2],'elbow_pos'},'Writable',true);
 else
-    xpc = [];
+%     xpc = [];
     m_data_1.Data.EMG_data = zeros(1,4);
     m_data_1.Data.bmi_running = 2;
-    m_data_2.Data.model_running = 0;
+    m_data_1.Data.force_xpc = zeros(1,2);
+    m_data_2.Data.model_running = 0;    
 %     m_data_2.Data.file_name = repmat(' ',1,200);
     m_data_2.Data.x_hand = [0 0];
     m_data_2.Data.musc_force = zeros(1,4);
@@ -43,5 +45,5 @@ m_data_2.Data.model_running = 1;
 
 h = create_arm_model_figure;
 
-run_arm_model(m_data_1,m_data_2,xpc,h)
+run_arm_model(m_data_1,m_data_2,h)
 

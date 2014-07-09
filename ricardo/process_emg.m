@@ -32,6 +32,9 @@ elseif strcmp(params.mode,'N2E')
     end    
     EMG_raw = predictions(idx);
     EMG_data = predictions(idx);    
+else
+    EMG_raw = zeros(1,4);
+    EMG_data = zeros(1,4);
 end
     
 

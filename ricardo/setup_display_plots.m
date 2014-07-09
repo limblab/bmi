@@ -36,11 +36,17 @@ function handles = setup_display_plots(params,handles)
             'String','Vel','Position',[.1 .4 .8 .2]);
         handles.radio_button_iso = uicontrol('Units','normalized','Style','radiobutton',...
             'Parent',handles.mode_select_group,...
-            'String','Isometric','Position',[.1 .2 .8 .2]);
+            'String','Iso','Position',[.1 .2 .8 .2]);
         temp = strcmp(get(get(handles.mode_select_group,'Children'),'String'),params.mode);
         temp2 = get(handles.mode_select_group,'Children');
         temp2 = temp2(temp);
         set(handles.mode_select_group,'SelectedObject',temp2);
+        handles.label_force_to_cursor_gain = uicontrol('Units','normalized','Style','text',...
+            'Parent',handles.mode_select_group,...
+            'String','Force to cursor gain','Position',[.1 0 .6 .2]);
+        handles.textbox_force_to_cursor_gain = uicontrol('Units','normalized','Style','edit',...
+            'Parent',handles.mode_select_group,...
+            'String','.2','Position',[.7 .1 .2 .1],'Callback',@gainchange_Callback);
     else
         handles = [];
     end
@@ -58,5 +64,12 @@ end
 function selcbk(source,eventdata)
     params = evalin('base','params');
     params.mode = get(eventdata.NewValue,'String');    
+    assignin('base','params',params);
+end
+
+function gainchange_Callback(hObject,eventdata)
+    new_gain = str2double(get(hObject,'String'));
+    params = evalin('base','params');
+    params.force_to_cursor_gain = new_gain;    
     assignin('base','params',params);
 end

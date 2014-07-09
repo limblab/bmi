@@ -1,4 +1,4 @@
-function measure_force_offsets()
+function params = measure_force_offsets(params)
 % function measure_force_offsets()
 % Take a measurement of the force handle while it's being unused to get the
 % offsets before a recording session, and save to
@@ -12,19 +12,19 @@ add_these = current_folder(1:add_these(end)-1);
 addpath(genpath(add_these))
 clearxpc
 
-calibration_pause = 0.5; % seconds to collect data across
+calibration_pause = 1; % seconds to collect data across
 %% Initialize 'params'
 % Only initialize required values.
-params.online = 1;
-params.output = 'xpc';
-params.display_plots = 0;
-params.save_data = 0;
+params_2.online = 1;
+params_2.output = 'xpc';
+params_2.display_plots = 0;
+params_2.save_data = 0;
 
 %% Initialize xPC connection
-xpc = open_xpc_udp(params);
-handles = setup_display_plots(params);
-handles = get_new_filename(params,handles);
-handles = start_cerebus_stream(params,handles,xpc);
+xpc = open_xpc_udp(params_2);
+handles = setup_display_plots(params_2);
+handles = get_new_filename(params_2,handles);
+handles = start_cerebus_stream(params_2,handles,xpc);
 
 %% Get data
 A = cbmex('trialconfig',1);
@@ -53,15 +53,10 @@ disp(mean_diff);
 % fhcal = [Fx;Fy]./[scaleX;scaleY]
 % force_offsets acquired empirically by recording static
 % handle.
-fhcal = [-0.0129 0.0254 -0.1018 -6.2876 -0.1127 6.2163;...
+params.fhcal = [-0.0129 0.0254 -0.1018 -6.2876 -0.1127 6.2163;...
          -0.2059 7.1801 -0.0804 -3.5910 0.0641 -3.6077]'./1000;
-rotcal = [-1 0; 0 1];
-
-%% Save data file, to be accessed as a memmapfile
-delete('force_offset_cal.dat')
-fid = fopen('force_offset_cal.dat','a');
-fwrite(fid,mean_forces,'double');
-fwrite(fid,fhcal,'double');
-fwrite(fid,rotcal,'double');
-fclose(fid);
+params.rotcal = [-1 0; 0 1];
+params.force_offsets = mean_forces;
+params.Fy_invert = 1;
+    
 clearxpc

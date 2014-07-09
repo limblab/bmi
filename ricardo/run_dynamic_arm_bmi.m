@@ -1,13 +1,14 @@
 % run_dynamic_arm_bmi
 clear params
-params.monkey_name = 'Mini';
+params.monkey_name = 'Chewie';
 params.save_dir = ['E:\' params.monkey_name];
-params.mode = 'EMG'; % EMG | N2E | Vel (not implemented yet) | Isometric
+params.mode = 'EMG'; % EMG | N2E | Vel (not implemented yet) | Iso
 params.task_name = ['DCO_' params.mode];
 params.neuron_decoder = '\\citadel\data\Mini_7H1\Ricardo\Mini_2014-05-27_decoders\Mini_2014-05-27_frankendecoder.mat';
 params.map_file = '\\citadel\limblab\lab_folder\Animal-Miscellany\Mini 7H1\Blackrock array info\1025-0592.cmp';
 params.N2E = '';
 params.output = 'xpc';
+params.force_to_cursor_gain = .2;
 
 if exist('params','var')
     params = bmi_params_defaults(params);
@@ -16,4 +17,4 @@ else
 end
 params.elec_map = read_cmp(params.map_file);
 
-decoder_test(params)
+run_decoder(params)

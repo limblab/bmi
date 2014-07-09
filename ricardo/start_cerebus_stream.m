@@ -5,8 +5,12 @@ connection = cbmex('open',1);
 if ~connection
     echoudp('off');
     if exist('xpc','var')
-        fclose(xpc);
-        delete(xpc);
+        fclose(xpc.xpc_read);
+        delete(xpc.xpc_read);
+        fclose(xpc.xpc_write);
+        delete(xpc.xpc_write);
+        echoudp('off')
+        clear xpc
     end
     close(handles.keep_running);
     error('Connection to Central Failed');
