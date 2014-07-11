@@ -26,6 +26,11 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc)
         data.handleforce = (data.handleforce' - params.force_offsets)*params.fhcal*params.rotcal;
         data.handleforce = [data.handleforce(1)*cos(2*pi-new_xpc_data.theta(2)) - data.handleforce(2)*sin(2*pi-new_xpc_data.theta(2)) ...
             data.handleforce(1)*sin(2*pi-new_xpc_data.theta(2)) + data.handleforce(2)*cos(2*pi-new_xpc_data.theta(2))];
+        
+        data.force_xpc = new_xpc_data.Force;
+%         if isnan(new_xpc_data.Force)
+%             pause
+%         end
     else
         data.sys_time = double(offline_data.timeframe(bin_count));
         new_spikes = offline_data.spikeratedata(bin_count,:)';
@@ -134,10 +139,10 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
                 end
             end
         else
-            new_spikes = 0;
+            new_spikes = zeros(0,1);
         end
     else
-        new_spikes = 0;
+        new_spikes = zeros(0,1);
     end
     %remove artifact (80% of neurons have spikes for this bin)
 %     while (length(nonzeros(new_spikes))>.8*length(unique(params.neuron_decoder.neuronIDs(:,1))))

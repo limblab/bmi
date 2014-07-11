@@ -1,9 +1,9 @@
-function [params,handles] = setup_datafiles(params,handles,data,offline_data,w)
+function [params,handles] = setup_datafiles(params,handles,data,offline_data,w,xpc)
 
 if params.save_data 
     handles = get_new_filename(params,handles);
     handles.data_file = fullfile(handles.save_dir, [handles.filename '_data.txt']);        
-    data_temp = get_new_data(params,data,offline_data,0,1,w);
+    data_temp = get_new_data(params,data,offline_data,0,1,w,xpc);
     [~,~,emg_chans] = process_emg(params,data_temp,zeros(1,100));
     [ts_cell_array, ~, ~] = cbmex('trialdata', 1);
 %     params.n_neurons = sum(~cellfun(@isempty,strfind(ts_cell_array(:,1),'elec')));

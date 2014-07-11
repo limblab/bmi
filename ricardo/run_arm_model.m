@@ -46,6 +46,12 @@ function run_arm_model(m_data_1,m_data_2,h)
             
         F_x = m_data_1.Data.force_xpc(1);
         F_y = m_data_1.Data.force_xpc(2);
+        
+        if isnan(F_x) || isnan(F_y)
+            F_x = 0;
+            F_y = 0;
+        end
+        
 %         if isobject(xpc)
 %             if mod(i,1) == 0
 %                 fopen(xpc);
@@ -91,16 +97,16 @@ function run_arm_model(m_data_1,m_data_2,h)
         arm_params.F_end = [F_x F_y];
 %         clc
         if arm_params.X_h(1) < -.12
-            arm_params.F_end(1) = arm_params.x_gain*10;
+            arm_params.F_end(1) = -(arm_params.X_h(1)-(-.12))*arm_params.x_gain*500;
         end
         if arm_params.X_h(1) > .12
-            arm_params.F_end(1) = arm_params.x_gain*-10;
+            arm_params.F_end(1) = -(arm_params.X_h(1)-(.12))*arm_params.x_gain*500;
         end
         if arm_params.X_h(2) < -.1
-            arm_params.F_end(2) = 10;
+            arm_params.F_end(2) = -(arm_params.X_h(2)-(-.1))*500;
         end
         if arm_params.X_h(2) > .1
-            arm_params.F_end(2) = -10;
+            arm_params.F_end(2) = -(arm_params.X_h(2)-(.1))*500;
         end
         
         arm_params.musc_act = EMG_data;

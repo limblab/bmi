@@ -22,7 +22,8 @@ for iText = 1:length(text)
     temp_text = text{iText};
     temp_text = temp_text(1:strfind(text{iText},char(13))-1);
     temp_text = regexp(temp_text,'\t','split');
-    if length(temp_text)== 5 && str2double(temp_text{5})~=0 && ~strcmp(temp_text{1}(1),'/') && length(temp_text{2}>0)
+    if numel(temp_text)>= 5 && str2double(temp_text{5})~=0 && isempty(strfind('/',temp_text{1})) && length(temp_text{2}>0)
+%     if length(temp_text)== 5 && str2double(temp_text{5})~=0 && ~strcmp(temp_text{1}(1),'/') && length(temp_text{2}>0)
         switch temp_text{3}
             case 'A'
                 bank = 0;

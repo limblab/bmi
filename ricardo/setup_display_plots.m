@@ -24,7 +24,7 @@ function handles = setup_display_plots(params,handles)
             'Parent',handles.control_panel,'Units','normalized','Position',[.1 .7 .3 .1],'Value',0,...
             'Callback',@togglebutton_Callback);   
         handles.mode_select_group = uibuttongroup('Parent',handles.control_panel,...
-            'Units','normalized','Position',[.1 .1 .8 .5],'SelectionChangeFcn',@selcbk);
+            'Units','normalized','Position',[.1 .1 .8 .5],'SelectionChangeFcn',@mode_selection);
         handles.radio_button_n2e = uicontrol('Units','normalized','Style','radiobutton',...
             'Parent',handles.mode_select_group,...
             'String','N2E','Position',[.1 .8 .8 .2]);
@@ -61,9 +61,11 @@ function togglebutton_Callback(hObject,eventdata)
     end
 end
 
-function selcbk(source,eventdata)
+function mode_selection(source,eventdata)
     params = evalin('base','params');
-    params.mode = get(eventdata.NewValue,'String');    
+    params.mode = get(eventdata.NewValue,'String');
+    params.task_name = ['DCO_' params.mode];
+    params = load_decoders(params);
     assignin('base','params',params);
 end
 

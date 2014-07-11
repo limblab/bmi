@@ -23,8 +23,7 @@ function run_decoder(varargin)
     xpc = open_xpc_udp(params);
 
     % Read Decoders and other files
-    [neuron_decoder, ~,params] = load_decoders(params);
-    params.neuron_decoder = neuron_decoder;
+    params = load_decoders(params);    
     params = measure_force_offsets(params);
     assignin('base','params',params);
 
@@ -65,7 +64,7 @@ function run_decoder(varargin)
     drawnow;
 
     % Run cycle
-    try
+%     try
         params = evalin('base','params');
         recording = 0;
 
@@ -76,7 +75,7 @@ function run_decoder(varargin)
             if (reached_cycle_t)
                 if get(handles.record,'Value') && ~recording
                     recording = 1;
-                    [params,handles] = setup_datafiles(params,handles,data,offline_data,w);
+                    [params,handles] = setup_datafiles(params,handles,data,offline_data,w,xpc);
                     cbmex('fileconfig', handles.cerebus_file, '', 1);
                     data.sys_time = cbmex('time');
                 end
@@ -92,26 +91,35 @@ function run_decoder(varargin)
 
                 % Get and Process New Data
                 data = get_new_data(params,data,offline_data,bin_count,cycle_t,w,xpc);
-
+                
+                if size(data.spikes,1)<params.n_lag
+                    data.spikes = zeros(params.n_lag,params.n_neurons);
+                end
                 % Predictions
                 if strcmp(params.mode,'N2E')
-                    predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
+                    predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.neuron_decoder.H;
                 else
                     predictions = [];
                 end
                 [EMG_data,~,~] = process_emg(params,data,predictions);
 
+                m_data_1.Data.EMG_data = EMG_data;
+                m_data_1.Data.force_xpc = data.force_xpc;
                 if strncmpi(params.mode,'iso',3) % ...if task was isometric
                     cursor_pos = -params.force_to_cursor_gain*data.handleforce;
                 else % ...if task was a movement task
-                    m_data_1.Data.EMG_data = EMG_data;
                     cursor_pos = m_data_2.Data.x_hand;                       
                 end
 
                 bin_start_t = data.sys_time;
 
                 if recording
-                    tmp_data = [bin_start_t data.spikes(1,:) cursor_pos ...
+                    if isempty(data.spikes)
+                        spikes = [];
+                    else
+                        spikes = data.spikes(1,:);
+                    end
+                    tmp_data = [bin_start_t spikes cursor_pos ...
                         m_data_2.Data.shoulder_pos m_data_2.Data.elbow_pos ...
                         EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force]; 
                     save(handles.data_file,'tmp_data','-append','-ascii');
@@ -184,18 +192,18 @@ function run_decoder(varargin)
         fclose('all');    
         close all;
 
-    catch e
-        if params.online
-            if params.save_data
-                cbmex('fileconfig', handles.cerebus_file, '', 0);
-            end
-            cbmex('close');
-        end
-        m_data_1.Data.bmi_running = 0;
-        echoudp('off');
-        fclose('all');
-        close all;
-        rethrow(e);
-    end
+%     catch e
+%         if params.online
+%             if params.save_data
+%                 cbmex('fileconfig', handles.cerebus_file, '', 0);
+%             end
+%             cbmex('close');
+%         end
+%         m_data_1.Data.bmi_running = 0;
+%         echoudp('off');
+%         fclose('all');
+%         close all;
+%         rethrow(e);
+%     end
 
 end
