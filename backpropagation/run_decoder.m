@@ -433,7 +433,8 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
     else
         data.sys_time = double(offline_data.timeframe(bin_count));
-        new_spikes = offline_data.spikeratedata(bin_count,:)';
+        [~,spike_idx,~] = intersect(offline_data.neuronIDs,params.neuronIDs,'rows');
+        new_spikes = offline_data.spikeratedata(bin_count,spike_idx)';
         new_words  = offline_data.words(offline_data.words(:,1)>= data.sys_time & ...
             offline_data.words(:,1) < data.sys_time+params.binsize,:);
         new_target = offline_data.targets.corners(offline_data.targets.corners(:,1)>= data.sys_time & ...
@@ -504,14 +505,16 @@ end
 function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
 
     new_spikes = zeros(params.n_neurons,1);
-
+    new_ts = ts_cell_array(params.neuronIDs(:,1),:);
+ 
     %firing rate for new spikes
     for i = 1:params.n_neurons
-        new_spikes(i) = length(ts_cell_array{i,2})/binsize;
+        unit = params.neuronIDs(i,2);
+        new_spikes(i) = length(new_ts{i,unit+2})/binsize;
     end
 
     %remove artifact (80% of neurons have spikes for this bin)
-    while (length(nonzeros(new_spikes))>.8*n_neurons)
+    while (length(nonzeros(new_spikes))>.8*params.n_neurons)
         warning('artifact detected, spikes removed');
         new_spikes(new_spikes>0) = new_spikes(new_spikes>0) - 1/binsize;
     end
