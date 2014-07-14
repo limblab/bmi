@@ -165,6 +165,7 @@ if params.online
         cerebus_file   = fullfile(save_dir, filename);
         cbmex('fileconfig', cerebus_file, '', 0);% open 'file storage' app, or stop ongoing recordings
         drawnow; %wait until the app opens
+        drawnow; %wait some more to be sure. if app was closed, it did not always start recording otherwise
         bin_start_t = 0.0; % time at beginning of next bin
         
         %start cerebus file recording :
@@ -231,7 +232,9 @@ try
             % save adapting decoder every 30 seconds
             if params.adapt && mod(bin_count*params.binsize, 30) == 0
                 %                 save([params.save_dir '\previous_trials_' strrep(strrep(datestr(now),':',''),' ','-')], 'previous_trials','neuron_decoder');
-                save( [adapt_dir '\Adapt_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS'))],'-struct','neuron_decoder');
+                if params.save_data
+                    save( [adapt_dir '\Adapt_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS'))],'-struct','neuron_decoder');
+                end
                 fprintf('Average Matlab Operation Time : %.2fms\n',ave_op_time*1000);
             end
             
@@ -255,7 +258,7 @@ try
             end
             
             % each second show adaptation progress
-            if mod(bin_count*params.binsize, 1) == 0
+            if mod(bin_count*params.binsize, 1) == 0 && params.realtime
                 disp([sprintf('Time: %d secs, ', bin_count*params.binsize) ...
                       'Adapting: ' num2str(~data.fix_decoder) ', ' ...
                       'Online: ' num2str(params.online)]);
@@ -365,7 +368,7 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
                 % create new neuron decoder from scratch
                 neuron_decoder = struct(...
                     'P'        , [] ,...
-                    'neuronIDs', [(1:params.n_neurons)' zeros(params.n_neurons,1)],...
+                    'neuronIDs', params.neuronIDs,...
                     'binsize'  , params.binsize,...
                     'fillen'   , params.binsize*params.n_lag);
                 if strcmp(params.neuron_decoder,'new_rand')
@@ -384,6 +387,7 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
                 params.n_lag     = round(neuron_decoder.fillen/neuron_decoder.binsize);
                 params.n_neurons = size(neuron_decoder.neuronIDs,1);
                 params.binsize   = neuron_decoder.binsize;
+                params.neuronIDs = neuron_decoder.neuronIDs;
             end
             
             % load existing emg decoder
@@ -411,6 +415,7 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
             params.n_lag = round(neuron_decoder.fillen/neuron_decoder.binsize);
             params.n_neurons = size(neuron_decoder.neuronIDs,1);
             params.binsize   = neuron_decoder.binsize;
+            params.neuronIDs = neuron_decoder.neuronIDs;
             emg_decoder = [];
             params.n_emgs = 0;
             params.n_lag_emg = 0;
@@ -424,7 +429,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
         % read and flush data buffer
         ts_cell_array = cbmex('trialdata',1);
         data.sys_time = cbmex('time');
-        new_spikes = get_new_spikes(ts_cell_array,params.n_neurons,bin_dur);
+        new_spikes = get_new_spikes(ts_cell_array,params,bin_dur);
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
     else
         data.sys_time = double(offline_data.timeframe(bin_count));
@@ -496,12 +501,12 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
         end
     end
 end                
-function new_spikes = get_new_spikes(ts_cell_array,n_neurons,binsize)
+function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
 
-    new_spikes = zeros(n_neurons,1);
+    new_spikes = zeros(params.n_neurons,1);
 
     %firing rate for new spikes
-    for i = 1:n_neurons
+    for i = 1:params.n_neurons
         new_spikes(i) = length(ts_cell_array{i,2})/binsize;
     end
 
