@@ -7,14 +7,13 @@ params = bmi_params_defaults;
 params.adapt = true;
 params.cursor_assist = true;
 
-if nargin
-    params.ave_fr = varargin{1};
+for i = 1:nargin
+    if iscalar(varargin{i})
+        params.ave_fr = varargin{i};
+    else
+        params.neuronIDs = varargin{i};
+    end
 end
-if nargin >1
-    params.neuronIDs = varargin{2};
-end
-
-params.save_data = false;
 
 % % %Jaco:
 % params.save_dir =  'E:\Data-lab1\8I1-Jaco\CerebusData\Adaptation';
@@ -27,22 +26,23 @@ params.save_data = false;
 % params.n_emgs = 6;
 % params.LR = 5e-10;
 
+
 %Jango:
-params.save_name = 'Jango_WF_Adapt';
-params.save_dir =  'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation';
+    params.save_name      = 'Jango_WF_Offline_Adapt_';
+    params.save_dir       = 'F:\Data-lab1\12A1-Jango\CerebusData\Adaptation';
 
-% Neuron decoder
-params.neuron_decoder = 'new_zeros';
-% params.neuron_decoder = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\';
-params.n_neurons = size(params.neuronIDs,1);
+    % Neuron decoder
+    params.neuron_decoder = 'new_zeros';
+    % params.neuron_decoder = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\';
+    params.n_neurons = size(params.neuronIDs,1);
 
-% EMG decoder
-params.emg_decoder = 'F:\Data-lab1\12A1-Jango\SavedFilters\Jango_WF_20140714_HC_001_E2F_Decoder.mat';
-params.n_emgs      = 10;
+    % EMG decoder
+    params.emg_decoder = 'F:\Data-lab1\12A1-Jango\SavedFilters\Jango_WF_20140714_HC_001_E2F_Decoder.mat';
+    params.n_emgs      = 10;
 
-% Adaptation parameters
-% params.lambda = 0.0015;
-params.lambda = 0;
-params.LR = 1e-9;
+    % Adaptation parameters
+    % params.lambda = 0.0015;
+    params.lambda = 0;
+    params.LR = 1e-9;
     
 
