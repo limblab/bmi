@@ -10,6 +10,9 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc)
         new_analog = get_new_analog(continuous_cell_array);       
         data.analog_channels = [continuous_cell_array{:,1}]';
         new_xpc_data = get_new_xpc_data(xpc);
+%         new_xpc_data.Force = nan(1,2);
+%         new_xpc_data.theta = nan(1,2);
+%         disp('No udp data read')
         
         % Let's do the force stuff now (get force data)
         % From 'calc_from_raw.m', "elseif opts.rothandle" section:
@@ -134,7 +137,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
                 ts_col_idx = params.neuron_decoder.neuronIDs(iNeuron,2)+2; 
                 new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),['chan' num2str(params.neuron_decoder.neuronIDs(iNeuron,1))])),...
                     ts_col_idx})/binsize;
-                if params.neuron_decoder.neuronIDs(iNeuron,2) == 0
+                if params.neuron_decoder.neuronIDs(iNeuron,2) == 255
                     new_spikes(iNeuron) = 0;
                 end
             end

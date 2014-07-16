@@ -161,7 +161,7 @@ function run_arm_model(m_data_1,m_data_2,h)
         arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x(end,2)) arm_params.l(2)*sin(x(end,2))];   
                         
         % If model becomes unstable, restart
-        if (abs(arm_params.X_h(1:2)-old_X_h(1:2))>.1 | (abs(arm_params.X_h) > 0.2))
+        if (abs(arm_params.X_h(1:2)-old_X_h(1:2))>.1 | (abs(arm_params.X_h) > 0.2)) | any(isnan(arm_params.X_h))
             x0 = x0_default;
             [~,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0);
             arm_params.theta = x(end,1:2);
@@ -186,13 +186,15 @@ function run_arm_model(m_data_1,m_data_2,h)
         xS(1) = arm_params.x_gain * xS(1);
         
         if numel(x0) > numel(x0_default)
-            xE2 = arm_params.X_sh + [arm_params.l(1)*cos(x(end,5)) arm_params.l(1)*sin(x(end,5))];            
+            xE2 = arm_params.X_sh + [arm_params.l(1)*cos(x(end,5)) arm_params.l(1)*sin(x(end,5))];                
             xH2 = xE2 + [arm_params.l(2)*cos(x(end,6)) arm_params.l(2)*sin(x(end,6))]; 
+            xE2(1) = arm_params.x_gain * xE2(1);
+            xH2(1) = arm_params.x_gain * xH2(1);
             xE2 = 100 * xE2;
             xH2 = 100 * xH2;
         else
-            xE2 = [100*arm_params.X_sh 100*arm_params.X_sh];
-            xH2 = [100*arm_params.X_sh 100*arm_params.X_sh];
+            xE2 = [arm_params.x_gain*100*arm_params.X_sh(1) 100*arm_params.X_sh(2)];
+            xH2 = [arm_params.x_gain*100*arm_params.X_sh(1) 100*arm_params.X_sh(2)];            
         end
         
         m_data_2.Data.x_hand = xH;

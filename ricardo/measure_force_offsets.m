@@ -22,8 +22,9 @@ params_2.save_data = 0;
 
 %% Initialize xPC connection
 xpc = open_xpc_udp(params_2);
-handles = setup_display_plots(params_2);
-handles = get_new_filename(params_2,handles);
+% handles = setup_display_plots(params_2);
+% handles = get_new_filename(params_2,handles);
+handles = [];
 handles = start_cerebus_stream(params_2,handles,xpc);
 
 %% Get data
