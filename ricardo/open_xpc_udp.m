@@ -9,13 +9,13 @@ if strcmpi(params.output,'xpc')
     set(xpc.xpc_write,'LocalHost','192.168.0.10');
     fopen(xpc.xpc_write);
 
-    XPC_PORT_READ = 24998;
-    xpc.xpc_read = udp(XPC_IP,XPC_PORT_READ);
-    set(xpc.xpc_read,'ByteOrder','littleEndian');
-    set(xpc.xpc_read,'LocalHost','192.168.0.10');
-    set(xpc.xpc_read,'LocalPort',24998);
-    set(xpc.xpc_read,'Timeout',.05);
-    set(xpc.xpc_read,'InputBufferSize',100);
-    set(xpc.xpc_read,'InputDatagramPacketSize',100);
-    set(xpc.xpc_read, 'ReadAsyncMode', 'continuous');
+%     XPC_PORT_READ = 24998;
+%     xpc.xpc_read = udp(XPC_IP,XPC_PORT_READ);
+%     set(xpc.xpc_read,'ByteOrder','littleEndian');
+%     set(xpc.xpc_read,'LocalHost','192.168.0.10');
+%     set(xpc.xpc_read,'LocalPort',24998);
+%     set(xpc.xpc_read,'Timeout',.05);
+%     set(xpc.xpc_read,'InputBufferSize',100);
+%     set(xpc.xpc_read,'InputDatagramPacketSize',100);
+%     set(xpc.xpc_read, 'ReadAsyncMode', 'continuous');
 end

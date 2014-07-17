@@ -3,11 +3,14 @@ function h = create_arm_model_figure
 
     close all    
     h.h_fig = figure;
+    set(h.h_fig,'Position',[1150 200 720 560])
     
     % dt plot
     subplot(321)
     h.h_plot_dt = plot(1:10,zeros(1,10),'-');
     ylim([0 0.1])
+    xlabel('sample')
+    ylabel('t (s)')
     
     % Endpoint force plot
     subplot(322)
@@ -16,21 +19,24 @@ function h = create_arm_model_figure
     xlim([-10 10])
     ylim([-10 10])    
     axis square
+    title('Endpoint force (N)')
     
     % Arm position plot
     subplot(323)    
     hold on
     h.h_plot_arm = plot(0,0,'-k');    
     h.h_plot_arm_2 = plot(0,0,'-','Color',[.5 .5 .5]);
-    xlim([-50 50])
-    ylim([-50 50]) 
+    xlim([-30 30])
+    ylim([-30 30]) 
     axis square
+    title('Arm position (cm)')
     
     % EMG bar graph
     subplot(325)    
     h.h_emg_bar = bar(zeros(1,4));
     set(gca,'XTickLabel',{'AD','PD','Bi','Tri'})
     ylim([0 1])
+    title('Normalized EMG')
     
     drawnow
 

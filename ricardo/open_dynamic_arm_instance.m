@@ -1,4 +1,4 @@
-function [m_data_1,m_data_2] = open_dynamic_arm_instance
+function [m_data_1,m_data_2] = open_dynamic_arm_instance(params)
 
     % Open new Matlab instance and create files for data transfer across instances
     delete('data_1.dat')
@@ -6,11 +6,11 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance
 
     EMG_data = zeros(1,4);
     bmi_running = 1;
-    force_xpc = zeros(1,2);
+    vel_predictions = zeros(1,2);
     fid = fopen('data_1.dat','w');
     fwrite(fid, EMG_data, 'double');
     fwrite(fid, bmi_running, 'double');
-    fwrite(fid, force_xpc, 'double');
+    fwrite(fid, vel_predictions, 'double');
     fclose(fid);
 
     model_running = 0;
@@ -19,6 +19,7 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance
     F_end = zeros(1,2);
     shoulder_pos = zeros(1,2);
     elbow_pos = zeros(1,2);
+    theta = zeros(1,2);
     fid = fopen('data_2.dat','w');
     fwrite(fid, model_running, 'double');
     fwrite(fid, x_hand, 'double');
@@ -26,12 +27,13 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance
     fwrite(fid, F_end, 'double');
     fwrite(fid, shoulder_pos, 'double');
     fwrite(fid, elbow_pos, 'double');
+    fwrite(fid, theta, 'double');
     fclose(fid);
 
     m_data_1 = memmapfile('data_1.dat',...
     'Format',{'double',[1 4],'EMG_data';...
     'double',[1 1],'bmi_running';...
-    'double',[1 2],'force_xpc'},'Writable',true);
+    'double',[1 2],'vel_predictions'},'Writable',true);
 
     m_data_2 = memmapfile('data_2.dat',...
     'Format',{'double',[1 1],'model_running';...
@@ -39,10 +41,15 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance
     'double',[1 4],'musc_force';...
     'double',[1 2],'F_end';...
     'double',[1 2],'shoulder_pos';...
-    'double',[1 2],'elbow_pos'},'Writable',true);
+    'double',[1 2],'elbow_pos';...
+    'double',[1 2],'theta'},'Writable',true);
 
     m_data_1.Data.bmi_running = 1;
-    dos('start matlab -sd "C:\Users\system administrator\Desktop\bmi\ricardo" -r arm_model_container');
+    if params.debug
+        dos('start matlab -sd "C:\Users\system administrator\Desktop\bmi\ricardo" -nosplash -minimize -r arm_model_container');
+    else
+        dos('start matlab -sd "C:\Users\system administrator\Desktop\bmi\ricardo" -nosplash -nodesktop -minimize -r arm_model_container');
+    end
 
     disp('Opening dynamic arm Matlab instance, please wait')
     while(~m_data_2.Data.model_running)

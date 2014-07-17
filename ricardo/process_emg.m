@@ -23,7 +23,7 @@ if strcmp(params.mode,'EMG')
     end
 elseif strcmp(params.mode,'N2E')
 %     emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
-    temp = params.neuron_decoder.outnames;  
+    temp = params.current_decoder.outnames;  
     for iLabel = 1:size(temp,1)
         emg_labels{iLabel} = ['EMG_' deblank(temp(iLabel,:))];        
     end

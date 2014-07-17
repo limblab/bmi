@@ -1,6 +1,7 @@
 function handles = setup_display_plots(params,handles)
 
     handles.fig_handle = figure;
+    set(handles.fig_handle,'Position',[250 330 560 420])
     if params.display_plots
         subplot(121)
         handles.curs_handle = plot(0,0,'ko');

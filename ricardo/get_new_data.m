@@ -1,4 +1,4 @@
-function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc)
+function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_data_2)
     if params.online
         % read and flush data buffer
 %         ts_cell_array = cbmex('trialdata',1);
@@ -9,9 +9,9 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc)
         analog_fs = max([continuous_cell_array{:,2}]);
         new_analog = get_new_analog(continuous_cell_array);       
         data.analog_channels = [continuous_cell_array{:,1}]';
-        new_xpc_data = get_new_xpc_data(xpc);
-%         new_xpc_data.Force = nan(1,2);
-%         new_xpc_data.theta = nan(1,2);
+%         new_xpc_data = get_new_xpc_data(xpc);
+        new_xpc_data.Force = nan(1,2);
+        new_xpc_data.theta = nan(1,2);
 %         disp('No udp data read')
         
         % Let's do the force stuff now (get force data)
@@ -25,10 +25,15 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc)
         % Pass only mean force value for period: each cell of
         % 'handleforce' should be a 1-D array of force values, so take
         % mean of each
-        data.handleforce = cell2mat(cellfun(@mean, handleforce, 'uni', 0));
-        data.handleforce = (data.handleforce' - params.force_offsets)*params.fhcal*params.rotcal;
-        data.handleforce = [data.handleforce(1)*cos(2*pi-new_xpc_data.theta(2)) - data.handleforce(2)*sin(2*pi-new_xpc_data.theta(2)) ...
-            data.handleforce(1)*sin(2*pi-new_xpc_data.theta(2)) + data.handleforce(2)*cos(2*pi-new_xpc_data.theta(2))];
+        if ~isempty(handleforce)
+            data.handleforce = cell2mat(cellfun(@mean, handleforce, 'uni', 0));
+            data.handleforce = (data.handleforce' - params.force_offsets)*params.fhcal*params.rotcal;
+            theta = m_data_2.Data.theta;
+            data.handleforce = [data.handleforce(1)*cos(2*pi-theta(2)) - data.handleforce(2)*sin(2*pi-theta(2)) ...
+                data.handleforce(1)*sin(2*pi-theta(2)) + data.handleforce(2)*cos(2*pi-theta(2))];
+        else
+            disp('No handle force data read')
+        end            
         
         data.force_xpc = new_xpc_data.Force;
 %         if isnan(new_xpc_data.Force)
@@ -129,15 +134,15 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
         ts_cell_array(data_idx,1) = chan_names(elec_map_idx)';
     end
     
-    if isfield(params,'neuron_decoder')
-        if ~isempty(params.neuron_decoder.H)
-            new_spikes = zeros(size(params.neuron_decoder.neuronIDs,1),1);
-            for iNeuron = 1:size(params.neuron_decoder.neuronIDs,1)
-        %         ts_row_idx = find((strcmp(ts_cell_array(:,1),['elec' num2str(params.neuron_decoder.neuronIDs(iNeuron,1))])));
-                ts_col_idx = params.neuron_decoder.neuronIDs(iNeuron,2)+2; 
-                new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),['chan' num2str(params.neuron_decoder.neuronIDs(iNeuron,1))])),...
+    if isfield(params,'current_decoder')
+        if ~isempty(params.current_decoder.H)
+            new_spikes = zeros(size(params.current_decoder.neuronIDs,1),1);
+            for iNeuron = 1:size(params.current_decoder.neuronIDs,1)
+        %         ts_row_idx = find((strcmp(ts_cell_array(:,1),['elec' num2str(params.current_decoder.neuronIDs(iNeuron,1))])));
+                ts_col_idx = params.current_decoder.neuronIDs(iNeuron,2)+2; 
+                new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),['chan' num2str(params.current_decoder.neuronIDs(iNeuron,1))])),...
                     ts_col_idx})/binsize;
-                if params.neuron_decoder.neuronIDs(iNeuron,2) == 255
+                if params.current_decoder.neuronIDs(iNeuron,2) == 255
                     new_spikes(iNeuron) = 0;
                 end
             end
@@ -148,7 +153,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
         new_spikes = zeros(0,1);
     end
     %remove artifact (80% of neurons have spikes for this bin)
-%     while (length(nonzeros(new_spikes))>.8*length(unique(params.neuron_decoder.neuronIDs(:,1))))
+%     while (length(nonzeros(new_spikes))>.8*length(unique(params.current_decoder.neuronIDs(:,1))))
 %         warning('artifact detected, spikes removed');
 %         new_spikes(new_spikes>0) = new_spikes(new_spikes>0) - 1/binsize;
 %     end

@@ -54,6 +54,7 @@ joint_error = [theta(5)-theta(1);(theta(6)-theta(5))-(theta(2)-theta(1))];
 joint_stiffness = emg_coactivation.*(arm_params.joint_stiffness_max(:)-arm_params.joint_stiffness_min(:))+...
     arm_params.joint_stiffness_min(:);
 damping_coefficient = 2*sqrt(i(:).*joint_stiffness);
+% damping_coefficient = sqrt(i(:).*joint_stiffness);
 joint_damping = damping_coefficient.*[theta(3);theta(4)-theta(3)]/arm_params.dt;
 muscle_stiffness_torque = joint_stiffness.*joint_error - joint_damping;
 
@@ -83,10 +84,10 @@ X_e_b = arm_params.X_sh + [arm_params.l(1)*cos_theta_1_b arm_params.l(1)*sin_the
 X_h_b = X_e_b + [arm_params.l(2)*cos_theta_2_b arm_params.l(2)*sin_theta_2_b]; 
 F_end_b = [0;0];
 if X_h_b(1) < -.12
-    F_end_b(1) = -(X_h_b(1)-(-.12))*arm_params.x_gain*500;
+    F_end_b(1) = -(X_h_b(1)-(-.12))*500;
 end
 if X_h_b(1) > .12
-    F_end_b(1) = -(X_h_b(1)-(.12))*arm_params.x_gain*500;
+    F_end_b(1) = -(X_h_b(1)-(.12))*500;
 end
 if X_h_b(2) < -.1
     F_end_b(2) = -(X_h_b(2)-(-.1))*500;

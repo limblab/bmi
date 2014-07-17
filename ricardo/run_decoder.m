@@ -16,10 +16,10 @@ function run_decoder(varargin)
     %
     % INPUTS : Additional parameters: "params" structure -> see adapt_params_defaults.m
 
-    [m_data_1, m_data_2] = open_dynamic_arm_instance;
-
     params = evalin('base','params');
 
+    [m_data_1, m_data_2] = open_dynamic_arm_instance(params);
+    
     xpc = open_xpc_udp(params);
 
     % Read Decoders and other files
@@ -75,7 +75,7 @@ function run_decoder(varargin)
             if (reached_cycle_t)
                 if get(handles.record,'Value') && ~recording
                     recording = 1;
-                    [params,handles] = setup_datafiles(params,handles,data,offline_data,w,xpc);
+                    [params,handles] = setup_datafiles(params,handles,data,offline_data,w,xpc,m_data_2);
                     cbmex('fileconfig', handles.cerebus_file, '', 1);
                     data.sys_time = cbmex('time');
                 end
@@ -88,23 +88,34 @@ function run_decoder(varargin)
                 cycle_t = toc(t_buf); %this should be equal to bin_size, but may be longer if last cycle operations took too long.
                 t_buf   = tic; % reset buffering timer
                 bin_count = bin_count +1;
+                
+                if strcmp(params.mode,'N2E')
+                    params.current_decoder = params.N2E_decoder;
+                elseif strcmp(params.mode,'Vel')
+                    params.current_decoder = params.vel_decoder;
+                else
+                    params.current_decoder = params.N2E_decoder;
+                end
 
                 % Get and Process New Data
-                data = get_new_data(params,data,offline_data,bin_count,cycle_t,w,xpc);
+                data = get_new_data(params,data,offline_data,bin_count,cycle_t,w,xpc,m_data_2);
                 
                 if size(data.spikes,1)<params.n_lag
                     data.spikes = zeros(params.n_lag,params.n_neurons);
                 end
                 % Predictions
                 if strcmp(params.mode,'N2E')
-                    predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.neuron_decoder.H;
+                    predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.N2E_decoder.H;
+                elseif strcmp(params.mode,'Vel')
+                    predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.vel_decoder.H;
+                    m_data_1.Data.vel_predictions = predictions;
                 else
                     predictions = [];
                 end
                 [EMG_data,~,~] = process_emg(params,data,predictions);
 
                 m_data_1.Data.EMG_data = EMG_data;
-                m_data_1.Data.force_xpc = data.force_xpc;
+                
                 if strncmpi(params.mode,'iso',3) % ...if task was isometric
                     cursor_pos = -params.force_to_cursor_gain*data.handleforce;
                 else % ...if task was a movement task

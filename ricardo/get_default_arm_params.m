@@ -42,17 +42,17 @@ arm_params.dt = 0.05;
 % arm_params.t = 0:arm_params.dt:50;
 % arm_params.dt = diff(arm_params.t(1:2));
 
-arm_params.left_handed = 0;
+arm_params.left_handed = 1;
 % arm_params.monkey_offset = [(-2*arm_params.left_handed+1)*.08 -sqrt(sum(arm_params.l.^2))]; 
 
 % Prosthetic arm
-arm_params.P_gain = 10;
+arm_params.P_gain = 5;
 arm_params.Vmax = 10;
 arm_params.emg_thres = .1;
 arm_params.max_torque = 10;
 
 % Perreault arm
-arm_params.emg_to_torque_gain = [10 10];
+arm_params.emg_to_torque_gain = [5 5];
 arm_params.joint_stiffness_min = [0 0];
 arm_params.joint_stiffness_max = [5 5];
 

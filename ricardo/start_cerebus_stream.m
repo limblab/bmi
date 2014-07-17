@@ -7,8 +7,8 @@ if ~connection
     if exist('xpc','var')
         fclose(xpc.xpc_read);
         delete(xpc.xpc_read);
-        fclose(xpc.xpc_write);
-        delete(xpc.xpc_write);
+%         fclose(xpc.xpc_write);
+%         delete(xpc.xpc_write);
         echoudp('off')
         clear xpc
     end
