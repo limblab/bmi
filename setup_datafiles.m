@@ -8,11 +8,11 @@ if params.save_data
     [ts_cell_array, ~, ~] = cbmex('trialdata', 1);
 %     params.n_neurons = sum(~cellfun(@isempty,strfind(ts_cell_array(:,1),'elec')));
 
-    params.n_neurons = size(params.neuron_decoder.neuronIDs,1);
-    spike_chans = cell(1,params.n_neurons);
-    for i = 1:params.n_neurons
+%     params.n_neurons = size(params.current_decoder.neuronIDs,1);
+    spike_chans = cell(1,params.current_decoder.n_neurons);
+    for i = 1:params.current_decoder.n_neurons
 %        spike_chans{i} = data_temp.labels{i,1};
-       spike_chans{i} = ['chan_' num2str(params.neuron_decoder.neuronIDs(i,1)) '-' num2str(params.neuron_decoder.neuronIDs(i,2))];
+       spike_chans{i} = ['chan_' num2str(params.current_decoder.neuronIDs(i,1)) '-' num2str(params.current_decoder.neuronIDs(i,2))];
     end
 
     headers = ['t_bin_start',spike_chans,'pred_x','pred_y','sh_x','sh_y','el_x','el_y',...

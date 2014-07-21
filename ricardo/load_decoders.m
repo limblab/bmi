@@ -1,4 +1,21 @@
 function params = load_decoders(params)
+    params.null_decoder.neuronIDs = [];
+    params.null_decoder.H = [];
+    params.null_decoder.P = [];
+    params.null_decoder.T = [];
+    params.null_decoder.patch = [];
+    params.null_decoder.outnames = [];
+    params.null_decoder.fillen = 0.5;
+    params.null_decoder.binsize = .05;
+    params.null_decoder.input_type = 'spike';
+    params.null_decoder.decoder_file = '';
+    params.null_decoder.n_lag = 10;
+    params.null_decoder.n_neurons = 0;
+    params.null_decoder.emg_decoder = [];
+    params.null_decoder.n_emgs = 0;
+    params.null_decoder.n_lag_emg = 0;
+    params.current_decoder = params.null_decoder;
+    
     if isfield(params,'N2E_decoder')        
         decoder = LoadDataStruct(params.N2E_decoder.decoder_file);
         decoder.decoder_file = params.N2E_decoder.decoder_file;
@@ -31,6 +48,7 @@ function params = load_decoders(params)
         params.vel_decoder = decoder; 
         clear decoder
     end
+    
 %         
 %         
 %     switch params.mode

@@ -94,8 +94,9 @@ function run_decoder(varargin)
                 elseif strcmp(params.mode,'Vel')
                     params.current_decoder = params.vel_decoder;
                 else
-                    params.current_decoder = params.N2E_decoder;
+                    params.current_decoder = params.null_decoder;
                 end
+                assignin('base','params',params);
 
                 % Get and Process New Data
                 data = get_new_data(params,data,offline_data,bin_count,cycle_t,w,xpc,m_data_2);
@@ -104,13 +105,15 @@ function run_decoder(varargin)
                     data.spikes = zeros(params.n_lag,params.n_neurons);
                 end
                 % Predictions
-                if strcmp(params.mode,'N2E')
-                    predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.N2E_decoder.H;
-                elseif strcmp(params.mode,'Vel')
-                    predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.vel_decoder.H;
+                predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.current_decoder.H;
+                if ~isempty(params.current_decoder.P)
+                    for iP = 1:length(predictions)
+                        predictions(iP) = polyval(params.current_decoder.P(:,iP),predictions(iP));
+                    end
+                end
+%                 if strcmp(params.mode,'N2E')                    
+                if strcmp(params.mode,'Vel')
                     m_data_1.Data.vel_predictions = predictions;
-                else
-                    predictions = [];
                 end
                 [EMG_data,~,~] = process_emg(params,data,predictions);
 
@@ -181,7 +184,7 @@ function run_decoder(varargin)
                     fprintf('~~~~~~slow processing time: %.1f ms~~~~~~~\n',et_op*1000);
                 end
 
-                reached_cycle_t = false;
+                reached_cycle_t = false;                
             end
 
             et_buf = toc(t_buf); %elapsed buffering time
