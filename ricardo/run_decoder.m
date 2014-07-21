@@ -106,12 +106,15 @@ function run_decoder(varargin)
                 end
                 % Predictions
                 predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.current_decoder.H;
+                if strcmp(params.mode,'N2E')
+                    predictions(predictions<0) = 0;
+                end
                 if ~isempty(params.current_decoder.P)
                     for iP = 1:length(predictions)
                         predictions(iP) = polyval(params.current_decoder.P(:,iP),predictions(iP));
                     end
                 end
-%                 if strcmp(params.mode,'N2E')                    
+                
                 if strcmp(params.mode,'Vel')
                     m_data_1.Data.vel_predictions = predictions;
                 end
