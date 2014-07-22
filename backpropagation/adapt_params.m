@@ -8,7 +8,7 @@ params.adapt = true;
 params.cursor_assist = true;
 
 for i = 1:nargin
-    if iscalar(varargin{i})
+    if isscalar(varargin{i})
         params.ave_fr = varargin{i};
     else
         params.neuronIDs = varargin{i};

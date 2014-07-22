@@ -513,11 +513,11 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
         new_spikes(i) = length(new_ts{i,unit+2})/binsize;
     end
 
-    %remove artifact (80% of neurons have spikes for this bin)
-    while (length(nonzeros(new_spikes))>.8*params.n_neurons)
-        warning('artifact detected, spikes removed');
-        new_spikes(new_spikes>0) = new_spikes(new_spikes>0) - 1/binsize;
-    end
+%     %remove artifact (80% of neurons have spikes for this bin)
+%     while (length(nonzeros(new_spikes))>.8*params.n_neurons)
+%         warning('artifact detected, spikes removed');
+%         new_spikes(new_spikes>0) = new_spikes(new_spikes>0) - 1/binsize;
+%     end
     
     % remove artifacts (high freq thresh x-ing)
     % by capping FR at 400 Hz
