@@ -35,11 +35,14 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         cycle_counter = cycle_counter+1;
         if arm_params.online   
             EMG_data = m_data_1.Data.EMG_data;
+            EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min); 
         else
             temp_t = [.05*cycle_counter .05*cycle_counter .05*cycle_counter .05*cycle_counter];
             EMG_data = 500+500*[cos(temp_t(1)) cos(temp_t(2)+pi/2) cos(temp_t(3)+pi/4) cos(temp_t(4)+3*pi/4)];
+            EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
+            EMG_data = EMG_data.^2;
+            EMG_data(3:4) = 0;
         end
-        EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
         EMG_data(isnan(EMG_data)) = 0;
         EMG_data = min(EMG_data,1);
         EMG_data = max(EMG_data,0);
@@ -150,8 +153,9 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 [t,x] = ode45(@(t,x0) perreault_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = perreault_arm_model(t,x(end,:),arm_params);
             case 'ruiz'
-                [t,x] = ode45(@(t,x0) ruiz_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [t,x] = ode45(@(t,x0_b) ruiz_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
                 [~,out_var] = ruiz_arm_model(t,x(end,:),arm_params);
+                x0 = x0_b(1:4);
 %                 out_var
         end
         musc_force = out_var(1:4);
@@ -177,7 +181,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         end
         
         x0 = x(end,:);
-        if strcmp(arm_params.control_mode,'hu') && ~flag_reset
+        if (strcmp(arm_params.control_mode,'hu') || strcmp(arm_params.control_mode,'ruiz')) && ~flag_reset
             x0_b = x(end,:);
         else
             x0_b = [x0 x0];

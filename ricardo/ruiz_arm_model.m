@@ -42,12 +42,20 @@ X_h_b = X_e_b + [arm_params.l(2)*cos_theta_2_b arm_params.l(2)*sin_theta_2_b];
 % F = [1;-1];
 
 % theta = [45;135]*pi/180;
-% 
+% http://studywolf.wordpress.com/2013/09/02/robot-control-jacobians-velocity-and-force/
 % J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
-%     l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
+%     l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2));...
+%     0 0;
+%     0 0;
+%     0 0;
+%     1 1];
+J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
+    l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
 % 
 % T = -pinv(J)*F;
-
+if arm_params.left_handed
+    arm_params.musc_act(1:2) = arm_params.musc_act(2:-1:1);
+end
 emg_diff = [arm_params.musc_act(1)-arm_params.musc_act(2)...
     arm_params.musc_act(3)-arm_params.musc_act(4)];
 
@@ -59,21 +67,29 @@ emg_coactivation = [arm_params.musc_act(1)+arm_params.musc_act(2);...
 endpoint_error = [X_h_b - X_h]';
 endpoint_stiffness = emg_coactivation.*(arm_params.endpoint_stiffness_max(:)-arm_params.endpoint_stiffness_min(:))+...
     arm_params.endpoint_stiffness_min(:);
-damping_coefficient = 2*sqrt(m(:).*endpoint_stiffness);
+damping_coefficient = 2*sqrt(.01*m(:).*endpoint_stiffness);
+dX_h = J*theta(3:4);
+endpoint_damping = damping_coefficient.*dX_h/arm_params.dt;
+muscle_stiffness_force = endpoint_stiffness.*endpoint_error - endpoint_damping;
+
+% muscle_torque = inv(J)*muscle_force;
+muscle_torque = J\muscle_force;
+% muscle_stiffness_torque = inv(J)*muscle_stiffness_force;
+muscle_stiffness_torque = J\muscle_stiffness_force;
 
 % joint_error = [theta(5)-theta(1);(theta(6)-theta(5))-(theta(2)-theta(1))];
 % joint_stiffness = emg_coactivation.*(arm_params.joint_stiffness_max(:)-arm_params.joint_stiffness_min(:))+...
 %     arm_params.joint_stiffness_min(:);
 % damping_coefficient = 2*sqrt(i(:).*joint_stiffness);
+% joint_damping = damping_coefficient.*[theta(3);theta(4)-theta(3)]/arm_params.dt;
 
-joint_damping = damping_coefficient.*[theta(3);theta(4)-theta(3)]/arm_params.dt;
-muscle_stiffness_torque = joint_stiffness.*joint_error - joint_damping;
+% muscle_stiffness_torque = joint_stiffness.*joint_error - joint_damping;
 
 constraint_angle_diff = [theta(1)-arm_params.null_angles(1);theta(2)-(theta(1)+diff(arm_params.null_angles))];
-constraint_torque = -sign(constraint_angle_diff).*exp(30*(abs(constraint_angle_diff))/(pi/2)-27);
+constraint_torque = -sign(constraint_angle_diff).*exp(40*(abs(constraint_angle_diff))/(pi/2)-25);
 
 constraint_angle_diff_b = [theta(5)-arm_params.null_angles(1);theta(6)-(theta(5)+diff(arm_params.null_angles))];
-constraint_torque_b = -sign(constraint_angle_diff_b).*exp(30*(abs(constraint_angle_diff_b))/(pi/2)-27);
+constraint_torque_b = -sign(constraint_angle_diff_b).*exp(40*(abs(constraint_angle_diff_b))/(pi/2)-25);
 
  %matrix equations 
 M = [m(2)*lc(1)^2+m(2)*l(1)^2+i(1), m(2)*l(1)*lc(2)^2*cos(theta(1)-theta(2));

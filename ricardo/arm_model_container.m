@@ -27,7 +27,7 @@ if arm_params.online
     'double',[1 2],'elbow_pos';...
     'double',[1 2],'theta'},'Writable',true);
 else
-%     xpc = [];
+    xpc = [];
     m_data_1.Data.EMG_data = zeros(1,4);
     m_data_1.Data.bmi_running = 2;
     m_data_1.Data.force_xpc = zeros(1,2);
@@ -43,7 +43,6 @@ end
 
 % Let know other instance that we're ready
 m_data_2.Data.model_running = 1;
-
 
 h = create_arm_model_figure;
 
