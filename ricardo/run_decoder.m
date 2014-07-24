@@ -105,7 +105,11 @@ function run_decoder(varargin)
                     data.spikes = zeros(params.n_lag,params.n_neurons);
                 end
                 % Predictions
-                predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.current_decoder.H;
+                try
+                    predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.current_decoder.H;
+                catch
+                    predictions = zeros(1,4);
+                end
                 if strcmp(params.mode,'N2E')
                     predictions(predictions<0) = 0;
                 end

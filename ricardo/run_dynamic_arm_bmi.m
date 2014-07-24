@@ -1,6 +1,6 @@
 % run_dynamic_arm_bmi
 clear params
-params.monkey_name = 'Chewie';
+params.monkey_name = 'Lee';
 params.save_dir = ['E:\' params.monkey_name];
 params.mode = 'N2E'; % EMG | N2E | Vel (not implemented yet) | Iso
 params.task_name = ['DCO_' params.mode];

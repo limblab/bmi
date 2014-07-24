@@ -29,7 +29,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         arm_params.x_gain = -2*arm_params.left_handed+1;
         arm_params.theta = x0(1:2);
         arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x0(1)) arm_params.l(1)*sin(x0(1))];
-        arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x0(2)) arm_params.l(2)*sin(x0(2))];   
+        arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x0(2)) arm_params.l(2)*sin(x0(2))];
     
         tic
         cycle_counter = cycle_counter+1;
@@ -149,6 +149,9 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             case 'perreault'
                 [t,x] = ode45(@(t,x0) perreault_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = perreault_arm_model(t,x(end,:),arm_params);
+            case 'ruiz'
+                [t,x] = ode45(@(t,x0) ruiz_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [~,out_var] = ruiz_arm_model(t,x(end,:),arm_params);
 %                 out_var
         end
         musc_force = out_var(1:4);

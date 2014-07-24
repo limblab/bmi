@@ -53,8 +53,13 @@ arm_params.max_torque = 10;
 
 % Perreault arm
 arm_params.emg_to_torque_gain = [5 5];
-arm_params.joint_stiffness_min = [0 0];
+arm_params.joint_stiffness_min = [1 1];
 arm_params.joint_stiffness_max = [5 5];
+
+% Ruiz arm
+arm_params.emg_to_force_gain = [10 10];
+arm_params.endpoint_stiffness_min = 1;
+arm_params.endpoint_stiffness_max = 10;
 
 % Control mode
 arm_params.control_mode = 'hill';
