@@ -57,8 +57,8 @@ arm_params.joint_stiffness_min = [1 1];
 arm_params.joint_stiffness_max = [5 5];
 
 % Ruiz arm
-arm_params.emg_to_force_gain = [10 10];
-arm_params.endpoint_stiffness_min = 1;
+arm_params.emg_to_force_gain = [5 5];
+arm_params.endpoint_stiffness_min = 3;
 arm_params.endpoint_stiffness_max = 10;
 
 % Control mode

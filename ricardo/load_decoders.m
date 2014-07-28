@@ -49,6 +49,13 @@ function params = load_decoders(params)
         clear decoder
     end
     
+    if strcmp(params.mode,'N2E')
+        params.current_decoder = params.N2E_decoder;
+    elseif strcmp(lower(params.mode),'vel')
+        params.current_decoder = params.vel_decoder;
+    end
+        
+    
 %         
 %         
 %     switch params.mode
