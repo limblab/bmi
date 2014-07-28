@@ -35,14 +35,22 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         cycle_counter = cycle_counter+1;
         if arm_params.online   
             EMG_data = m_data_1.Data.EMG_data;
+            arm_params.emg_max = max(arm_params.emg_max,EMG_data);
+            arm_params.emg_max = arm_params.emg_max*exp(-dt_hist(1)/arm_params.emg_adaptation_rate);
+            arm_params.emg_min = min(arm_params.emg_min,EMG_data);
+            arm_params.emg_min = (arm_params.emg_min-arm_params.emg_max)*exp(-dt_hist(1)/arm_params.emg_adaptation_rate)+arm_params.emg_max;
             EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min); 
+            EMG_data(EMG_data<0) = 0;
         else
             temp_t = [.05*cycle_counter .05*cycle_counter .05*cycle_counter .05*cycle_counter];
             EMG_data = 500+500*[cos(temp_t(1)) cos(temp_t(2)+pi/2) cos(temp_t(3)+pi/4) cos(temp_t(4)+3*pi/4)];
             EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
             EMG_data = EMG_data.^2;
             EMG_data(3:4) = 0;
-        end
+        end        
+        
+        assignin('base','arm_params',arm_params);
+        
         EMG_data(isnan(EMG_data)) = 0;
         EMG_data = min(EMG_data,1);
         EMG_data = max(EMG_data,0);

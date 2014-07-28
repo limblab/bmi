@@ -89,9 +89,9 @@ function run_decoder(varargin)
                 t_buf   = tic; % reset buffering timer
                 bin_count = bin_count +1;
                 
-                if strcmp(params.mode,'N2E')
+                if strcmp(lower(params.mode),'n2e')
                     params.current_decoder = params.N2E_decoder;
-                elseif strcmp(params.mode,'Vel')
+                elseif strcmp(lower(params.mode),'vel')
                     params.current_decoder = params.vel_decoder;
                 else
                     params.current_decoder = params.null_decoder;
