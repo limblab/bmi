@@ -31,7 +31,42 @@ elseif strcmp(params.mode,'N2E')
         idx(iString) = find(strcmp(emg_labels,strings_to_match(iString)));
     end    
     EMG_raw = predictions(idx);
-    EMG_data = predictions(idx);    
+    EMG_data = predictions(idx);
+elseif strcmp(params.mode,'Test')
+%     EMG_data = abs([min(data.handleforce(1),0) max(data.handleforce(1),0) min(data.handleforce(2),0) max(data.handleforce(2),0)]);
+%     EMG_raw = zeros(1,4);
+
+    emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
+    emg_labels = data.labels(emg_channels);
+    for iString = 1:length(strings_to_match)
+        idx(iString) = find(strcmp(emg_labels,strings_to_match(iString)));
+    end
+    [~,chan_idx,~] = intersect(data.analog_channels,emg_channels);
+    EMG_data = data.analog(:,chan_idx);
+    % EMG_data(:,1:2) = 0;
+    EMG_raw = abs(EMG_data);
+    EMG_data = mean(EMG_raw);
+
+    if size(EMG_data,2) == max(idx)
+        EMG_data = EMG_data(:,idx);
+    else
+        EMG_data = zeros(1,max(idx));
+        EMG_raw = zeros(10,max(idx));
+    end
+    
+%     % High force
+%     mixing_matrix = [   -.0421  -.1389	0.2059 -.103;...
+%                         -.036   -.013	-.1459  .239;...
+%                         -.095   .4111	0.061   0.0612;...
+%                         .4395   .0479   0.2099  -.1093]; 
+    
+    % Low force
+    mixing_matrix = [   -0.163  -0.0212  0.0805 -0.0558;...
+                        0.0429  0.0031  -0.0526 0.0748;...
+                        -.0636  0.1925  0.0216  0.0280;...
+                        0.0741  0.0009  0.0889  0.0127];
+    
+    EMG_data = EMG_data*mixing_matrix;
 else
     EMG_raw = zeros(1,4);
     EMG_data = zeros(1,4);

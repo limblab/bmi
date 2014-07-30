@@ -79,6 +79,8 @@ musc_force_stiffness = sign(arm_params.musc_length_old - musc_length).*musc_stif
 
 muscle_force = arm_params.F_max.*arm_params.musc_act + musc_force_stiffness;
 muscle_torque = J_Muscle2Theta'*muscle_force';
+muscle_torque(muscle_torque>arm_params.max_torque) = arm_params.max_torque;
+muscle_torque(muscle_torque<-arm_params.max_torque) = -arm_params.max_torque;
 
 constraint_angle_diff = [theta(1)-arm_params.null_angles(1);theta(2)-(theta(1)+diff(arm_params.null_angles))];
 constraint_torque = -sign(constraint_angle_diff).*exp(30*(abs(constraint_angle_diff))/(pi/2)-27);

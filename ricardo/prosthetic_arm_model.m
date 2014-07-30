@@ -41,9 +41,9 @@ Kv = sqrt(arm_params.Vmax)/(1-arm_params.emg_thres);
 emg_to_vel = sign(emg_diff).*(Kv*(emg_diff-arm_params.emg_thres)).^2;
 emg_to_vel(abs(emg_diff)<arm_params.emg_thres) = 0;
 
-controller_torque = arm_params.P_gain*(emg_to_vel - [theta(3);theta(4)-theta(3)]);
-controller_torque(abs(controller_torque)>arm_params.max_torque) =...
-    sign(controller_torque(abs(controller_torque)>arm_params.max_torque))*arm_params.max_torque;
+motor_torque = arm_params.P_gain*(emg_to_vel - [theta(3);theta(4)-theta(3)]);
+motor_torque(motor_torque>arm_params.max_torque) = arm_params.max_torque;
+motor_torque(motor_torque<-arm_params.max_torque) = -arm_params.max_torque;
 
 angle_diff = [theta(1)-arm_params.null_angles(1);theta(2)-(theta(1)+diff(arm_params.null_angles))];
 constraint_torque = -sign(angle_diff).*exp(30*(abs(angle_diff))/(pi/2)-27);
@@ -64,8 +64,8 @@ T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_
 tau_c = [-theta(3)*c(1);-(theta(4)-theta(3))*c(2)]; % viscosity
 tau = T(:) + tau_c;
 xdot(1:2,1)=theta(3:4);
-xdot(3:4,1)= M\(T_endpoint + tau-Fg-C + controller_torque + constraint_torque);
+xdot(3:4,1)= M\(T_endpoint + tau-Fg-C + motor_torque + constraint_torque);
 
-out_var = [controller_torque(:);nan;nan;F_end(:)]';
+out_var = [motor_torque(:);nan;nan;F_end(:)]';
 
 end

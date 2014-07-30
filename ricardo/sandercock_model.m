@@ -115,6 +115,8 @@ musc_force = min(musc_force,arm_params.F_max);
 
 musc_torque = [(arm_params.m_ins(1)*musc_force(1) - arm_params.m_ins(2)*musc_force(2));...
     (arm_params.m_ins(3)*musc_force(3) - arm_params.m_ins(4)*musc_force(4))];
+musc_torque(musc_torque>arm_params.max_torque) = arm_params.max_torque;
+musc_torque(musc_torque<-arm_params.max_torque) = -arm_params.max_torque;
 
  %matrix equations 
 M = [m(2)*lc(1)^2+m(2)*l(1)^2+i(1), m(2)*l(1)*lc(2)^2*cos(theta(1)-theta(2));

@@ -12,7 +12,7 @@ add_these = current_folder(1:add_these(end)-1);
 addpath(genpath(add_these))
 clearxpc
 
-calibration_pause = 1; % seconds to collect data across
+calibration_pause = 2; % seconds to collect data across
 %% Initialize 'params'
 % Only initialize required values.
 params_2.online = 1;

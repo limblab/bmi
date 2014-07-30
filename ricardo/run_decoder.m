@@ -33,10 +33,7 @@ function run_decoder(varargin)
     ave_op_time = 0.0;
     bin_count = 0;
     reached_cycle_t = false;
-    w = Words;
-
-    % data structure to store inputs
-    data = get_default_data(params);
+    w = Words;    
 
     % Setup figures
     handles = setup_display_plots(params);
@@ -45,8 +42,7 @@ function run_decoder(varargin)
     % Start data streaming
     if params.online   
         handles = start_cerebus_stream(params,handles,xpc);
-        cbmex('trialconfig',1);
-        data.labels = cbmex('chanlabel',1:156);
+        cbmex('trialconfig',1);       
         offline_data = [];
         max_cycles = 0;
     else
@@ -56,6 +52,9 @@ function run_decoder(varargin)
         bin_start_t = double(offline_data.timeframe(1));
     end
 
+    % data structure to store inputs
+    data = get_default_data(params);
+    
     % Setup data files and directories for recording
     % handles = setup_datafiles(params,handles,data,offline_data,w);
 
@@ -67,6 +66,7 @@ function run_decoder(varargin)
 %     try
         params = evalin('base','params');
         recording = 0;
+        current_mode = params.mode;
 
         while(~get(handles.stop_bmi,'Value') && ... 
                 ( params.online || ...
@@ -89,12 +89,17 @@ function run_decoder(varargin)
                 t_buf   = tic; % reset buffering timer
                 bin_count = bin_count +1;
                 
-                if strcmp(lower(params.mode),'n2e')
-                    params.current_decoder = params.N2E_decoder;
-                elseif strcmp(lower(params.mode),'vel')
-                    params.current_decoder = params.vel_decoder;
-                else
-                    params.current_decoder = params.null_decoder;
+                
+                if ~strcmpi(current_mode,params.mode)
+                    if strcmpi(params.mode,'n2e')
+                        params.current_decoder = params.N2E_decoder;
+                    elseif strcmpi(params.mode,'vel')
+                        params.current_decoder = params.vel_decoder;
+                    else
+                        params.current_decoder = params.null_decoder;
+                    end
+                    data = get_default_data(params);
+                    current_mode = params.mode;
                 end
                 assignin('base','params',params);
 
@@ -212,6 +217,11 @@ function run_decoder(varargin)
         echoudp('off');
         fclose('all');    
         close all;
+        recorded_files = dir(handles.save_dir);
+        recorded_files = {recorded_files(:).name};
+        if numel(recorded_files)<3
+            rmdir(handles.save_dir);
+        end
 
 %     catch e
 %         if params.online

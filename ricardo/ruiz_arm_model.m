@@ -124,10 +124,14 @@ end
 T_endpoint_virtual = [-(l(1)*sin_theta_1_b+l(2)*sin_theta_2_b) * F_end_b(1) + (l(1)*cos_theta_1_b-l(2)*cos_theta_2_b) * F_end_b(2);
     -l(2)*sin_theta_2_b * F_end_b(1) + l(2)*cos_theta_2_b * F_end_b(2)];
     
+motor_torque = muscle_torque + muscle_stiffness_torque;
+motor_torque(motor_torque>arm_params.max_torque) = arm_params.max_torque;
+motor_torque(motor_torque<-arm_params.max_torque) = -arm_params.max_torque;
+
 tau_c = [-theta(3)*c(1);-(theta(4)-theta(3))*c(2)]; % viscosity
 tau = T(:) + tau_c;
 xdot(1:2,1)=theta(3:4);
-xdot(3:4,1)= M\(T_endpoint + tau - C + muscle_torque + muscle_stiffness_torque + constraint_torque);
+xdot(3:4,1)= M\(T_endpoint + tau - C + motor_torque + constraint_torque);
 
 tau_c_b = [-theta(7)*c(1);-(theta(8)-theta(7))*c(2)]; % viscosity
 tau_b = tau_c_b;

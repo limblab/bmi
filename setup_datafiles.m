@@ -1,5 +1,11 @@
 function [params,handles] = setup_datafiles(params,handles,data,offline_data,w,xpc,m_data_2)
 
+recorded_files = dir(handles.save_dir);
+recorded_files = {recorded_files(:).name};
+if numel(recorded_files)<3
+    rmdir(handles.save_dir);
+end
+
 if params.save_data 
     handles = get_new_filename(params,handles);
     handles.data_file = fullfile(handles.save_dir, [handles.filename '_data.txt']);        
