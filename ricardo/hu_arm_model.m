@@ -16,13 +16,6 @@ end
 
 xdot = zeros(8,1);
 theta = reshape(theta,[],1);
-% theta(1:2) = mod(theta(1:2),2*pi);
-% theta(5:6) = mod(theta(5:6),2*pi);
-% if abs(theta(1:2)-theta(5:6))>20*pi/180
-% %     theta;
-% end
-% theta(5) = theta(1) - sign(theta(1)-theta(5)).*min(abs(theta(1)-theta(5)),20*pi/180);
-% theta(6) = theta(2) - sign((theta(2)-theta(1))-(theta(6)-theta(5))).*min(abs((theta(2)-theta(1))-(theta(6)-theta(5))),20*pi/180);
 
 sin_theta_1 = sin(theta(1));
 sin_theta_2 = sin(theta(2));
@@ -34,6 +27,30 @@ sin_theta_2_b = sin(theta(6));
 cos_theta_1_b = cos(theta(5));
 cos_theta_2_b = cos(theta(6));
 
+X_e_b = arm_params.X_sh + [arm_params.l(1)*cos_theta_1_b arm_params.l(1)*sin_theta_1_b];
+X_h_b = X_e_b + [arm_params.l(2)*cos_theta_2_b arm_params.l(2)*sin_theta_2_b];
+
+F_end_b = [0;0];
+if X_h_b(1) < -.12
+    F_end_b(1) = -(X_h_b(1)-(-.12))*500;
+end
+if X_h_b(1) > .12
+    F_end_b(1) = -(X_h_b(1)-(.12))*500;
+end
+if X_h_b(2) < -.1
+    F_end_b(2) = -(X_h_b(2)-(-.1))*500;
+end
+if X_h_b(2) > .1
+    F_end_b(2) = -(X_h_b(2)-(.1))*500;
+end
+
+J_reference = [-l(1)*sin(theta(5))-l(2)*sin(theta(6)) -l(2)*sin(theta(6));...
+    l(1)*cos(theta(5))+l(2)*cos(theta(6)) l(2)*cos(theta(6))];
+T_endpoint_reference = J_reference'*F_end_b(:);
+
+J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
+    l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
+T_endpoint = J'*F_end(:);
 % F = [1;-1];
 
 % theta = [45;135]*pi/180;
@@ -77,27 +94,13 @@ C = [-m(2)*l(1)*lc(2)*sin(theta(1)-theta(2))*theta(4)^2;
 C_b = [-m(2)*l(1)*lc(2)*sin(theta(5)-theta(6))*theta(8)^2;
  -m(2)*l(1)*lc(2)*sin(theta(5)-theta(6))*theta(7)^2];
 
-T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
-        -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
+% T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
+%         -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
     
-X_e_b = arm_params.X_sh + [arm_params.l(1)*cos_theta_1_b arm_params.l(1)*sin_theta_1_b];
-X_h_b = X_e_b + [arm_params.l(2)*cos_theta_2_b arm_params.l(2)*sin_theta_2_b]; 
-F_end_b = [0;0];
-if X_h_b(1) < -.12
-    F_end_b(1) = -(X_h_b(1)-(-.12))*500;
-end
-if X_h_b(1) > .12
-    F_end_b(1) = -(X_h_b(1)-(.12))*500;
-end
-if X_h_b(2) < -.1
-    F_end_b(2) = -(X_h_b(2)-(-.1))*500;
-end
-if X_h_b(2) > .1
-    F_end_b(2) = -(X_h_b(2)-(.1))*500;
-end
+ 
 
-T_endpoint_virtual = [-(l(1)*sin_theta_1_b+l(2)*sin_theta_2_b) * F_end_b(1) + (l(1)*cos_theta_1_b-l(2)*cos_theta_2_b) * F_end_b(2);
-    -l(2)*sin_theta_2_b * F_end_b(1) + l(2)*cos_theta_2_b * F_end_b(2)];
+% T_endpoint_virtual = [-(l(1)*sin_theta_1_b+l(2)*sin_theta_2_b) * F_end_b(1) + (l(1)*cos_theta_1_b-l(2)*cos_theta_2_b) * F_end_b(2);
+%     -l(2)*sin_theta_2_b * F_end_b(1) + l(2)*cos_theta_2_b * F_end_b(2)];
     
 motor_torque = muscle_torque + muscle_stiffness_torque;
 motor_torque(motor_torque>arm_params.max_torque) = arm_params.max_torque;
@@ -111,7 +114,7 @@ xdot(3:4,1)= M\(T_endpoint + tau - C + motor_torque + constraint_torque);
 tau_c_b = [-theta(7)*c(1);-(theta(8)-theta(7))*c(2)]; % viscosity
 tau_b = tau_c_b;
 xdot(5:6,1)=theta(7:8);
-xdot(7:8,1)= M_b\(T_endpoint_virtual + tau_b - C_b + muscle_torque + constraint_torque_b);
+xdot(7:8,1)= M_b\(T_endpoint_reference + tau_b - C_b + muscle_torque + constraint_torque_b);
 
 out_var = [muscle_torque(:);muscle_stiffness_torque(:);F_end(:);xdot(:)]';
 

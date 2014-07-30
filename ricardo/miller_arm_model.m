@@ -92,8 +92,13 @@ M = [m(2)*lc(1)^2+m(2)*l(1)^2+i(1), m(2)*l(1)*lc(2)^2*cos(theta(1)-theta(2));
 C = [-m(2)*l(1)*lc(2)*sin(theta(1)-theta(2))*theta(4)^2;
  -m(2)*l(1)*lc(2)*sin(theta(1)-theta(2))*theta(3)^2];
 
-T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
-    -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
+J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
+    l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
+
+T_endpoint = J'*F_end(:);
+
+% T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
+%     -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
 
 tau_c = [-theta(3)*c(1);-(theta(4)-theta(3))*c(2)]; % viscosity
 tau = T(:) + tau_c;

@@ -1,4 +1,4 @@
-function [xdot,out_var] = prosthetic_arm_model(t,theta,arm_params)
+function [xdot,out_var] = bmi_model(t,theta,arm_params)
 
 %parameters
 g = 0;
@@ -25,24 +25,9 @@ cos_theta_2 = cos(theta(2));
 J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
     l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
 
-%     emg = 0:.001:1;
-%     thres = .2;
-%     Vmax = 10;
-%     Kv = sqrt(Vmax)/(1-thres);
-%     vel = (Kv*(emg-thres)).^2;
-%     vel(emg<thres) = 0;
-%     figure;
-%     plot(emg,vel)
-%     P_gain = 1;
-    
-emg_diff = [arm_params.musc_act(1)-arm_params.musc_act(2);...
-    arm_params.musc_act(3)-arm_params.musc_act(4)];
+commanded_rot_vel = J\arm_params.commanded_vel;
 
-Kv = sqrt(arm_params.Vmax)/(1-arm_params.emg_thres);
-emg_to_vel = sign(emg_diff).*(Kv*(emg_diff-arm_params.emg_thres)).^2;
-emg_to_vel(abs(emg_diff)<arm_params.emg_thres) = 0;
-
-motor_torque = arm_params.P_gain*(emg_to_vel - [theta(3);theta(4)-theta(3)]);
+motor_torque = arm_params.P_gain*(commanded_rot_vel - [theta(3);theta(4)-theta(3)]);
 motor_torque(motor_torque>arm_params.max_torque) = arm_params.max_torque;
 motor_torque(motor_torque<-arm_params.max_torque) = -arm_params.max_torque;
 
@@ -59,10 +44,9 @@ C = [-m(2)*l(1)*lc(2)*sin(theta(1)-theta(2))*theta(4)^2;
 Fg = [(m(1)*lc(1)+m(2)*l(1))*g*cos_theta_1;
  m(2)*g*lc(2)*cos_theta_2];
 
+T_endpoint = J'*F_end(:);
 % T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
 %     -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
-
-T_endpoint = J'*F_end(:);
 
 tau_c = [-theta(3)*c(1);-(theta(4)-theta(3))*c(2)]; % viscosity
 tau = T(:) + tau_c;

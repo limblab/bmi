@@ -128,8 +128,12 @@ C = [-m(2)*l(1)*lc(2)*sin(theta(1)-theta(2))*theta(4)^2;
 Fg = [(m(1)*lc(1)+m(2)*l(1))*g*cos_theta_1;
  m(2)*g*lc(2)*cos_theta_2];
 
-T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
-    -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
+J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
+    l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
+T_endpoint = J'*F_end(:);
+
+% T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
+%     -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
 
 % tau =T+ [-theta(3)*c(1);-theta(4)*c(2)]; %input torques,
 % tau =T+ [-sign(theta(3))*sqrt(abs(theta(3)))*c(1);-sign(theta(4))*sqrt(abs(theta(4)))*c(2)]; %input torques,

@@ -100,8 +100,7 @@ function run_decoder(varargin)
                     end
                     data = get_default_data(params);
                     current_mode = params.mode;
-                end
-                assignin('base','params',params);
+                end                
 
                 % Get and Process New Data
                 data = get_new_data(params,data,offline_data,bin_count,cycle_t,w,xpc,m_data_2);
@@ -124,7 +123,11 @@ function run_decoder(varargin)
                     end
                 end
                 
-                if strcmp(params.mode,'Vel')
+                if strcmpi(params.mode,'Vel')
+                    hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
+                        (predictions + params.vel_offsets);
+                    params.vel_offsets = hpf_predictions - predictions;
+                    predictions = hpf_predictions;
                     m_data_1.Data.vel_predictions = predictions;
                 end
                 [EMG_data,~,~] = process_emg(params,data,predictions);
@@ -196,7 +199,8 @@ function run_decoder(varargin)
                     fprintf('~~~~~~slow processing time: %.1f ms~~~~~~~\n',et_op*1000);
                 end
 
-                reached_cycle_t = false;                
+                reached_cycle_t = false;    
+                assignin('base','params',params);
             end
 
             et_buf = toc(t_buf); %elapsed buffering time

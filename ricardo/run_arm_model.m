@@ -43,12 +43,14 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
 %             end
             EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min); 
             EMG_data(EMG_data<0) = 0;
+            vel_data = m_data_1.Data.vel_predictions;
         else
             temp_t = [.05*cycle_counter .05*cycle_counter .05*cycle_counter .05*cycle_counter];
             EMG_data = 500+500*[cos(temp_t(1)) cos(temp_t(2)+pi/2) cos(temp_t(3)+pi/4) cos(temp_t(4)+3*pi/4)];
             EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
             EMG_data = EMG_data.^2;
             EMG_data(3:4) = 0;
+            vel_data = 10*[cos(temp_t(1)) cos(temp_t(2)+pi/2)];
         end        
         
 %         assignin('base','arm_params',arm_params);
@@ -80,33 +82,11 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             else
                 disp('No udp data read')
             end
-        else            
-%             cycle_counter = 0
-%             cycle_counter = cycle_counter+1;
-%             m_data_1.Data.EMG_data = .9*m_data_1.Data.EMG_data +...
-%                 .1*rand(size(m_data_1.Data.EMG_data)).*...
-%                 (2*(cos(cycle_counter/10000+[0 pi/3 1.5*pi pi/4])>0)-1);
-%             m_data_1.Data.EMG_data =... .9*m_data_1.Data.EMG_data +...
-%                 1.*...
-%                 (.5*(cos(cycle_counter/100+[0 pi/3 1.5*pi pi/4]))+.5);
-%             m_data_1.Data.EMG_data = min(m_data_1.Data.EMG_data,1);
-%             m_data_1.Data.EMG_data = max(m_data_1.Data.EMG_data,0);
-%             m_data_1.Data.EMG_data = .5*ones(size(m_data_1.Data.EMG_data));
-%             m_data_1.Data.EMG_data
-                        
-%             if mod(cycle_counter,200)==0
-%                 m_data_1.Data.EMG_data = rand(1,4);
-% %                 forces = .99*forces +...
-% %                     .01*rand(1,2).*...
-% %                     (2*(cos(2*pi*cycle_counter/1000+[pi/3 1.5*pi])>0)-1);
-% %                 forces = 2*rand(1,2)-1;
-%             end
-            
+        else   
             forces = min(forces,1);
             forces = max(forces,-1);
             F_x = 5*forces(1);
             F_y = 5*forces(2);
-            
         end
         
         arm_params.F_end = [F_x F_y];
@@ -128,12 +108,9 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         arm_params.musc_l0 = sqrt(2*arm_params.m_ins.^2)+...
                         0*sqrt(2*arm_params.m_ins.^2)/5.*...
                         (rand(1,length(arm_params.m_ins))-.5);
-%         arm_params.theta_ref = [3*pi/4 pi/2]; 
-%         arm_params.X_s = [0 0];
+        arm_params.commanded_vel = vel_data;
 
         t_temp = [0 mean(dt_hist)];
-%         t_temp = [0 dt_hist(1)];
-%         t_temp = [0 0.01];
         
         old_X_h = arm_params.X_h;
         
@@ -166,7 +143,9 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 [t,x] = ode45(@(t,x0_b) ruiz_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
                 [~,out_var] = ruiz_arm_model(t,x(end,:),arm_params);
                 x0 = x0_b(1:4);
-%                 out_var
+            case 'hill'
+                [t,x] = ode45(@(t,x0) bmi_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [~,out_var] = bmi_model(t,x(end,:),arm_params);
         end
         musc_force = out_var(1:4);
         F_end = out_var(5:6);

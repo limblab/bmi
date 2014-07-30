@@ -14,6 +14,8 @@ params.save_firing_rates = 1;
 params.display_plots = 0;
 params.left_handed = 1;
 params.debug = 0;
+params.offset_time_constant = 60;
+params.vel_offsets = [0 0];
 
 if exist('params','var')
     params = bmi_params_defaults(params);
