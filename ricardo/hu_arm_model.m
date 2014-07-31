@@ -31,17 +31,19 @@ X_e_b = arm_params.X_sh + [arm_params.l(1)*cos_theta_1_b arm_params.l(1)*sin_the
 X_h_b = X_e_b + [arm_params.l(2)*cos_theta_2_b arm_params.l(2)*sin_theta_2_b];
 
 F_end_b = [0;0];
-if X_h_b(1) < -.12
-    F_end_b(1) = -(X_h_b(1)-(-.12))*500;
-end
-if X_h_b(1) > .12
-    F_end_b(1) = -(X_h_b(1)-(.12))*500;
-end
-if X_h_b(2) < -.1
-    F_end_b(2) = -(X_h_b(2)-(-.1))*500;
-end
-if X_h_b(2) > .1
-    F_end_b(2) = -(X_h_b(2)-(.1))*500;
+if arm_params.walls
+    if X_h_b(1) < -.12
+        F_end_b(1) = -(X_h_b(1)-(-.12))*500;
+    end
+    if X_h_b(1) > .12
+        F_end_b(1) = -(X_h_b(1)-(.12))*500;
+    end
+    if X_h_b(2) < -.1
+        F_end_b(2) = -(X_h_b(2)-(-.1))*500;
+    end
+    if X_h_b(2) > .1
+        F_end_b(2) = -(X_h_b(2)-(.1))*500;
+    end
 end
 
 J_reference = [-l(1)*sin(theta(5))-l(2)*sin(theta(6)) -l(2)*sin(theta(6));...

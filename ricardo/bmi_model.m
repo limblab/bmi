@@ -23,9 +23,9 @@ cos_theta_1 = cos(theta(1));
 cos_theta_2 = cos(theta(2));
 
 J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
-    l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
+    l(1)*cos(theta(1))-l(2)*cos(theta(2)) l(2)*cos(theta(2))];
 
-commanded_rot_vel = J\arm_params.commanded_vel;
+commanded_rot_vel = J\arm_params.commanded_vel(:);
 
 motor_torque = arm_params.P_gain*(commanded_rot_vel - [theta(3);theta(4)-theta(3)]);
 motor_torque(motor_torque>arm_params.max_torque) = arm_params.max_torque;
@@ -54,5 +54,6 @@ xdot(1:2,1)=theta(3:4);
 xdot(3:4,1)= M\(T_endpoint + tau-Fg-C + motor_torque + constraint_torque);
 
 out_var = [motor_torque(:);nan;nan;F_end(:)]';
+% out_var = [motor_torque(:);T_endpoint;F_end(:)]';
 
 end

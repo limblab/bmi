@@ -3,6 +3,7 @@ clear params
 params.monkey_name = 'Chewie';
 params.save_dir = ['E:\' params.monkey_name];
 params.mode = 'N2E'; % EMG | N2E | Vel (not implemented yet) | Iso
+params.arm_model = 'ruiz';
 params.task_name = ['DCO_' params.mode];
 params.N2E_decoder.decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-07-25_DCO_Iso\Output_Data\bdf-binned_Decoder.mat';
 params.vel_decoder.decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-07-25_DCO_Iso\Output_Data\bdf-binned_Decoder.mat';

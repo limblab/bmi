@@ -56,14 +56,12 @@ function run_decoder(varargin)
     data = get_default_data(params);
     
     % Setup data files and directories for recording
-    % handles = setup_datafiles(params,handles,data,offline_data,w);
 
-    %
     t_buf = tic; %data buffering timer
     drawnow;
 
     % Run cycle
-%     try
+    try
         params = evalin('base','params');
         recording = 0;
         current_mode = params.mode;
@@ -124,15 +122,17 @@ function run_decoder(varargin)
                 end
                 
                 if strcmpi(params.mode,'Vel')
+                    predictions = predictions(1:2);
                     hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
                         (predictions + params.vel_offsets);
                     params.vel_offsets = hpf_predictions - predictions;
                     predictions = hpf_predictions;
                     m_data_1.Data.vel_predictions = predictions;
                 end
+                
                 [EMG_data,~,~] = process_emg(params,data,predictions);
 
-                m_data_1.Data.EMG_data = EMG_data;
+                m_data_1.Data.EMG_data = EMG_data;                
                 
                 if strncmpi(params.mode,'iso',3) % ...if task was isometric
                     cursor_pos = -params.force_to_cursor_gain*data.handleforce;
@@ -148,7 +148,7 @@ function run_decoder(varargin)
                     else
                         spikes = data.spikes(1,:);
                     end
-                    tmp_data = [bin_start_t spikes cursor_pos ...
+                    tmp_data = [bin_start_t spikes predictions cursor_pos ...
                         m_data_2.Data.shoulder_pos m_data_2.Data.elbow_pos ...
                         EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force]; 
                     save(handles.data_file,'tmp_data','-append','-ascii');
@@ -164,10 +164,10 @@ function run_decoder(varargin)
                         elbow_pos = cursor_pos;
                     end
                     fwrite(xpc.xpc_write, [1 1 cursor_pos shoulder_pos elbow_pos],'float32');
-                    fprintf('%.2f\t%.2f\n',cursor_pos);
+%                     fprintf('%.2f\t%.2f\n',cursor_pos);
                 end
 
-
+                assignin('base','params',params);
                 %display targets and cursor plots
                 if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(handles.curs_handle)                
 
@@ -199,8 +199,7 @@ function run_decoder(varargin)
                     fprintf('~~~~~~slow processing time: %.1f ms~~~~~~~\n',et_op*1000);
                 end
 
-                reached_cycle_t = false;    
-                assignin('base','params',params);
+                reached_cycle_t = false;                    
             end
 
             et_buf = toc(t_buf); %elapsed buffering time
@@ -223,22 +222,27 @@ function run_decoder(varargin)
         close all;
         recorded_files = dir(handles.save_dir);
         recorded_files = {recorded_files(:).name};
-        if numel(recorded_files)<3
+        if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
             rmdir(handles.save_dir);
         end
 
-%     catch e
-%         if params.online
-%             if params.save_data
-%                 cbmex('fileconfig', handles.cerebus_file, '', 0);
-%             end
-%             cbmex('close');
-%         end
-%         m_data_1.Data.bmi_running = 0;
-%         echoudp('off');
-%         fclose('all');
-%         close all;
-%         rethrow(e);
-%     end
+    catch e
+        if params.online
+            if params.save_data
+                cbmex('fileconfig', handles.cerebus_file, '', 0);
+            end
+            cbmex('close');
+        end
+        recorded_files = dir(handles.save_dir);
+        recorded_files = {recorded_files(:).name};
+        if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
+            rmdir(handles.save_dir);
+        end
+        m_data_1.Data.bmi_running = 0;
+        echoudp('off');
+        fclose('all');
+        close all;
+        rethrow(e);
+    end
 
 end

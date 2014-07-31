@@ -12,6 +12,7 @@ arm_params.c = [5, 5];
 arm_params.emg_min = zeros(1,4);
 arm_params.emg_max = 1000*ones(1,4);
 arm_params.emg_adaptation_rate = -1;
+arm_params.walls = 1;
 
 % % Human
 % arm_params.m = [1, 1];

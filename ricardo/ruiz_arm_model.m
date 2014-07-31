@@ -90,19 +90,21 @@ C = [-m(2)*l(1)*lc(2)*sin(theta(1)-theta(2))*theta(4)^2;
 C_b = [-m(2)*l(1)*lc(2)*sin(theta(5)-theta(6))*theta(8)^2;
  -m(2)*l(1)*lc(2)*sin(theta(5)-theta(6))*theta(7)^2];
 
-    
+
 F_end_b = [0;0];
-if X_h_b(1) < -.12
-    F_end_b(1) = -(X_h_b(1)-(-.12))*500;
-end
-if X_h_b(1) > .12
-    F_end_b(1) = -(X_h_b(1)-(.12))*500;
-end
-if X_h_b(2) < -.1
-    F_end_b(2) = -(X_h_b(2)-(-.1))*500;
-end
-if X_h_b(2) > .1
-    F_end_b(2) = -(X_h_b(2)-(.1))*500;
+if arm_params.walls
+    if X_h_b(1) < -.12
+        F_end_b(1) = -(X_h_b(1)-(-.12))*500;
+    end
+    if X_h_b(1) > .12
+        F_end_b(1) = -(X_h_b(1)-(.12))*500;
+    end
+    if X_h_b(2) < -.1
+        F_end_b(2) = -(X_h_b(2)-(-.1))*500;
+    end
+    if X_h_b(2) > .1
+        F_end_b(2) = -(X_h_b(2)-(.1))*500;
+    end
 end
 
 % T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1+l(2)*cos_theta_2) * F_end(2);
@@ -128,5 +130,6 @@ xdot(5:6,1)=theta(7:8);
 xdot(7:8,1)= M_b\(T_endpoint_reference + tau_b - C_b + muscle_torque + constraint_torque_b);
 
 out_var = [muscle_torque(:);muscle_stiffness_torque(:);F_end(:);xdot(:)]';
+out_var = [muscle_torque(:);muscle_stiffness_torque(:);F_end(:);xdot(:);T_endpoint(:)]';
 
 end

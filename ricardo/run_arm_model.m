@@ -49,8 +49,8 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             EMG_data = 500+500*[cos(temp_t(1)) cos(temp_t(2)+pi/2) cos(temp_t(3)+pi/4) cos(temp_t(4)+3*pi/4)];
             EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
             EMG_data = EMG_data.^2;
-            EMG_data(3:4) = 0;
-            vel_data = 10*[cos(temp_t(1)) cos(temp_t(2)+pi/2)];
+%             EMG_data(1:4) = 0;
+            vel_data = .10*[cos(temp_t(1)) cos(temp_t(2)+pi/2)];
         end        
         
 %         assignin('base','arm_params',arm_params);
@@ -91,17 +91,19 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         
         arm_params.F_end = [F_x F_y];
 %         clc
-        if arm_params.X_h(1) < -.12
-            arm_params.F_end(1) = -(arm_params.X_h(1)-(-.12))*arm_params.x_gain*500;
-        end
-        if arm_params.X_h(1) > .12
-            arm_params.F_end(1) = -(arm_params.X_h(1)-(.12))*arm_params.x_gain*500;
-        end
-        if arm_params.X_h(2) < -.1
-            arm_params.F_end(2) = -(arm_params.X_h(2)-(-.1))*500;
-        end
-        if arm_params.X_h(2) > .1
-            arm_params.F_end(2) = -(arm_params.X_h(2)-(.1))*500;
+        if arm_params.walls
+            if arm_params.X_h(1) < -.12
+                arm_params.F_end(1) = -(arm_params.X_h(1)-(-.12))*arm_params.x_gain*500;
+            end
+            if arm_params.X_h(1) > .12
+                arm_params.F_end(1) = -(arm_params.X_h(1)-(.12))*arm_params.x_gain*500;
+            end
+            if arm_params.X_h(2) < -.1
+                arm_params.F_end(2) = -(arm_params.X_h(2)-(-.1))*500;
+            end
+            if arm_params.X_h(2) > .1
+                arm_params.F_end(2) = -(arm_params.X_h(2)-(.1))*500;
+            end
         end
         
         arm_params.musc_act = EMG_data;
@@ -141,9 +143,9 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 [~,out_var] = perreault_arm_model(t,x(end,:),arm_params);
             case 'ruiz'
                 [t,x] = ode45(@(t,x0_b) ruiz_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
-                [~,out_var] = ruiz_arm_model(t,x(end,:),arm_params);
+                [~,out_var] = ruiz_arm_model(t,x(end,:),arm_params);                
                 x0 = x0_b(1:4);
-            case 'hill'
+            case 'bmi'
                 [t,x] = ode45(@(t,x0) bmi_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = bmi_model(t,x(end,:),arm_params);
         end
