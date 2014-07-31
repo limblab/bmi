@@ -1,5 +1,5 @@
 % Endpoint forces to muscle activations
-function estimated_emg = ruiz_end_force_to_musc_act(arm_params,F)
+function estimated_emg = end_force_to_cartesian_musc_act(arm_params,F)
 
 min_99_prctile = min([prctile(F,99) prctile(-F,99)]);
 mag_F = sqrt(F(:,1).^2+F(:,2).^2);
