@@ -1,4 +1,4 @@
-arm_params = get_default_arm_params;
+load('temp_arm_params')
 arm_params.online = 1;
 if arm_params.online
     XPC_IP = '192.168.0.1';

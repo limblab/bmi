@@ -33,7 +33,7 @@ function run_decoder(varargin)
     ave_op_time = 0.0;
     bin_count = 0;
     reached_cycle_t = false;
-    w = Words;    
+    w = Words;
 
     % Setup figures
     handles = setup_display_plots(params);
@@ -90,11 +90,13 @@ function run_decoder(varargin)
                 
                 if ~strcmpi(current_mode,params.mode)
                     if strcmpi(params.mode,'n2e')
-                        params.current_decoder = params.N2E_decoder;
+                        params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'n2e'));
+                    elseif strcmpi(params.mode,'n2e_cartesian')
+                        params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'n2e_cartesian'));
                     elseif strcmpi(params.mode,'vel')
-                        params.current_decoder = params.vel_decoder;
+                        params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'vel'));
                     else
-                        params.current_decoder = params.null_decoder;
+                        params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'null'));
                     end
                     data = get_default_data(params);
                     current_mode = params.mode;
@@ -110,9 +112,9 @@ function run_decoder(varargin)
                 try
                     predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*params.current_decoder.H;
                 catch
-                    predictions = zeros(1,4);
+                    predictions = [];
                 end
-                if strcmp(params.mode,'N2E')
+                if strcmpi(params.mode,'n2e') || strcmpi(params.mode,'n2e_cartesian')
                     predictions(predictions<0) = 0;
                 end
                 if ~isempty(params.current_decoder.P)
@@ -121,7 +123,7 @@ function run_decoder(varargin)
                     end
                 end
                 
-                if strcmpi(params.mode,'Vel')
+                if strcmpi(params.mode,'vel')
                     predictions = predictions(1:2);
                     hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
                         (predictions + params.vel_offsets);
@@ -216,6 +218,7 @@ function run_decoder(varargin)
             end
             cbmex('close');
         end
+        
         m_data_1.Data.bmi_running = 0;
         echoudp('off');
         fclose('all');    
