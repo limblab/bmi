@@ -9,7 +9,7 @@ F = -bdf.force(:,2:3);
 if 0
     estimated_emg = end_force_to_musc_act(arm_params,F);
 else
-    estimated_emg = ruiz_end_force_to_musc_act(arm_params,F);
+    estimated_emg = end_force_to_cartesian_musc_act(arm_params,F);
 end
 estimated_emg = estimated_emg(:,[3 4 1 2]);
 bdf.emg.data(:,2:5) = estimated_emg;
