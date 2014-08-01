@@ -145,6 +145,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 [t,x] = ode45(@(t,x0_b) ruiz_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
                 [~,out_var] = ruiz_arm_model(t,x(end,:),arm_params);                
                 x0 = x0_b(1:4);
+                out_var
             case 'bmi'
                 [t,x] = ode45(@(t,x0) bmi_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = bmi_model(t,x(end,:),arm_params);

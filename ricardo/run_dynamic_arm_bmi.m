@@ -1,6 +1,6 @@
 % run_dynamic_arm_bmi
 clear params
-params.monkey_name = 'Chewie';
+params.monkey_name = 'Ricardo';
 params.save_dir = ['E:\' params.monkey_name];
 params.mode = 'n2e_cartesian'; % emg | n2e | n2e_cartesian | vel | iso
 params.arm_model = 'hill'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi

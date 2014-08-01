@@ -48,20 +48,25 @@ emg_diff = [arm_params.musc_act(1)-arm_params.musc_act(2)...
 muscle_force = (arm_params.emg_to_force_gain.*emg_diff)';
 
 emg_coactivation = [arm_params.musc_act(1)+arm_params.musc_act(2);...
-    arm_params.musc_act(3)+arm_params.musc_act(4)];
+    arm_params.musc_act(3)+arm_params.musc_act(4)]/2;
 
 endpoint_error = [X_h_b - X_h]';
-endpoint_stiffness = emg_coactivation.*(arm_params.endpoint_stiffness_max(:)-arm_params.endpoint_stiffness_min(:))+...
+endpoint_stiffness = emg_coactivation*(arm_params.endpoint_stiffness_max(:)-arm_params.endpoint_stiffness_min(:))+...
     arm_params.endpoint_stiffness_min(:);
-damping_coefficient = 2*sqrt(.01*m(:).*endpoint_stiffness);
+% damping_coefficient = 2*sqrt(.01*m(:).*endpoint_stiffness);
+
+damping_coefficient = arm_params.endpoint_damping_coefficient;
+
 dX_h = J*theta(3:4);
-endpoint_damping = damping_coefficient.*dX_h/arm_params.dt;
+endpoint_damping = damping_coefficient*dX_h/arm_params.dt;
 muscle_stiffness_force = endpoint_stiffness.*endpoint_error - endpoint_damping;
 
 % muscle_torque = inv(J)*muscle_force;
-muscle_torque = J\muscle_force;
+% muscle_torque = J\muscle_force;
+muscle_torque = J'*muscle_force;
 % muscle_stiffness_torque = inv(J)*muscle_stiffness_force;
-muscle_stiffness_torque = J\muscle_stiffness_force;
+% muscle_stiffness_torque = J\muscle_stiffness_force;
+muscle_stiffness_torque = J'*muscle_stiffness_force;
 
 % joint_error = [theta(5)-theta(1);(theta(6)-theta(5))-(theta(2)-theta(1))];
 % joint_stiffness = emg_coactivation.*(arm_params.joint_stiffness_max(:)-arm_params.joint_stiffness_min(:))+...
