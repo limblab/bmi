@@ -61,6 +61,10 @@ dX_h = J*theta(3:4);
 endpoint_damping = damping_coefficient*dX_h/arm_params.dt;
 muscle_stiffness_force = endpoint_stiffness.*endpoint_error - endpoint_damping;
 
+dX_h2 = J_reference*theta(7:8);
+reference_damping = -damping_coefficient*dX_h2/arm_params.dt;
+reference_damping_torque = J_reference'*reference_damping;
+
 % muscle_torque = inv(J)*muscle_force;
 % muscle_torque = J\muscle_force;
 muscle_torque = J'*muscle_force;
@@ -132,7 +136,7 @@ xdot(3:4,1)= M\(T_endpoint + tau - C + motor_torque + constraint_torque);
 tau_c_b = [-theta(7)*c(1);-(theta(8)-theta(7))*c(2)]; % viscosity
 tau_b = tau_c_b;
 xdot(5:6,1)=theta(7:8);
-xdot(7:8,1)= M_b\(T_endpoint_reference + tau_b - C_b + muscle_torque + constraint_torque_b);
+xdot(7:8,1)= M_b\(T_endpoint_reference + tau_b - C_b + muscle_torque + reference_damping_torque + constraint_torque_b);
 
 out_var = [muscle_torque(:);muscle_stiffness_torque(:);F_end(:);xdot(:)]';
 out_var = [muscle_torque(:);muscle_stiffness_torque(:);F_end(:);xdot(:);T_endpoint(:)]';
