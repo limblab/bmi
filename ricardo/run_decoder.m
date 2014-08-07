@@ -59,9 +59,9 @@ function run_decoder(varargin)
 
     t_buf = tic; %data buffering timer
     drawnow;
-
+    iCycle = 0;
     % Run cycle
-    try
+    try        
         params = evalin('base','params');
         recording = 0;
         current_mode = params.mode;
@@ -69,6 +69,7 @@ function run_decoder(varargin)
         while(~get(handles.stop_bmi,'Value') && ... 
                 ( params.online || ...
                     ~params.online && bin_count < max_cycles) )
+            iCycle = iCycle+1;
             params = evalin('base','params');
             if (reached_cycle_t)
                 if get(handles.record,'Value') && ~recording
@@ -128,6 +129,10 @@ function run_decoder(varargin)
                     hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
                         (predictions + params.vel_offsets);
                     params.vel_offsets = hpf_predictions - predictions;
+                    if mod(iCycle,100)==0
+                        set(handles.textbox_offset_x,'String',num2str(params.vel_offsets(1)));
+                        set(handles.textbox_offset_y,'String',num2str(params.vel_offsets(2)));
+                    end
                     predictions = hpf_predictions;
                     m_data_1.Data.vel_predictions = predictions;
                 end
@@ -166,7 +171,7 @@ function run_decoder(varargin)
                         elbow_pos = cursor_pos;
                     end
                     fwrite(xpc.xpc_write, [1 1 cursor_pos shoulder_pos elbow_pos],'float32');
-%                     fprintf('%.2f\t%.2f\n',cursor_pos);
+%                     fprintf('%.2f\t%.2f\t%.2f\t%.2f\n',[cursor_pos params.vel_offsets]);
                 end
 
                 assignin('base','params',params);

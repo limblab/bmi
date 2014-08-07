@@ -131,6 +131,10 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 [~,out_var] = hu_arm_model(t,x(end,:),arm_params);
                 x0 = x0_b(1:4);
 %                 x = x(:,1:4);
+                if arm_params.block_shoulder
+                    x(:,[1 5]) = arm_params.null_angles(1);
+                    x(:,[3 7]) = 0;
+                end
             case 'miller'
                 if ~isfield(arm_params,'musc_length_old')
                     arm_params.musc_length_old = [];

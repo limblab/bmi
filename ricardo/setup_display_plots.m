@@ -39,9 +39,18 @@ function handles = setup_display_plots(params,handles)
     handles.radio_button_vel = uicontrol('Units','normalized','Style','radiobutton',...
         'Parent',handles.mode_select_group,...
         'String','vel','Position',[.1 .40 .8 .2]);
+    handles.textbox_offset_rate = uicontrol('Units','normalized','Style','edit',...
+        'Parent',handles.mode_select_group,...
+        'String','60','Position',[.4 .4 .2 .1],'Callback',@offset_rate_change_Callback);
+    handles.textbox_offset_x = uicontrol('Units','normalized','Style','edit',...
+        'Parent',handles.mode_select_group,...
+        'String','0','Position',[.6 .4 .2 .1],'Callback',@x_offset_change_Callback);
+    handles.textbox_offset_y = uicontrol('Units','normalized','Style','edit',...
+        'Parent',handles.mode_select_group,...
+        'String','0','Position',[.8 .4 .2 .1],'Callback',@y_offset_change_Callback);
     handles.radio_button_iso = uicontrol('Units','normalized','Style','radiobutton',...
         'Parent',handles.mode_select_group,...
-        'String','iso','Position',[.1 .25 .8 .2]);
+        'String','iso','Position',[.1 .25 .3 .2]);
     temp = strcmp(get(get(handles.mode_select_group,'Children'),'String'),params.mode);
     temp2 = get(handles.mode_select_group,'Children');
     temp2 = temp2(temp);
@@ -79,5 +88,26 @@ function gainchange_Callback(hObject,eventdata)
     new_gain = str2double(get(hObject,'String'));
     params = evalin('base','params');
     params.force_to_cursor_gain = new_gain;    
+    assignin('base','params',params);
+end
+
+function offset_rate_change_Callback(hObject,eventdata)
+    new_rate = str2double(get(hObject,'String'));
+    params = evalin('base','params');
+    params.offset_time_constant = new_rate;    
+    assignin('base','params',params);
+end
+
+function x_offset_change_Callback(hObject,eventdata)
+    new_x_offset = str2double(get(hObject,'String'));
+    params = evalin('base','params');
+    params.vel_offsets(1) = new_x_offset;    
+    assignin('base','params',params);
+end
+
+function y_offset_change_Callback(hObject,eventdata)
+    new_y_offset = str2double(get(hObject,'String'));
+    params = evalin('base','params');
+    params.vel_offsets(2) = new_y_offset;    
     assignin('base','params',params);
 end
