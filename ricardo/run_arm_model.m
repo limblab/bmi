@@ -50,7 +50,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
             EMG_data = EMG_data.^2;
 %             EMG_data(1:4) = 0;
-            vel_data = .10*[cos(temp_t(1)) cos(temp_t(2)+pi/2)];
+            vel_data = 10*[cos(temp_t(1)) cos(temp_t(2)+pi/2)];
         end        
         
 %         assignin('base','arm_params',arm_params);
