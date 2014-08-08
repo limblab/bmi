@@ -124,7 +124,7 @@ function run_decoder(varargin)
                     end
                 end
                 
-                if strcmpi(params.mode,'vel')
+                if strcmpi(params.mode,'vel')                    
                     predictions = predictions(1:2);
                     hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
                         (predictions + params.vel_offsets);
@@ -171,7 +171,7 @@ function run_decoder(varargin)
                         elbow_pos = cursor_pos;
                     end
                     fwrite(xpc.xpc_write, [1 1 cursor_pos shoulder_pos elbow_pos],'float32');
-%                     fprintf('%.2f\t%.2f\t%.2f\t%.2f\n',[cursor_pos params.vel_offsets]);
+%                     fprintf('%.2f\t%.2f\t%.2f\t%.2f\n',[cursor_pos predictions]);
                 end
 
                 assignin('base','params',params);

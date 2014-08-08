@@ -4,8 +4,10 @@ function [xdot,out_var] = prosthetic_arm_model(t,theta,arm_params)
 g = 0;
 m = arm_params.m;
 l = arm_params.l;
-lc = arm_params.lc;
-i = arm_params.i;
+% lc = arm_params.lc;
+% i = arm_params.i;
+lc = arm_params.l/2; %distance from center
+i = [arm_params.m(1)*arm_params.l(1)^2/3, arm_params.m(2)*arm_params.l(2)^2/3]; %moments of inertia i1, i2, need to validate coef's
 c = arm_params.c;
 T = arm_params.T;
 F_end = arm_params.F_end;
@@ -58,9 +60,6 @@ C = [-m(2)*l(1)*lc(2)*sin(theta(1)-theta(2))*theta(4)^2;
 
 Fg = [(m(1)*lc(1)+m(2)*l(1))*g*cos_theta_1;
  m(2)*g*lc(2)*cos_theta_2];
-
-% T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
-%     -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
 
 T_endpoint = J'*F_end(:);
 

@@ -23,8 +23,8 @@ arm_params_default.block_shoulder = 0;
 % arm_params_default.F_max = [1000 1000 1000 1000];
 
 arm_params_default.m_ins = [.02 .02 .02 .02];
-arm_params_default.lc = arm_params_default.l/2; %distance from center
-arm_params_default.i = [arm_params_default.m(1)*arm_params_default.l(1)^2/3, arm_params_default.m(2)*arm_params_default.l(2)^2/3]; %moments of inertia i1, i2, need to validate coef's
+% arm_params_default.lc = arm_params_default.l/2; %distance from center
+% arm_params_default.i = [arm_params_default.m(1)*arm_params_default.l(1)^2/3, arm_params_default.m(2)*arm_params_default.l(2)^2/3]; %moments of inertia i1, i2, need to validate coef's
 
 % arm_params_default.Ksh = 3;
 % arm_params_default.Kl = .8;

@@ -4,8 +4,10 @@ function [xdot,out_var] = bmi_model(t,theta,arm_params)
 g = 0;
 m = arm_params.m;
 l = arm_params.l;
-lc = arm_params.lc;
-i = arm_params.i;
+% lc = arm_params.lc;
+% i = arm_params.i;
+lc = arm_params.l/2; %distance from center
+i = [arm_params.m(1)*arm_params.l(1)^2/3, arm_params.m(2)*arm_params.l(2)^2/3]; %moments of inertia i1, i2, need to validate coef's
 c = arm_params.c;
 T = arm_params.T;
 F_end = arm_params.F_end;
@@ -23,9 +25,10 @@ cos_theta_1 = cos(theta(1));
 cos_theta_2 = cos(theta(2));
 
 J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
-    l(1)*cos(theta(1))-l(2)*cos(theta(2)) l(2)*cos(theta(2))];
+    l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
 
 % commanded_rot_vel = J\arm_params.commanded_vel(:);
+arm_params.commanded_vel(1) = arm_params.commanded_vel(1)*(-1)^(-arm_params.left_handed+2);
 commanded_rot_vel = J'*arm_params.commanded_vel(:);
 
 motor_torque = arm_params.P_gain*(commanded_rot_vel - [theta(3);theta(4)-theta(3)]);
