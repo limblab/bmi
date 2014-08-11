@@ -10,7 +10,7 @@ arm_params_default.F_max = [1000 1000 1000 1000];
 arm_params_default.X_sh = [.05 -.3];
 arm_params_default.c = [5, 5];
 arm_params_default.emg_min = zeros(1,4);
-arm_params_default.emg_max = 1000*ones(1,4);
+arm_params_default.emg_max = 1*ones(1,4);
 arm_params_default.emg_adaptation_rate = -1;
 arm_params_default.walls = 1;
 arm_params_default.block_shoulder = 0;
@@ -62,7 +62,7 @@ arm_params_default.joint_damping_min = [.2 .2];
 arm_params_default.joint_damping_max = [.5 .5];
 
 % Ruiz arm
-arm_params_default.emg_to_force_gain = [5 5];
+arm_params_default.emg_to_force_gain = [30 30];
 arm_params_default.endpoint_stiffness_min = 3;
 arm_params_default.endpoint_stiffness_max = 10;
 arm_params_default.endpoint_damping_min = 2;
