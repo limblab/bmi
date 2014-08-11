@@ -58,7 +58,9 @@ endpoint_stiffness = emg_coactivation*(arm_params.endpoint_stiffness_max(:)-arm_
     arm_params.endpoint_stiffness_min(:);
 % damping_coefficient = 2*sqrt(.01*m(:).*endpoint_stiffness);
 
-damping_coefficient = arm_params.endpoint_damping_coefficient;
+damping_coefficient = emg_coactivation*(arm_params.endpoint_damping_max(:)-arm_params.endpoint_damping_min(:))+...
+    arm_params.endpoint_damping_min(:);
+% damping_coefficient = arm_params.endpoint_damping_coefficient;
 
 dX_h = J*theta(3:4);
 endpoint_damping = damping_coefficient*dX_h/arm_params.dt;

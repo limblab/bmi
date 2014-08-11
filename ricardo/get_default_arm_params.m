@@ -58,13 +58,15 @@ arm_params_default.max_torque = 10;
 arm_params_default.emg_to_torque_gain = [5 5];
 arm_params_default.joint_stiffness_min = [1 1];
 arm_params_default.joint_stiffness_max = [5 5];
-arm_params_default.joint_damping_coefficient = [.5 .5];
+arm_params_default.joint_damping_min = [.2 .2];
+arm_params_default.joint_damping_max = [.5 .5];
 
 % Ruiz arm
 arm_params_default.emg_to_force_gain = [5 5];
 arm_params_default.endpoint_stiffness_min = 3;
 arm_params_default.endpoint_stiffness_max = 10;
-arm_params_default.endpoint_damping_coefficient = 5;
+arm_params_default.endpoint_damping_min = 2;
+arm_params_default.endpoint_damping_max = 5;
 
 % Control mode
 arm_params_default.control_mode = 'ruiz';
