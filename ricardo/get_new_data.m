@@ -136,14 +136,18 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
         spike_id = cell2mat(arrayfun(@repmat,data_idx,num_spikes,ones(size(data_idx,1),1),'UniformOutput',false));
         spike_time = ts_cell_array(data_idx,2);
         spike_time = cell2mat(spike_time(~cellfun(@isempty,spike_time)));
-        [spike_time,spike_order] = sort(spike_time);
-        rounded_spike_times = params.artifact_removal_window*round((double(spike_time)/30000)/params.artifact_removal_window);
-        [spike_repeats,spike_time_bins] = hist(rounded_spike_times,unique(rounded_spike_times));
-        remove_spike_times = spike_time_bins(spike_repeats>params.artifact_removal_num_channels);
+        [spike_time,spike_order] = sort(spike_time);        
+        remove_spike_times = [];
+        for iWindow = 1:params.artifact_removal_window*30000
+            rounded_spike_times = params.artifact_removal_window*round((double(spike_time+iWindow-1)/30000)/params.artifact_removal_window);
+            [spike_repeats,spike_time_bins] = hist(rounded_spike_times,unique(rounded_spike_times));
+            remove_spike_times = [remove_spike_times; spike_time_bins(spike_repeats>params.artifact_removal_num_channels)];
+        end        
+        remove_spike_times = unique(remove_spike_times);
         [~,spike_removal_idx] = ismember(rounded_spike_times,remove_spike_times);
         spike_id(spike_removal_idx>0) = [];
         spike_time(spike_removal_idx>0) = [];
-%         disp(['Removed: ' num2str(length(spike_removal_idx)) '. Did not remove: ' num2str(length(spike_time))])
+        disp(['Removed: ' num2str(sum(spike_removal_idx>0)) '. Did not remove: ' num2str(length(spike_time))])
         for iChan = 1:length(data_idx)
             ts_cell_array{data_idx(iChan),2} = spike_time(spike_id==data_idx(iChan));
         end
