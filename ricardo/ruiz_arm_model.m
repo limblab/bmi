@@ -63,11 +63,11 @@ damping_coefficient = emg_coactivation*(arm_params.endpoint_damping_max(:)-arm_p
 % damping_coefficient = arm_params.endpoint_damping_coefficient;
 
 dX_h = J*theta(3:4);
-endpoint_damping = damping_coefficient*dX_h/arm_params.dt;
+endpoint_damping = damping_coefficient.*dX_h/arm_params.dt;
 muscle_stiffness_force = endpoint_stiffness.*endpoint_error - endpoint_damping;
 
 dX_h2 = J_reference*theta(7:8);
-reference_damping = -damping_coefficient*dX_h2/arm_params.dt;
+reference_damping = -damping_coefficient.*dX_h2/arm_params.dt;
 reference_damping_torque = J_reference'*reference_damping;
 
 % muscle_torque = inv(J)*muscle_force;

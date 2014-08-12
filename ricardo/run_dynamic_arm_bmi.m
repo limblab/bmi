@@ -22,6 +22,8 @@ params.left_handed = 1;
 params.debug = 0;
 params.offset_time_constant = 60;
 params.vel_offsets = [0 0];
+params.artifact_removal_window = 0.001;
+params.artifact_removal_num_channels = 10;
 
 if exist('params','var')
     params = bmi_params_defaults(params);

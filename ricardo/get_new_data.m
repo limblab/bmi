@@ -132,6 +132,21 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
         [~,elec_map_idx,data_idx] = intersect(params.elec_map(:,4),ts_cell_array(:,1));
         chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);        
         ts_cell_array(data_idx,1) = chan_names(elec_map_idx)';
+        num_spikes = cellfun(@numel,ts_cell_array(data_idx,2));
+        spike_id = cell2mat(arrayfun(@repmat,data_idx,num_spikes,ones(size(data_idx,1),1),'UniformOutput',false));
+        spike_time = ts_cell_array(data_idx,2);
+        spike_time = cell2mat(spike_time(~cellfun(@isempty,spike_time)));
+        [spike_time,spike_order] = sort(spike_time);
+        rounded_spike_times = params.artifact_removal_window*round((double(spike_time)/30000)/params.artifact_removal_window);
+        [spike_repeats,spike_time_bins] = hist(rounded_spike_times,unique(rounded_spike_times));
+        remove_spike_times = spike_time_bins(spike_repeats>params.artifact_removal_num_channels);
+        [~,spike_removal_idx] = ismember(rounded_spike_times,remove_spike_times);
+        spike_id(spike_removal_idx>0) = [];
+        spike_time(spike_removal_idx>0) = [];
+%         disp(['Removed: ' num2str(length(spike_removal_idx)) '. Did not remove: ' num2str(length(spike_time))])
+        for iChan = 1:length(data_idx)
+            ts_cell_array{data_idx(iChan),2} = spike_time(spike_id==data_idx(iChan));
+        end
     end
     
     if isfield(params,'current_decoder')
