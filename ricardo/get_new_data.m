@@ -1,18 +1,14 @@
 function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_data_2)
     if params.online
         % read and flush data buffer
-%         ts_cell_array = cbmex('trialdata',1);
-        [ts_cell_array, time, continuous_cell_array] = cbmex('trialdata', 1);
+        [ts_cell_array, ~, continuous_cell_array] = cbmex('trialdata', 1);
         data.sys_time = cbmex('time');
         new_spikes = get_new_spikes(ts_cell_array,params,bin_dur);
-        [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
-        analog_fs = max([continuous_cell_array{:,2}]);
+        [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);       
         new_analog = get_new_analog(continuous_cell_array);       
         data.analog_channels = [continuous_cell_array{:,1}]';
-%         new_xpc_data = get_new_xpc_data(xpc);
         new_xpc_data.Force = nan(1,2);
         new_xpc_data.theta = nan(1,2);
-%         disp('No udp data read')
         
         % Let's do the force stuff now (get force data)
         % From 'calc_from_raw.m', "elseif opts.rothandle" section:
@@ -46,8 +42,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
             offline_data.words(:,1) < data.sys_time+params.binsize,:);
         new_target = offline_data.targets.corners(offline_data.targets.corners(:,1)>= data.sys_time & ...
             offline_data.targets.corners(:,1)< data.sys_time+params.binsize,2:end);
-        new_analog = [];
-        analog_fs = 1;
+        new_analog = [];        
         data.analog_channels = [];
     end
 
@@ -55,11 +50,6 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
     num_new_words = size(new_words,1);
     data.words  = [new_words;     data.words(1:end-num_new_words,:)];
     data.analog = new_analog;
-%     data.analog = [new_analog; data.analog(1:end-1,:)];    
-%     
-%     if size(data.analog,1)>analog_fs*3
-%         data.analog = data.analog(1:analog_fs*3,:);
-%     end
 
     if ~isempty(new_target)
         data.pending_tgt_pos  = [ (new_target(3)+new_target(1))/2 ...
@@ -120,44 +110,39 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
 end                
 function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
 
-%     new_spikes = zeros(n_neurons,1);
-
-    %firing rate for new spikes
-%     for i = 1:n_neurons
-%         new_spikes(i) = length(ts_cell_array{i,2})/binsize;
-%     end
-
-%     new_spikes = cellfun(@length,ts_cell_array(1:params.n_neurons,2))/binsize;
     if ~isempty(strfind(ts_cell_array(:,1),'elec'))
-        [~,elec_map_idx,data_idx] = intersect(params.elec_map(:,4),ts_cell_array(:,1));
+        [~,elec_map_idx,spike_chan_idx] = intersect(params.elec_map(:,4),ts_cell_array(:,1));
         chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);        
-        ts_cell_array(data_idx,1) = chan_names(elec_map_idx)';
-        num_spikes = cellfun(@numel,ts_cell_array(data_idx,2));
-        spike_id = cell2mat(arrayfun(@repmat,data_idx,num_spikes,ones(size(data_idx,1),1),'UniformOutput',false));
-        spike_time = ts_cell_array(data_idx,2);
+        ts_cell_array(spike_chan_idx,1) = chan_names(elec_map_idx)';
+        
+        num_spikes = cellfun(@numel,ts_cell_array(spike_chan_idx,2));
+        spike_id = cell2mat(arrayfun(@repmat,spike_chan_idx,num_spikes,ones(size(spike_chan_idx,1),1),'UniformOutput',false));
+        spike_time = ts_cell_array(spike_chan_idx,2);
         spike_time = cell2mat(spike_time(~cellfun(@isempty,spike_time)));
         [spike_time,spike_order] = sort(spike_time);        
+        
         remove_spike_times = [];
         for iWindow = 1:params.artifact_removal_window*30000
             rounded_spike_times = params.artifact_removal_window*round((double(spike_time+iWindow-1)/30000)/params.artifact_removal_window);
             [spike_repeats,spike_time_bins] = hist(rounded_spike_times,unique(rounded_spike_times));
             remove_spike_times = [remove_spike_times; spike_time_bins(spike_repeats>params.artifact_removal_num_channels)];
-        end        
+        end
+
         remove_spike_times = unique(remove_spike_times);
         [~,spike_removal_idx] = ismember(rounded_spike_times,remove_spike_times);
         spike_id(spike_removal_idx>0) = [];
         spike_time(spike_removal_idx>0) = [];
         disp(['Removed: ' num2str(sum(spike_removal_idx>0)) '. Did not remove: ' num2str(length(spike_time))])
-        for iChan = 1:length(data_idx)
-            ts_cell_array{data_idx(iChan),2} = spike_time(spike_id==data_idx(iChan));
+        for iChan = 1:length(spike_chan_idx)
+            ts_cell_array{spike_chan_idx(iChan),2} = spike_time(spike_id==spike_chan_idx(iChan));
         end
+        
     end
     
     if isfield(params,'current_decoder')
         if ~isempty(params.current_decoder.H)
             new_spikes = zeros(size(params.current_decoder.neuronIDs,1),1);
             for iNeuron = 1:size(params.current_decoder.neuronIDs,1)
-        %         ts_row_idx = find((strcmp(ts_cell_array(:,1),['elec' num2str(params.current_decoder.neuronIDs(iNeuron,1))])));
                 ts_col_idx = params.current_decoder.neuronIDs(iNeuron,2)+2; 
                 new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),['chan' num2str(params.current_decoder.neuronIDs(iNeuron,1))])),...
                     ts_col_idx})/binsize;
