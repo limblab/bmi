@@ -115,6 +115,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
         chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);        
         ts_cell_array(spike_chan_idx,1) = chan_names(elec_map_idx)';
         
+        tic
         num_spikes = cellfun(@numel,ts_cell_array(spike_chan_idx,2));
         spike_id = cell2mat(arrayfun(@repmat,spike_chan_idx,num_spikes,ones(size(spike_chan_idx,1),1),'UniformOutput',false));
         spike_time = ts_cell_array(spike_chan_idx,2);
@@ -132,7 +133,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
         [~,spike_removal_idx] = ismember(rounded_spike_times,remove_spike_times);
         spike_id(spike_removal_idx>0) = [];
         spike_time(spike_removal_idx>0) = [];
-        disp(['Removed: ' num2str(sum(spike_removal_idx>0)) '. Did not remove: ' num2str(length(spike_time))])
+%         disp(['Removed: ' num2str(sum(spike_removal_idx>0)) '. Did not remove: ' num2str(length(spike_time)) ' in ' num2str(toc) ' s.'])
         for iChan = 1:length(spike_chan_idx)
             ts_cell_array{spike_chan_idx(iChan),2} = spike_time(spike_id==spike_chan_idx(iChan));
         end
