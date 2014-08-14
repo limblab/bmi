@@ -1,6 +1,6 @@
 function run_arm_model(m_data_1,m_data_2,h,xpc)    
     cycle_counter = 0;    
-    dt_hist = 0.01*ones(1,10);
+    dt_hist = 0.05*ones(1,10);    
     F_x = 0;
     F_y = 0;
     encoder_theta = [0 0];
@@ -14,6 +14,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
     options = odeset('RelTol',1e-2,'AbsTol',1e-2);
     arm_params_base = [];
     flag_reset = 0;
+    EMG_data = zeros(size(m_data_1.Data.EMG_data));
     while ((m_data_1.Data.bmi_running)) % && i < 300)
         i = i+1;                
         old_arm_params = arm_params_base;
@@ -21,6 +22,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         arm_params = evalin('base','arm_params');
         arm_params_base = arm_params;
         
+        arm_params.dt = dt_hist(1);
         if ~isequal(old_arm_params,arm_params_base)
             save('temp_arm_params','arm_params');
             disp('Saved arm parameters')
@@ -33,6 +35,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
     
         tic
         cycle_counter = cycle_counter+1;
+        old_EMG_data = EMG_data;
         if arm_params.online   
             EMG_data = m_data_1.Data.EMG_data;
 %             if arm_params.emg_adaptation_rate>0
@@ -53,9 +56,11 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             vel_data = 10*[cos(temp_t(1)) cos(temp_t(2)+pi/2)];
         end        
         
-%         assignin('base','arm_params',arm_params);
-        
+%         assignin('base','arm_params',arm_params);        
         EMG_data(isnan(EMG_data)) = 0;
+        
+        EMG_data = (1-arm_params.EMG_filter)*EMG_data + arm_params.EMG_filter*old_EMG_data;
+        
         EMG_data = min(EMG_data,1);
         EMG_data = max(EMG_data,0);
 %         EMG_data = min(EMG_data,1);
@@ -219,7 +224,6 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             set(h.h_emg_bar,'YData',EMG_data)
             drawnow
         end
-        
     end   
     quit
 end
