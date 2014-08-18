@@ -1,5 +1,5 @@
 load('temp_arm_params')
-arm_params.online = 1;
+arm_params.online = 0;
 if arm_params.online
     XPC_IP = '192.168.0.1';
     XPC_PORT = 24998;
@@ -30,7 +30,7 @@ else
     xpc = [];
     m_data_1.Data.EMG_data = zeros(1,4);
     m_data_1.Data.bmi_running = 2;
-    m_data_1.Data.force_xpc = zeros(1,2);
+    m_data_1.Data.vel_predictions = zeros(1,2);
     m_data_2.Data.model_running = 0;    
 %     m_data_2.Data.file_name = repmat(' ',1,200);
     m_data_2.Data.x_hand = [0 0];
