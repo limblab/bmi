@@ -1,5 +1,5 @@
 load('temp_arm_params')
-arm_params.online = 0;
+arm_params.online = 1;
 if arm_params.online
     XPC_IP = '192.168.0.1';
     XPC_PORT = 24998;
