@@ -30,6 +30,10 @@ J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
 % commanded_rot_vel = J\arm_params.commanded_vel(:);
 arm_params.commanded_vel(1) = arm_params.commanded_vel(1)*(-1)^(-arm_params.left_handed+2);
 commanded_rot_vel = inv(J)*arm_params.commanded_vel(:);
+% commanded_rot_vel = J\arm_params.commanded_vel(:);
+
+vel_error = J*[theta(3);theta(4)-theta(3)];
+% vel_error = commanded_rot_vel - [theta(3);theta(4)-theta(3)];
 
 motor_torque = arm_params.P_gain*(commanded_rot_vel - [theta(3);theta(4)-theta(3)]);
 motor_torque(motor_torque>arm_params.max_torque) = arm_params.max_torque;
@@ -37,6 +41,11 @@ motor_torque(motor_torque<-arm_params.max_torque) = -arm_params.max_torque;
 
 angle_diff = [theta(1)-arm_params.null_angles(1);theta(2)-(theta(1)+diff(arm_params.null_angles))];
 constraint_torque = -sign(angle_diff).*exp(30*(abs(angle_diff))/(pi/2)-27);
+% if abs(constraint_torque)>1
+%     c = arm_params.c;
+% else
+%     c = [0;0];
+% end
 
  %matrix equations 
 M = [m(2)*lc(1)^2+m(2)*l(1)^2+i(1), m(2)*l(1)*lc(2)^2*cos(theta(1)-theta(2));
@@ -58,6 +67,8 @@ xdot(1:2,1)=theta(3:4);
 xdot(3:4,1)= M\(T_endpoint + tau-Fg-C + motor_torque + constraint_torque);
 
 out_var = [motor_torque(:);nan;nan;F_end(:)]';
+
+out_var = [motor_torque(:);nan;nan;F_end(:);vel_error(:)]';
 % out_var = [motor_torque(:);T_endpoint;F_end(:)]';
 
 end

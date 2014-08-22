@@ -8,7 +8,7 @@ function h = create_arm_model_figure
     % dt plot
     subplot(321)
     h.h_plot_dt = plot(1:10,zeros(1,10),'-');
-    ylim([0 0.1])
+    ylim([0 0.2])
     xlabel('sample')
     ylabel('t (s)')
     

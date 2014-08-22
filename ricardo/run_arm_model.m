@@ -16,6 +16,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
     flag_reset = 0;
     EMG_data = zeros(size(m_data_1.Data.EMG_data));
     while ((m_data_1.Data.bmi_running)) % && i < 300)
+        tic
         i = i+1;                
         old_arm_params = arm_params_base;
 
@@ -33,7 +34,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x0(1)) arm_params.l(1)*sin(x0(1))];
         arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x0(2)) arm_params.l(2)*sin(x0(2))];
     
-        tic
+        
         cycle_counter = cycle_counter+1;
         old_EMG_data = EMG_data;
         if arm_params.online   
@@ -110,6 +111,20 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 arm_params.F_end(2) = -(arm_params.X_h(2)-(.1))*500;
             end
         end
+%         if arm_params.walls
+%             if arm_params.X_h(1) < -.12
+%                 arm_params.F_end(1) = arm_params.x_gain*5;
+%             end
+%             if arm_params.X_h(1) > .12
+%                 arm_params.F_end(1) = -arm_params.x_gain*5;
+%             end
+%             if arm_params.X_h(2) < -.1
+%                 arm_params.F_end(2) = 5;
+%             end
+%             if arm_params.X_h(2) > .1
+%                 arm_params.F_end(2) = -5;
+%             end
+%         end
         
         arm_params.musc_act = EMG_data;
         arm_params.musc_l0 = sqrt(2*arm_params.m_ins.^2)+...
@@ -153,11 +168,11 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             case 'ruiz'
                 [t,x] = ode45(@(t,x0_b) ruiz_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
                 [~,out_var] = ruiz_arm_model(t,x(end,:),arm_params);                
-                x0 = x0_b(1:4);
-                out_var
+                x0 = x0_b(1:4);                
             case 'bmi'
                 [t,x] = ode45(@(t,x0) bmi_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = bmi_model(t,x(end,:),arm_params);
+                out_var
         end
         musc_force = out_var(1:4);
         F_end = out_var(5:6);
@@ -212,10 +227,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         m_data_2.Data.elbow_pos = xE;
         m_data_2.Data.shoulder_pos = xS;
 
-        if mod(i,1)==0
-            dt_hist = circshift(dt_hist,[0 1]);
-            dt_hist(1) = toc;
-            set(h.h_plot_dt,'YData',dt_hist)
+        if mod(i,1)==0            
             set(h.h_plot_force,'XData',[0 F_x],'YData',[0 F_y])
             set(h.h_plot_arm,'XData',[xS(1) xE(1) xH(1)],...
                 'YData',[xS(2) xE(2) xH(2)])
@@ -223,6 +235,9 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 'YData',[xS(2) xE2(2) xH2(2)])
             set(h.h_emg_bar,'YData',EMG_data)
             drawnow
+            dt_hist = circshift(dt_hist,[0 1]);
+            dt_hist(1) = toc;            
+            set(h.h_plot_dt,'YData',dt_hist)
         end
     end   
     quit

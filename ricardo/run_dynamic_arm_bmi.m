@@ -2,16 +2,16 @@
 clear params
 params.monkey_name = 'Chewie';
 params.save_dir = ['E:\' params.monkey_name];
-params.mode = 'iso'; % emg | n2e | n2e_cartesian | vel | iso
+params.mode = 'n2e_cartesian'; % emg | n2e | n2e_cartesian | vel | iso
 params.arm_model = 'ruiz'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi
 params.task_name = ['DCO_' params.mode];
-params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-08-04_DCO_iso_ruiz\Output_Data\bdf-musc_binned_Decoder.mat';
+params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-08-21_DCO_iso_bmi\Output_Data\bdf-musc_Binned_Decoder.mat';
 params.decoders(1).decoder_type = 'n2e';
-params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-08-04_DCO_iso_ruiz\Output_Data\bdf-cartesian_binned_Decoder.mat';
+params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-08-21_DCO_iso_bmi\Output_Data\bdf-cartesian_Binned_Decoder.mat';
 params.decoders(2).decoder_type = 'n2e_cartesian';
-params.decoders(3).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-08-06_RW\bdf-binned_Decoder.mat';
+params.decoders(3).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-08-20_RW\Chewie_2014-08-20_RW_001_Binned_Decoder.mat';
 params.decoders(3).decoder_type = 'vel';
-params.arm_params_file = 'E:\Chewie\Chewie_2014-08-11_DCO_n2e_cartesian_ruiz\Chewie_2014-08-11_DCO_n2e_cartesian_ruiz_001_params.mat';
+params.arm_params_file = 'E:\Chewie\Chewie_2014-08-19_DCO_iso_ruiz\Chewie_2014-08-19_DCO_iso_ruiz_001_params.mat';
 % params.arm_params_file = [];
 params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Chewie 8I2\Blackrock implant surgery 6-14-10\1025-0394.cmp';
 params.output = 'xpc';

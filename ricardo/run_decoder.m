@@ -125,7 +125,7 @@ function run_decoder(varargin)
                 end
                 
                 if strcmpi(params.mode,'vel')                    
-                    predictions = predictions(1:2);
+                    predictions = .01*predictions(1:2);
                     hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
                         (predictions + params.vel_offsets);
                     params.vel_offsets = hpf_predictions - predictions;
