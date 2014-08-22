@@ -61,7 +61,7 @@ function run_decoder(varargin)
     drawnow;
     iCycle = 0;
     % Run cycle
-    try        
+%     try        
         params = evalin('base','params');
         recording = 0;
         current_mode = params.mode;
@@ -82,7 +82,7 @@ function run_decoder(varargin)
                     recording = 0;
                     cbmex('fileconfig', handles.cerebus_file, '', 0);
                 end
-                clc
+%                 clc
                 % timers and counters
                 cycle_t = toc(t_buf); %this should be equal to bin_size, but may be longer if last cycle operations took too long.
                 t_buf   = tic; % reset buffering timer
@@ -234,23 +234,23 @@ function run_decoder(varargin)
             rmdir(handles.save_dir);
         end
 
-    catch e
-        if params.online
-            if params.save_data
-                cbmex('fileconfig', handles.cerebus_file, '', 0);
-            end
-            cbmex('close');
-        end
-        recorded_files = dir(handles.save_dir);
-        recorded_files = {recorded_files(:).name};
-        if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
-            rmdir(handles.save_dir);
-        end
-        m_data_1.Data.bmi_running = 0;
-        echoudp('off');
-        fclose('all');
-        close all;
-        rethrow(e);
-    end
+%     catch e
+%         if params.online
+%             if params.save_data
+%                 cbmex('fileconfig', handles.cerebus_file, '', 0);
+%             end
+%             cbmex('close');
+%         end
+%         recorded_files = dir(handles.save_dir);
+%         recorded_files = {recorded_files(:).name};
+%         if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
+%             rmdir(handles.save_dir);
+%         end
+%         m_data_1.Data.bmi_running = 0;
+%         echoudp('off');
+%         fclose('all');
+%         close all;
+%         rethrow(e);
+%     end
 
 end

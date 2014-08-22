@@ -13,11 +13,9 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
         % Let's do the force stuff now (get force data)
         % From 'calc_from_raw.m', "elseif opts.rothandle" section:
         analog_data = continuous_cell_array;
-        %           label_idcs = strncmp(ts_cell_array(:,1),'ForceHandle',11);
         analog_data(:,1) = ts_cell_array([continuous_cell_array{:,1}]',1); % replace channel numbers with names
         handleforce = analog_data(strncmp(analog_data(:,1), 'ForceHandle', 11),3); % only take force data - "ForceHandle[1-6]", not EMGs        
-%         force(:,1) = temp(:,1).*cos(-th_2_adj)' - temp(:,2).*sin(th_2_adj)';
-%         force(:,2) = temp(:,1).*sin(th_2_adj)' + temp(:,2).*cos(th_2_adj)';
+
         % Pass only mean force value for period: each cell of
         % 'handleforce' should be a 1-D array of force values, so take
         % mean of each
@@ -32,9 +30,6 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
         end            
         
         data.force_xpc = new_xpc_data.Force;
-%         if isnan(new_xpc_data.Force)
-%             pause
-%         end
     else
         data.sys_time = double(offline_data.timeframe(bin_count));
         new_spikes = offline_data.spikeratedata(bin_count,:)';
@@ -116,29 +111,47 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
         chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);        
         ts_cell_array(spike_chan_idx,1) = chan_names(elec_map_idx)';
         
-        % Artifact removal
-        tic
-        num_spikes = cellfun(@numel,ts_cell_array(spike_chan_idx,2));
-        spike_id = cell2mat(arrayfun(@repmat,spike_chan_idx,num_spikes,ones(size(spike_chan_idx,1),1),'UniformOutput',false));
-        spike_time = ts_cell_array(spike_chan_idx,2);
-        spike_time = cell2mat(spike_time(~cellfun(@isempty,spike_time)));
-        [spike_time,spike_order] = sort(spike_time);
-        
-        remove_spike_times = [];
-        for iWindow = 1:params.artifact_removal_window*30000
-            rounded_spike_times = params.artifact_removal_window*round((double(spike_time+iWindow-1)/30000)/params.artifact_removal_window);
-            [spike_repeats,spike_time_bins] = hist(rounded_spike_times,unique(rounded_spike_times));
-            remove_spike_times = [remove_spike_times; spike_time_bins(spike_repeats>params.artifact_removal_num_channels)];
-        end
+        if params.artifact_removal
+            % Artifact removal
+            tic
+            chan_id = [];
+            unit_id = [];
+            spike_time = [];
+            for iUnit = 1:6
+                num_spikes = cellfun(@numel,ts_cell_array(spike_chan_idx,iUnit+1));
+                chan_id = [chan_id ; cell2mat(arrayfun(@repmat,spike_chan_idx,num_spikes,ones(size(spike_chan_idx,1),1),'UniformOutput',false))];
+                unit_id = [unit_id ; repmat(iUnit-1,sum(num_spikes),1)];
+                spike_time_temp = ts_cell_array(spike_chan_idx,iUnit+1);
+                spike_time = [spike_time ; cell2mat(spike_time_temp(~cellfun(@isempty,spike_time_temp)))];
+            end
 
-        remove_spike_times = unique(remove_spike_times);
-        [~,spike_removal_idx] = ismember(rounded_spike_times,remove_spike_times);
-        spike_id(spike_removal_idx>0) = [];
-        spike_time(spike_removal_idx>0) = [];
-%         disp(['Removed: ' num2str(sum(spike_removal_idx>0)) '. Did not remove: ' num2str(length(spike_time)) ' in ' num2str(toc) ' s.'])
-        for iChan = 1:length(spike_chan_idx)
-            ts_cell_array{spike_chan_idx(iChan),2} = spike_time(spike_id==spike_chan_idx(iChan));
+            [spike_time,spike_order] = sort(spike_time);
+            chan_id = chan_id(spike_order);
+            unit_id = unit_id(spike_order);
+
+            remove_spike_times = [];
+            for iWindow = 1:params.artifact_removal_window*30000
+                rounded_spike_times = params.artifact_removal_window*round((double(spike_time+iWindow-1)/30000)/params.artifact_removal_window);
+                [spike_repeats,spike_time_bins] = hist(rounded_spike_times,unique(rounded_spike_times));
+                remove_spike_times = [remove_spike_times; spike_time_bins(spike_repeats>params.artifact_removal_num_channels)];
+            end
+
+            remove_spike_times = unique(remove_spike_times);
+            [~,spike_removal_idx] = ismember(rounded_spike_times,remove_spike_times);
+
+    %         spike_removal_idx = unique(spike_removal_idx);
+            chan_id(spike_removal_idx>0) = [];
+            unit_id(spike_removal_idx>0) = [];
+            spike_time(spike_removal_idx>0) = [];
+
+            tic
+            for iChan = 1:length(spike_chan_idx)
+                for iUnit = 1:6
+                    ts_cell_array{spike_chan_idx(iChan),iUnit+1} = spike_time(chan_id==spike_chan_idx(iChan) & unit_id==(iUnit-1));
+                end
+            end
         end
+%         disp(['Removed: ' num2str(sum(spike_removal_idx>0)) '. Did not remove: ' num2str(length(spike_time)) ' in ' num2str(toc) ' s.'])
         
     end
     
@@ -153,24 +166,32 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
                     new_spikes(iNeuron) = 0;
                 end
             end
+            % remove artifact (80% of neurons have spikes for this bin)            
+            if (length(nonzeros(new_spikes))>.8*length(unique(params.current_decoder.neuronIDs(:,1))))  
+                iArt = 0;
+                while (length(nonzeros(new_spikes))>.8*length(unique(params.current_decoder.neuronIDs(:,1))) && iArt<5) 
+                    new_spikes(new_spikes>0) = new_spikes(new_spikes>0) - 1/binsize;
+                    iArt = iArt+1;
+                end
+                if iArt==5
+                    new_spikes(:) = 0;
+                end
+                warning([num2str(iArt) ' artifacts detected, spikes removed']);
+            end
+
+            % remove artifacts (high freq thresh x-ing)
+            % by capping FR at 400 Hz
+            if any(new_spikes>400)
+                new_spikes(new_spikes>400) = 400;
+                warning('noise detected, FR capped at 400 Hz');
+            end
         else
             new_spikes = zeros(0,1);
         end
     else
         new_spikes = zeros(0,1);
-    end
-    %remove artifact (80% of neurons have spikes for this bin)
-%     while (length(nonzeros(new_spikes))>.8*length(unique(params.current_decoder.neuronIDs(:,1))))
-%         warning('artifact detected, spikes removed');
-%         new_spikes(new_spikes>0) = new_spikes(new_spikes>0) - 1/binsize;
-%     end
-    
-    % remove artifacts (high freq thresh x-ing)
-    % by capping FR at 400 Hz
-    if any(new_spikes>400)
-        new_spikes(new_spikes>400) = 400;
-        warning('noise detected, FR capped at 400 Hz');
-    end
+    end    
+
 end
 function [new_words, new_target, db_buf] = get_new_words(new_ts,new_words,db_buf)
     if ~isempty(new_ts)
