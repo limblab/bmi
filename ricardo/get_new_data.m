@@ -111,16 +111,18 @@ end
 function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
 
     if ~isempty(strfind(ts_cell_array(:,1),'elec'))
+        % Assign channel numbers from map file to acquired data
         [~,elec_map_idx,spike_chan_idx] = intersect(params.elec_map(:,4),ts_cell_array(:,1));
         chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);        
         ts_cell_array(spike_chan_idx,1) = chan_names(elec_map_idx)';
         
+        % Artifact removal
         tic
         num_spikes = cellfun(@numel,ts_cell_array(spike_chan_idx,2));
         spike_id = cell2mat(arrayfun(@repmat,spike_chan_idx,num_spikes,ones(size(spike_chan_idx,1),1),'UniformOutput',false));
         spike_time = ts_cell_array(spike_chan_idx,2);
         spike_time = cell2mat(spike_time(~cellfun(@isempty,spike_time)));
-        [spike_time,spike_order] = sort(spike_time);        
+        [spike_time,spike_order] = sort(spike_time);
         
         remove_spike_times = [];
         for iWindow = 1:params.artifact_removal_window*30000

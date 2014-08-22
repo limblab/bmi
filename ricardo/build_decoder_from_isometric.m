@@ -1,8 +1,10 @@
-bdf_file = 'D:\Data\Chewie_8I2\Chewie_2014-08-04_DCO_iso_ruiz\Output_Data\bdf.mat';
+data_location = 'D:\Data\Chewie_8I2\Chewie_2014-08-21_DCO_iso_bmi';
+bdf_file = [data_location filesep 'Output_Data\bdf.mat'];
+param_file = dir([data_location filesep '*params*']);
+param_file = [data_location filesep param_file(1).name];
 decoder_type = 'cartesian';
 load(bdf_file);
-arm_params = get_default_arm_params;
-arm_params.left_handed = 1;
+load(param_file);
 
 F = -bdf.force(:,2:3);
 if strcmp(decoder_type,'musc')
