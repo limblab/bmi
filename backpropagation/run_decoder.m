@@ -62,6 +62,7 @@ data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
               'emgs'        , zeros( params.n_lag_emg, params.n_emgs),...
               'adapt_trial' , false,...
               'adapt_bin'   , false,...
+              'adapt_flag'  , false,...
               'tgt_on'      , false,...
               'tgt_bin'     , NaN,...
               'tgt_ts'      , NaN,...
@@ -73,16 +74,19 @@ data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
               'sys_time'    , 0.0,...
               'fix_decoder' , false,...
               'effort_flag' , false,...
-              'traj_pct'    , 0 );
+              'traj_pct'    , 0,...
+              'trial_count' , 0);
           
 % dataset to store older data for batch adaptation
-previous_trials = dataset();
+data_buffer = dataset();                 
 for i=params.batch_length
-    previous_trials = [previous_trials;...
-        dataset({bin_count, 'bin_count'}, ...
-        {{data},'data'},...
-        {data.tgt_id,'target_id'},...
-        {nan(1,params.n_forces),'predictions'})];%#ok<AGROW>
+    data_buffer = [data_buffer;...
+        dataset({{data.trial_count}, 'trial_number'}, ...
+        {{data.spikes} ,'spikes'},...
+        {{data.tgt_id} ,'tgt_id'},...
+        {{data.tgt_pos},'tgt_pos'},...
+        {{data.emgs}   ,'emg_pred'},...
+        {{nan(1,params.n_forces)},'force_pred'})];%#ok<AGROW>
 end
 
 
@@ -200,13 +204,14 @@ try
             data = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
             
             %% Predictions
-            
             predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
+%             predictions = sigmoid([1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H,'direct',params.N2Esig);
             
             if ~strcmp(params.mode,'direct')
                 % emg cascade
                 data.emgs = [predictions; data.emgs(1:end-1,:)];
-                predictions = [1 rowvec(data.emgs(:))']*emg_decoder.H;                
+%                 predictions = [1 rowvec(data.emgs(:))']*emg_decoder.H;
+                predictions = rowvec(data.emgs(:))'*emg_decoder.H;
             end
             
             %% Cursor Output
@@ -224,19 +229,26 @@ try
             
             %% Neurons-to-EMG Adaptation
             if params.adapt
-                [previous_trials,data,neuron_decoder] = decoder_adaptation(params,data,bin_count,previous_trials,neuron_decoder,emg_decoder,predictions);
+                [data_buffer,data,neuron_decoder] = decoder_adaptation2(params,data,bin_count,data_buffer,neuron_decoder,emg_decoder,predictions);
             end
                 
             %% Save and display progress
             
             % save adapting decoder every 30 seconds
-            if params.adapt && mod(bin_count*params.binsize, 30) == 0
+            if params.adapt && (mod(bin_count*params.binsize, 30) == 0)
                 %                 save([params.save_dir '\previous_trials_' strrep(strrep(datestr(now),':',''),' ','-')], 'previous_trials','neuron_decoder');
                 if params.save_data
                     save( [adapt_dir '\Adapt_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS'))],'-struct','neuron_decoder');
                 end
-                fprintf('Average Matlab Operation Time : %.2fms\n',ave_op_time*1000);
+                if params.online
+                    fprintf('Average Matlab Operation Time : %.2fms\n',ave_op_time*1000);
+                else
+                    prog = bin_count/max_cycles;
+                    fprintf('Progress: %.0f %%\n',100*prog);
+                end
             end
+            
+                
             
             % save raw data
             if params.save_data
@@ -280,7 +292,7 @@ try
                     set(tgt_handle,'Visible','off');
                 end
                 
-                if  data.adapt_bin && ~data.fix_decoder
+                if  data.adapt_trial && ~data.fix_decoder
                     display_color = 'r';
                 else
                     display_color = 'k';
@@ -294,7 +306,7 @@ try
             %check elapsed operation time
             et_op = toc(t_buf);
             ave_op_time = ave_op_time*(bin_count-1)/bin_count + et_op/bin_count;
-            if et_op>0.05
+            if et_op>0.05 && params.print_out
                 fprintf('~~~~~~slow processing time: %.1f ms~~~~~~~\n',et_op*1000);
             end
             
@@ -343,7 +355,8 @@ end
 
 %% optionally Save decoder at the end
 if params.adapt
-    YesNo = questdlg('Would you like to save the adapted decoder?','Save Decoder?','Yes','No','Yes');
+%     YesNo = questdlg('Would you like to save the adapted decoder?','Save Decoder?','Yes','No','Yes');
+    YesNo = 'Yes';
     if strcmp(YesNo,'Yes')
         dec_dir = [params.save_dir filesep datestr(now,'yyyy_mm_dd')];
         if ~isdir(dec_dir)
@@ -358,6 +371,7 @@ if params.adapt
     end
 end
 
+varargout = {neuron_decoder};
 end
 
 %% Accessory Functions :
@@ -396,7 +410,7 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
                 error('Invalid emg-to-force decoder');
             end
             params.n_lag_emg = round(emg_decoder.fillen/emg_decoder.binsize);
-            params.n_emgs = round((size(emg_decoder.H,1)-1)/params.n_lag_emg);
+%             params.n_emgs = round((size(emg_decoder.H,1)-1)/params.n_lag_emg);
             if round(emg_decoder.binsize*1000) ~= round(neuron_decoder.binsize*1000) 
                 error('Incompatible binsize between neurons and emg decoders');
             end
@@ -459,6 +473,10 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
             if new_words(i,2) == w.Start
                 data.traj_pct = 0;
                 data.tgt_id   = nan;
+                data.trial_count = data.trial_count+1;
+                if ~params.online
+                    data.adapt_trial = true;
+                end
             end
             
             % new word Ot_On?
@@ -486,7 +504,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
                 % fprintf('CT_on\n');
             end
             % Adapt word
-            if new_words(i,2)==w.Adapt || ~params.online
+            if new_words(i,2)==w.Adapt
                 data.adapt_trial = true;
                 % fprintf('Adapt Trial\n');
             end
@@ -495,6 +513,9 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
             end
             % End trial
             if w.IsEndWord(new_words(i,2))
+                if data.adapt_trial
+                    data.adapt_flag = true;
+                end
                 data.adapt_trial = false;
                 data.tgt_on      = false;
                 data.effort_flag = false;

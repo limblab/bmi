@@ -23,33 +23,60 @@ if data.adapt_bin
         {predictions,'predictions'});...
         previous_trials(1:end-1,:)];
     if ~data.fix_decoder
-        % gradient accumulator
-        accum_g = zeros(size(neuron_decoder.H));
-        accum_n = 0;
+        %         % gradient accumulator
+        %         accum_g = zeros(size(neuron_decoder.H));
+        %         accum_n = 0;
         for trial = 1:params.batch_length
             tmp_spikes = previous_trials.data{trial}.spikes;
-            tmp_emgs = previous_trials.data{trial}.emgs;
+            emgs = previous_trials.data{trial}.emgs;
             tmp_target_pos = previous_trials.data{trial}.tgt_pos;
+            %
+            %             accum_g = backpropagation_through_time_sigmoid_EMG(neuron_decoder.H, emg_decoder.H, ...
+            %                 tmp_spikes, tmp_emgs, ...
+            %                 tmp_target_pos(:)', ...
+            %                 params.n_lag, params.n_lag_emg, params.lambda);
+            %
+            %             % count how many gradients we have accumulated
+            %             accum_n = accum_n + 1;
+            %         end
+            %         g = accum_g/accum_n;
+            %         neuron_decoder.H = neuron_decoder.H - params.LR*g;
+            %     end
             
-            accum_g = backpropagation_through_time(neuron_decoder.H, emg_decoder.H, ...
-                tmp_spikes, tmp_emgs, ...
-                tmp_target_pos(:)', ...
-                params.n_lag, params.n_lag_emg, params.lambda);
+            %which EMGs would give me this force:
+            TolX     = 0.01; %function search tolerance for EMG
+            TypicalX = 0.1*ones(size(emgs));
+            TolFun   = TolX; %tolerance on cost function? not exactly sure what this should be
             
-            %                         %??? temp: prevent divergence caused possibly by
-            %                         %floating point error? divide by 0 ????
-            %                         if any(any(accum_g))>100/params.LR
-            %                             high_weights = find(accum_g>100/params.LR);
-            %                             w   = num2str(accum_g(high_weights));
-            %                             w_i = num2str(high_weights);
-            %                             fprintf('super high weight(s) : %s\nDetected at indexes %s\n',w,w_i);
-            %                             accum_g(abs(accum_g)>100/params.LR) = 0;
-            %                         end
+            fmin_options = optimoptions('fminunc','GradObj','on','Display','none',...
+                'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX);
             
-            % count how many gradients we have accumulated
-            accum_n = accum_n + 1;
+            %initial_emgs have to higher than 0 and lower than 10
+            low_idx = find(emgs<=TolX);
+            hi_idx  = find(emgs>=(10-TolX));
+            tmp_emgs = emgs;
+            tmp_emgs(low_idx) = emgs(low_idx)+repmat(TolX,1,length(low_idx));
+            tmp_emgs(hi_idx)  = emgs(hi_idx) -repmat(TolX,1,length(hi_idx) );
+            
+            [opt_emgs,fmin_val,exit_flag,fmin_output,final_grad] = ...
+                fminunc(@(EMG) Force2EMG_costfun(EMG,tmp_target_pos(1),emg_decoder.H,params.lambda),tmp_emgs,fmin_options);
+            
+            % replace negative values by 0
+            opt_emgs(opt_emgs<0) = zeros(size(opt_emgs(opt_emgs<0)));
+            % emg error:
+            de = opt_emgs-emgs;
+            de = max(de,0);
+            
+            % feed back through inverse of N2E sigmoid
+%             de = sigmoid(de,'inverse');
+            
+            % look back at neurons, apply learning rate and update weights:
+            g = [1;rowvec(tmp_spikes)]*de;
+            %g(2:end, :) = g(2:end, :) - lambda*S2EMG_w(2:end, :);
+            neuron_decoder.H = neuron_decoder.H + params.LR*g;
+
         end
-        g = accum_g/accum_n;
-        neuron_decoder.H = neuron_decoder.H - params.LR*g;
+        
     end
+    
 end

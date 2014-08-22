@@ -1,4 +1,4 @@
-function [g1_new, g2_new] = backpropagation_through_time(S2EMG_w, ...
+function [g1_new, g2_new] = backpropagation_through_time_sigmoid_EMG(S2EMG_w, ...
     EMG2F_w, S, EMG, F, S_lag, EMG_lag, lambda)
 %BPTT Computes the backpropagation gradient when there is a recurrent 
 % EMG has, in each row, a lagged history of EMG, where the first row
@@ -8,17 +8,26 @@ function [g1_new, g2_new] = backpropagation_through_time(S2EMG_w, ...
 % stationary weight in firts row. Accordingly, S and EMG have a
 % unit signal added to the other values.
 
-EMG = [1 rowvec(EMG(:))'];
+% EMG = [1 rowvec(EMG(:))'];
 
 % Force prediction
-Fpred = EMG(:)'*EMG2F_w;
+% Fpred = EMG(:)'*EMG2F_w;
+Fpred = [1 rowvec(EMG(:))']*EMG2F_w;
+
 
 % Gradient of squared error
-df = F - Fpred;
+% df = F - Fpred;
+% just one force signal for now
+df = F(1) - Fpred;
 
 % gradient of EMG
 % previous error gradient without sigmoid de = df*EMG2F_w(2:end,:)';
-de = (EMG(2:end).*(1-EMG(2:end))*(df*EMG2F_w(2:end,:)');
+% Daniel:: de = (EMG(2:end).*(1-EMG(2:end))).*(df*EMG2F_w(2:end,:)');
+de = df*EMG2F_w(2:end,:)';
+% de = min(-de,EMG(:)');
+de = -sigmoid(de,'inverse');
+
+
 g = zeros(size(S2EMG_w));
 de_reshaped = reshape(de, EMG_lag, []);
 
@@ -29,9 +38,9 @@ for t = 1:EMG_lag
 %          [1 rowvec(S(:, t:(t+S_lag-1)))']'*de_reshaped(t, :);
 end
 
-g1_new = -g/EMG_lag;
-g1_new(2:end, :) = g1_new(2:end, :) - lambda*S2EMG_w(2:end, :);
+g1_new = g/EMG_lag;
+% g1_new(2:end, :) = g1_new(2:end, :) - lambda*S2EMG_w(2:end, :);
 
-g2_new = -[EMG2F_w(:, 1)*df(1) EMG2F_w(:, 2)*df(2)];
+% g2_new = -[EMG2F_w(:, 1)*df(1) EMG2F_w(:, 2)*df(2)];
 
 end

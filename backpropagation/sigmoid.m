@@ -1,3 +1,45 @@
-function res = sigmoid(x)
+function res = sigmoid(x,mode, varargin)
+%piecewise sigmoid.
+% f(x) = {  0      , x <=  0;
+%          [0,10]  , 0 <x< 1;
+%           10     , x >=  1;
 
-res = 1./(1+exp(-x));
+bottom = 0;
+top    = 1;
+v50    = 0.5;
+slope  = 10;
+
+if nargin > 2
+    p = varargin{1};
+    bottom = p(1);
+    top    = p(2);
+    v50    = p(3);
+    slope  = p(4);
+end
+
+% res = 1./(1+exp(-x));
+
+switch mode
+    case 'inverse'         
+        %'inverse' (find x from f(x))
+        res = v50 - log(-1+(top-bottom)./(x-bottom))/slope;
+%         res = round(10000*res)/10000;
+%         idx_top = find(x>=top);
+%         res(idx_top) = ones(size(idx_top));
+%         idx_bot = find(x<=bottom);
+%         res(idx_bot) = zeros(size(idx_bot));
+    case 'direct'
+        % normal, find y = f(x)
+        res = bottom + (top-bottom)./(1+exp((v50-x).*slope));
+%         res = round(10000*res)/10000;
+%         res = min(res,top);
+%         idx_top = find(x>=1);
+%         res(idx_top) = top*ones(size(idx_top));
+%         idx_bot = find(x<=bottom);
+%         res(idx_bot) = zeros(size(idx_bot));
+    case 'derivative'
+        res = slope*(top-bottom).*exp(slope*(v50-x))./(exp(slope*(v50-x))+1).^2;
+%         idx_out = find(x<=bottom | x>=top);
+%         res(idx_out) = zeros(size(idx_out));
+end
+
