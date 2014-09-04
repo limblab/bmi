@@ -60,10 +60,19 @@ function handles = setup_display_plots(params,handles)
         'String','Force to cursor gain','Position',[.1 .1 .6 .2]);
     handles.textbox_force_to_cursor_gain = uicontrol('Units','normalized','Style','edit',...
         'Parent',handles.mode_select_group,...
-        'String','.2','Position',[.7 .2 .2 .1],'Callback',@gainchange_Callback);
+        'String','.2','Position',[.7 .25 .2 .1],'Callback',@gainchange_Callback);
+    handles.label_force_offset = uicontrol('Units','normalized','Style','text',...
+        'Parent',handles.mode_select_group,...
+        'String','Force offsets','Position',[.05 .05 .6 .2]);
+    handles.textbox_force_offset_x = uicontrol('Units','normalized','Style','edit',...
+        'Parent',handles.mode_select_group,...
+        'String','0','Position',[.6 .15 .2 .1],'Callback',@force_x_offsetchange_Callback);
+    handles.textbox_force_offset_y = uicontrol('Units','normalized','Style','edit',...
+        'Parent',handles.mode_select_group,...
+        'String','0','Position',[.8 .15 .2 .1],'Callback',@force_y_offsetchange_Callback);
     handles.radio_button_test = uicontrol('Units','normalized','Style','radiobutton',...
         'Parent',handles.mode_select_group,...
-        'String','test','Position',[.1 0 .8 .2]);
+        'String','test','Position',[.1 0 .2 .2]);
 
 end
 
@@ -109,5 +118,19 @@ function y_offset_change_Callback(hObject,eventdata)
     new_y_offset = str2double(get(hObject,'String'));
     params = evalin('base','params');
     params.vel_offsets(2) = new_y_offset;    
+    assignin('base','params',params);
+end
+
+function force_x_offsetchange_Callback(hObject,eventdata)
+    new_x_offset = str2double(get(hObject,'String'));
+    params = evalin('base','params');
+    params.force_offset(1) = new_x_offset;    
+    assignin('base','params',params);
+end
+
+function force_y_offsetchange_Callback(hObject,eventdata)
+    new_y_offset = str2double(get(hObject,'String'));
+    params = evalin('base','params');
+    params.force_offset(2) = new_y_offset;    
     assignin('base','params',params);
 end

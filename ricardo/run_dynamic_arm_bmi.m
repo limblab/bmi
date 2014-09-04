@@ -1,6 +1,6 @@
 % run_dynamic_arm_bmi
 clear params
-params.monkey_name = 'Chewie';
+params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
 params.mode = 'iso'; % emg | n2e | n2e_cartesian | vel | iso
 params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi
@@ -12,7 +12,7 @@ params.decoders(2).decoder_type = 'n2e_cartesian';
 params.decoders(3).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-08-20_RW\Chewie_2014-08-20_RW_001_Binned_Decoder.mat';
 params.decoders(3).decoder_type = 'vel';
 params.arm_params_file = 'E:\Chewie\Chewie_2014-08-19_DCO_iso_ruiz\Chewie_2014-08-19_DCO_iso_ruiz_001_params.mat';
-% params.arm_params_file = [];
+params.arm_params_file = [];
 params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Chewie 8I2\Blackrock implant surgery 6-14-10\1025-0394.cmp';
 params.output = 'xpc';
 params.force_to_cursor_gain = .3;

@@ -54,7 +54,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
             EMG_data = EMG_data.^2;
 %             EMG_data(1:4) = 0;
-            vel_data = 10*[cos(temp_t(1)) cos(temp_t(2)+pi/2)];
+            vel_data = 1*[cos(.1*temp_t(1)) cos(.3*temp_t(2)+pi/2)];
         end        
         
 %         assignin('base','arm_params',arm_params);        
@@ -141,13 +141,13 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         
         switch(arm_params.control_mode)
             case 'hill'
-                [t,x] = ode45(@(t,x0) sandercock_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [t,x] = ode15s(@(t,x0) sandercock_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = sandercock_model(t,x(end,:),arm_params);
             case 'prosthesis'
-                [t,x] = ode45(@(t,x0) prosthetic_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [t,x] = ode15s(@(t,x0) prosthetic_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = prosthetic_arm_model(t,x(end,:),arm_params);
             case 'hu'
-                [t,x] = ode45(@(t,x0_b) hu_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
+                [t,x] = ode15s(@(t,x0_b) hu_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
                 [~,out_var] = hu_arm_model(t,x(end,:),arm_params);
                 x0 = x0_b(1:4);
 %                 x = x(:,1:4);
@@ -159,20 +159,20 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 if ~isfield(arm_params,'musc_length_old')
                     arm_params.musc_length_old = [];
                 end
-                [t,x] = ode45(@(t,x0) miller_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [t,x] = ode15s(@(t,x0) miller_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = miller_arm_model(t,x(end,:),arm_params);
                 arm_params.musc_length_old = out_var(7:8);
             case 'perreault'
-                [t,x] = ode45(@(t,x0) perreault_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [t,x] = ode15s(@(t,x0) perreault_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = perreault_arm_model(t,x(end,:),arm_params);
             case 'ruiz'
-                [t,x] = ode45(@(t,x0_b) ruiz_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
+                [t,x] = ode15s(@(t,x0_b) ruiz_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
                 [~,out_var] = ruiz_arm_model(t,x(end,:),arm_params);                
                 x0 = x0_b(1:4);                
             case 'bmi'
-                [t,x] = ode45(@(t,x0) bmi_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
+                [t,x] = ode15s(@(t,x0) bmi_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = bmi_model(t,x(end,:),arm_params);
-                out_var
+%                 out_var
         end
         musc_force = out_var(1:4);
         F_end = out_var(5:6);
@@ -227,16 +227,16 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         m_data_2.Data.elbow_pos = xE;
         m_data_2.Data.shoulder_pos = xS;
 
-        if mod(i,1)==0            
+        dt_hist = circshift(dt_hist,[0 1]);
+        dt_hist(1) = toc; 
+        if mod(i,5)==0           
             set(h.h_plot_force,'XData',[0 F_x],'YData',[0 F_y])
             set(h.h_plot_arm,'XData',[xS(1) xE(1) xH(1)],...
                 'YData',[xS(2) xE(2) xH(2)])
             set(h.h_plot_arm_2,'XData',[xS(1) xE2(1) xH2(1)],...
                 'YData',[xS(2) xE2(2) xH2(2)])
-            set(h.h_emg_bar,'YData',EMG_data)
-            drawnow
-            dt_hist = circshift(dt_hist,[0 1]);
-            dt_hist(1) = toc;            
+            set(h.h_emg_bar,'YData',[EMG_data arm_params.commanded_vel])
+            drawnow                       
             set(h.h_plot_dt,'YData',dt_hist)
         end
     end   

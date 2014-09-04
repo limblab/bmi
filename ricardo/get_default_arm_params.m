@@ -5,6 +5,7 @@ arm_params_default.GENERAL_PARAMETERS = 0;
 arm_params_default.control_mode = 'ruiz';
 arm_params_default.left_handed = 1;
 arm_params_default.m = [1, 1];
+arm_params_default.m_end = 0;
 arm_params_default.l = [.22, .22]; %segment lengths l1, l2
 arm_params_default.null_angles = [pi/4 3*pi/4];
 arm_params_default.X_sh = [.05 -.3];

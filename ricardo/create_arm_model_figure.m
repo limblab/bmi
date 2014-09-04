@@ -33,9 +33,9 @@ function h = create_arm_model_figure
     
     % EMG bar graph
     subplot(325)    
-    h.h_emg_bar = bar(zeros(1,4));
-    set(gca,'XTickLabel',{'AD(rt)','PD(lf)','Bi(up)','Tri(dn)'})
-    ylim([0 1])
+    h.h_emg_bar = bar(zeros(1,6));
+    set(gca,'XTickLabel',{'AD(rt)','PD(lf)','Bi(up)','Tri(dn)','Vel X','Vel Y'})
+    ylim([-1 1])
     title('Normalized EMG')
     
     drawnow

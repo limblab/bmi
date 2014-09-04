@@ -142,7 +142,7 @@ function run_decoder(varargin)
                 m_data_1.Data.EMG_data = EMG_data;                
                 
                 if strncmpi(params.mode,'iso',3) % ...if task was isometric
-                    cursor_pos = -params.force_to_cursor_gain*data.handleforce;
+                    cursor_pos = -params.force_to_cursor_gain*data.handleforce + params.force_offset;
                 else % ...if task was a movement task
                     cursor_pos = m_data_2.Data.x_hand;                       
                 end
@@ -203,7 +203,8 @@ function run_decoder(varargin)
                 et_op = toc(t_buf);
                 ave_op_time = ave_op_time*(bin_count-1)/bin_count + et_op/bin_count;
                 if et_op>0.05
-                    fprintf('~~~~~~slow processing time: %.1f ms~~~~~~~\n',et_op*1000);
+                    c = clock;
+                    fprintf('~~~~~~slow processing time: %.1f ms at %02.f:%02.f:%02.f~~~~~~~\n',[et_op*1000 c(4:6)]);
                 end
 
                 reached_cycle_t = false;                    

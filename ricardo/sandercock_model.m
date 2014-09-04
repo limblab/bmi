@@ -120,30 +120,21 @@ musc_torque = [(arm_params.m_ins(1)*musc_force(1) - arm_params.m_ins(2)*musc_for
 musc_torque(musc_torque>arm_params.max_torque) = arm_params.max_torque;
 musc_torque(musc_torque<-arm_params.max_torque) = -arm_params.max_torque;
 
- %matrix equations 
-M = [m(2)*lc(1)^2+m(2)*l(1)^2+i(1), m(2)*l(1)*lc(2)^2*cos(theta(1)-theta(2));
- m(2)*l(1)*lc(2)*cos(theta(1)-theta(2)),+m(2)*lc(2)^2+i(2)]; 
 
-C = [-m(2)*l(1)*lc(2)*sin(theta(1)-theta(2))*theta(4)^2;
- -m(2)*l(1)*lc(2)*sin(theta(1)-theta(2))*theta(3)^2];
+%matrix equations 
+M = arm_inertia_matrix(arm_params,theta(1:2));   
 
-Fg = [(m(1)*lc(1)+m(2)*l(1))*g*cos_theta_1;
- m(2)*g*lc(2)*cos_theta_2];
+% Coriolis torques
+C = coriolis_torques(arm_params,theta(1:4));
 
-J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
-    l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
+J = arm_jacobian(l,theta(1:2));
+
 T_endpoint = J'*F_end(:);
 
-% T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
-%     -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
+tau = [-theta(3)*c(1);-(theta(4)-theta(3))*c(2)]; % viscosity
 
-% tau =T+ [-theta(3)*c(1);-theta(4)*c(2)]; %input torques,
-% tau =T+ [-sign(theta(3))*sqrt(abs(theta(3)))*c(1);-sign(theta(4))*sqrt(abs(theta(4)))*c(2)]; %input torques,
-tau_c = [-theta(3)*c(1);-(theta(4)-theta(3))*c(2)]; % viscosity
-% tau_c = [ -min(max(theta(3),-1),1)*c(1) ; -min(max(theta(4),-1),1)*c(2)];
-tau = T(:) + tau_c;
 xdot(1:2,1)=theta(3:4);
-xdot(3:4,1)= M\(T_endpoint + tau-Fg-C + musc_torque);
+xdot(3:4,1)= M\(T(:) + T_endpoint + tau - C + musc_torque);
 
 out_var = [musc_force(:);F_end(:)]';
 
