@@ -203,8 +203,9 @@ function run_decoder(varargin)
                 et_op = toc(t_buf);
                 ave_op_time = ave_op_time*(bin_count-1)/bin_count + et_op/bin_count;
                 if et_op>0.05
-                    c = clock;
-                    fprintf('~~~~~~slow processing time: %.1f ms at %02.f:%02.f:%02.f~~~~~~~\n',[et_op*1000 c(4:6)]);
+%                     c = clock;
+%                     fprintf('~~~~~~slow processing time: %.1f ms at %02.f:%02.f:%02.f~~~~~~~\n',[et_op*1000 c(4:6)]);
+                      fprintf('~~~~~~slow processing time: %.1f ms~~~~~~~\n',[et_op*1000]);
                 end
 
                 reached_cycle_t = false;                    

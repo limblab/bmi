@@ -1,6 +1,6 @@
 function run_arm_model(m_data_1,m_data_2,h,xpc)    
     cycle_counter = 0;    
-    dt_hist = 0.05*ones(1,10);    
+    dt_hist = 0.01*ones(1,10);    
     F_x = 0;
     F_y = 0;
     encoder_theta = [0 0];
