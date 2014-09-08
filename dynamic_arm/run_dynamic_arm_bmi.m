@@ -1,4 +1,16 @@
 % run_dynamic_arm_bmi
+
+cd('C:\Users\system administrator\Desktop\S1_analysis')
+load_paths
+current_location = mfilename('fullpath');
+[current_folder,~,~] = fileparts(current_location);
+cd(current_folder)
+add_these = strfind(current_folder,'\');
+add_these = current_folder(1:add_these(end)-1);
+addpath([add_these filesep 'lib'])
+addpath(genpath([add_these filesep 'SDK for Windows']))
+% addpath(genpath(add_these))
+
 clear params
 params.monkey_name = 'Chewie';
 params.save_dir = ['E:\' params.monkey_name];
@@ -42,13 +54,6 @@ arm_params = get_default_arm_params(arm_params);
 save('temp_arm_params','arm_params')
 clear arm_params
 
-current_location = mfilename('fullpath');
-[current_folder,~,~] = fileparts(current_location);
-cd(current_folder)
-add_these = strfind(current_folder,'\');
-add_these = current_folder(1:add_these(end)-1);
-addpath([add_these filesep 'lib'])
-% addpath(genpath(add_these))
 clearxpc
 % run_decoder: This function connects to the Cerebus stream via
 % the Central application, produces cursor position predictions

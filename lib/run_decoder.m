@@ -3,6 +3,15 @@
 cd('C:\Users\system administrator\Desktop\S1_analysis')
 load_paths
 
+current_location = mfilename('fullpath');
+[current_folder,~,~] = fileparts(current_location);
+cd(current_folder)
+add_these = strfind(current_folder,'\');
+add_these = current_folder(1:add_these(end)-1);
+addpath([add_these filesep 'lib'])
+addpath(genpath([add_these filesep 'SDK for Windows']))
+clearxpc
+
 clear params
 params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
@@ -28,14 +37,6 @@ else
 end
 params.elec_map = read_cmp(params.map_file);
 
-current_location = mfilename('fullpath');
-[current_folder,~,~] = fileparts(current_location);
-cd(current_folder)
-add_these = strfind(current_folder,'\');
-add_these = current_folder(1:add_these(end)-1);
-addpath([add_these filesep 'lib'])
-addpath(genpath([add_these filesep 'SDK for Windows']))
-clearxpc
 % run_decoder: This function connects to the Cerebus stream via
 % the Central application, produces cursor position predictions
 %
