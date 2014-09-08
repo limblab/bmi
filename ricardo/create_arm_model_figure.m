@@ -24,8 +24,8 @@ function h = create_arm_model_figure
     % Arm position plot
     subplot(323)    
     hold on
-    h.h_plot_arm = plot(0,0,'-k');    
-    h.h_plot_arm_2 = plot(0,0,'-','Color',[.5 .5 .5]);
+    h.h_plot_arm = plot(0,0,'.-k','MarkerSize',10);    
+    h.h_plot_arm_2 = plot(0,0,'.-','Color',[.5 .5 .5],'MarkerSize',10);
     xlim([-30 30])
     ylim([-30 30]) 
     axis square
@@ -89,6 +89,9 @@ function h = create_arm_model_figure
     h.radio_button_bmi = uicontrol('Units','normalized','Style','radiobutton',...
         'Parent',h.radio_button_group,...
         'String','bmi','Position',[.5 .6 .5 .15]); 
+    h.radio_button_bmi = uicontrol('Units','normalized','Style','radiobutton',...
+        'Parent',h.radio_button_group,...
+        'String','point_mass','Position',[.5 .4 .5 .15]); 
   
     h.param_list = uicontrol('Style','listbox','Units','normalized',...
         'Position',[0 .5 1 .5],...

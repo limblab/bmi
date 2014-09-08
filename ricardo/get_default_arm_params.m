@@ -5,7 +5,7 @@ arm_params_default.GENERAL_PARAMETERS = 0;
 arm_params_default.control_mode = 'ruiz';
 arm_params_default.left_handed = 1;
 arm_params_default.m = [1, 1];
-arm_params_default.m_end = 0;
+arm_params_default.m_end = 1;
 arm_params_default.l = [.22, .22]; %segment lengths l1, l2
 arm_params_default.null_angles = [pi/4 3*pi/4];
 arm_params_default.X_sh = [.05 -.3];
@@ -54,6 +54,16 @@ arm_params_default.endpoint_stiffness_min = 3;
 arm_params_default.endpoint_stiffness_max = 10;
 arm_params_default.endpoint_damping_min = 2;
 arm_params_default.endpoint_damping_max = 5;
+
+% Point mass
+arm_params_default.POINT_MASS_PARAMETERS = 0;
+arm_params_default.m_pm = 1;
+arm_params_default.c_pm = 50;
+arm_params_default.emg_to_force_gain_pm = [30 30];
+arm_params_default.endpoint_stiffness_min_pm = 3;
+arm_params_default.endpoint_stiffness_max_pm = 10;
+arm_params_default.endpoint_damping_min_pm = 2;
+arm_params_default.endpoint_damping_max_pm = 5;
 
 arm_param_fields = fields(arm_params_default);
 for iField = 1:numel(arm_param_fields)
