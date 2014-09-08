@@ -4,11 +4,16 @@ if params.save_data
     if params.online
 %         handles.date_str = datestr(now,'yyyy_mm_dd_HHMMSS');
         handles.date_str = datestr(now,'yyyy-mm-dd');
-        handles.save_dir = [params.save_dir filesep params.monkey_name '_' handles.date_str '_' params.task_name '_' params.arm_model];
+        if isempty(params.arm_model)
+            handles.save_dir = [params.save_dir filesep params.monkey_name '_' handles.date_str '_' params.task_name];
+            handles.filename = [params.monkey_name '_' handles.date_str '_' params.task_name '_'];
+        else
+            handles.save_dir = [params.save_dir filesep params.monkey_name '_' handles.date_str '_' params.task_name '_' params.arm_model];
+            handles.filename = [params.monkey_name '_' handles.date_str '_' params.task_name '_' params.arm_model '_'];
+        end
         if ~isdir(handles.save_dir)
             mkdir(handles.save_dir);
-        end
-        handles.filename = [params.monkey_name '_' handles.date_str '_' params.task_name '_' params.arm_model '_'];
+        end        
         existing_files = dir([handles.save_dir filesep handles.filename '*.nev']);
         counter = length(existing_files)+1;
         handles.filename = [handles.filename num2str(counter,'%03d')];

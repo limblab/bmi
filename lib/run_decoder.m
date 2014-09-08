@@ -6,7 +6,7 @@ load_paths
 clear params
 params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
-params.mode = 'vel'; % emg | n2e | n2e_cartesian | vel | iso | test
+params.mode = 'vel'; 
 params.task_name = ['RW_' params.mode];
 params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-05_RW\Chewie_2014-09-05_RW_001_Binned_Decoder.mat';
 params.decoders(1).decoder_type = 'vel';
@@ -14,7 +14,7 @@ params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Chewie 8I2\Bl
 params.arm_model = '';
 params.output = 'xpc';
 params.save_firing_rates = 1;
-params.display_plots = 0;
+params.display_plots = 1;
 params.offset_time_constant = 60;
 params.vel_offsets = [0 0];
 params.artifact_removal = 0;
@@ -165,7 +165,7 @@ try
             end
             
             %display targets and cursor plots
-            if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(handles.curs_handle)
+            if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(handles.curs_handle) && mod(iCycle,10)==0
                 
                 set(handles.curs_handle,'XData',cursor_pos(1),'YData',cursor_pos(2));
                 set(handles.xpred_disp,'String',sprintf('xpred: %.2f',cursor_pos(1)))
