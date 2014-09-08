@@ -1,0 +1,119 @@
+function [xdot,out_var] = perreault_arm_model(t,theta,arm_params)
+
+%parameters
+g = 0;
+m = arm_params.m;
+l = arm_params.l;
+% lc = arm_params.lc;
+% i = arm_params.i;
+lc = arm_params.l/2; %distance from center
+i = [arm_params.m(1)*arm_params.l(1)^2/3, arm_params.m(2)*arm_params.l(2)^2/3]; %moments of inertia i1, i2, need to validate coef's
+c = arm_params.c;
+T = arm_params.T;
+F_end = arm_params.F_end;
+if numel(F_end)>2
+    [~,idx] = min(abs(F_end(1,:)-t));
+    F_end = F_end(2:3,idx);
+end
+
+xdot = zeros(4,1);
+theta = reshape(theta,[],1);
+
+sin_theta_1 = sin(theta(1));
+sin_theta_2 = sin(theta(2));
+cos_theta_1 = cos(theta(1));
+cos_theta_2 = cos(theta(2));
+
+
+J = arm_jacobian(l,theta(1:2));
+
+J_Muscle2Theta = [0.0336 -0.0381 0       0
+                  0      0       0.0875 -0.0194]';
+              
+X_e = [l(1)*cos_theta_1 l(1)*sin_theta_1];
+X_e_null = [l(1)*cos(arm_params.null_angles(1)) l(1)*sin(arm_params.null_angles(1))];
+
+musc_end_1 = [arm_params.m_ins(1)*cos(arm_params.null_angles(1)+pi/2)...
+    arm_params.m_ins(1)*cos(arm_params.null_angles(1)-pi/2)...
+    X_e(1)-arm_params.m_ins(3)*cos_theta_1...
+    X_e(1)+arm_params.m_ins(4)*cos_theta_1;...
+    arm_params.m_ins(1)*sin(arm_params.null_angles(1)+pi/2)...
+    arm_params.m_ins(2)*sin(arm_params.null_angles(1)-pi/2)...
+    X_e(2)-arm_params.m_ins(3)*sin_theta_1...
+    X_e(2)+arm_params.m_ins(4)*sin_theta_1];
+musc_end_2 = [arm_params.m_ins(1)*cos_theta_1...
+    arm_params.m_ins(2)*cos_theta_1...
+    X_e(1)+arm_params.m_ins(3)*cos_theta_2...
+    X_e(1)+arm_params.m_ins(4)*cos_theta_2;...
+    arm_params.m_ins(1)*sin_theta_1...
+    arm_params.m_ins(2)*sin_theta_1...
+    X_e(2)+arm_params.m_ins(3)*sin_theta_2...
+    X_e(2)+arm_params.m_ins(4)*sin_theta_2];
+
+musc_null_end_1 = [arm_params.m_ins(1)*cos(arm_params.null_angles(1)+pi/2)...
+    arm_params.m_ins(1)*cos(arm_params.null_angles(1)-pi/2)...
+    X_e_null(1)-arm_params.m_ins(3)*cos(arm_params.null_angles(1))...
+    X_e_null(1)+arm_params.m_ins(4)*cos(arm_params.null_angles(1));...
+    arm_params.m_ins(1)*sin(arm_params.null_angles(1)+pi/2)...
+    arm_params.m_ins(2)*sin(arm_params.null_angles(1)-pi/2)...
+    X_e_null(2)-arm_params.m_ins(3)*sin(arm_params.null_angles(1))...
+    X_e_null(2)+arm_params.m_ins(4)*sin(arm_params.null_angles(1))];
+musc_null_end_2 = [arm_params.m_ins(1)*cos(arm_params.null_angles(1))...
+    arm_params.m_ins(2)*cos(arm_params.null_angles(1))...
+    X_e_null(1)+arm_params.m_ins(3)*cos(arm_params.null_angles(2))...
+    X_e_null(1)+arm_params.m_ins(4)*cos(arm_params.null_angles(2));...
+    arm_params.m_ins(1)*sin(arm_params.null_angles(1))...
+    arm_params.m_ins(2)*sin(arm_params.null_angles(1))...
+    X_e_null(2)+arm_params.m_ins(3)*sin(arm_params.null_angles(2))...
+    X_e_null(2)+arm_params.m_ins(4)*sin(arm_params.null_angles(2))];
+
+musc_null_length = sqrt(sum((musc_null_end_1 - musc_null_end_2).^2));
+musc_length = sqrt(sum((musc_end_1 - musc_end_2).^2));
+ 
+
+musc_length_diff = musc_length - musc_null_length;
+musc_length_diff(musc_length_diff<0) = 0;
+
+% From Cui et al, 2008
+musc_stiffness = 23.4*arm_params.musc_act.*arm_params.F_max*502E6*2E-6./...
+    (23.4*arm_params.musc_act.*arm_params.F_max*.05 +...
+    502E6*2E-6*.05);
+musc_force_stiffness = musc_stiffness.*musc_length_diff;
+
+% musc_vel = [arm_params.m_ins(1)*theta(3) arm_params.m_ins(2)*theta(3)...
+%     arm_params.m_ins(3)*theta(4) arm_params.m_ins(4)*theta(4);...
+%     arm_params.m_ins(1)*theta(3) arm_params.m_ins(2)*theta(3)...
+%     arm_params.m_ins(3)*theta(4) arm_params.m_ins(4)*theta(4)];
+% 
+% musc_vel = musc_vel.*[-sin_theta_1 -sin_theta_1...
+%                         -sin_theta_2 -sin_theta_2;...
+%                         cos_theta_1 cos_theta_1...
+%                         cos_theta_2 cos_theta_2];
+
+muscle_force = arm_params.F_max.*arm_params.musc_act + musc_force_stiffness;
+muscle_torque = J_Muscle2Theta'*muscle_force';
+muscle_torque(muscle_torque>arm_params.max_torque) = arm_params.max_torque;
+muscle_torque(muscle_torque<-arm_params.max_torque) = -arm_params.max_torque;
+
+angle_diff = [theta(1)-arm_params.null_angles(1);theta(2)-(theta(1)+diff(arm_params.null_angles))];
+constraint_torque = -sign(angle_diff).*exp(30*(abs(angle_diff))/(pi/2)-27);
+
+%matrix equations 
+M = arm_inertia_matrix(arm_params,theta(1:2));   
+
+% Coriolis torques
+C = coriolis_torques(arm_params,theta(1:4));
+
+% T_endpoint = [-(l(1)*sin_theta_1+l(2)*sin_theta_2) * F_end(1) + (l(1)*cos_theta_1-l(2)*cos_theta_2) * F_end(2);
+%     -l(2)*sin_theta_2 * F_end(1) + l(2)*cos_theta_2 * F_end(2)];
+
+T_endpoint = J'*F_end(:);
+
+tau = [-theta(3)*c(1);-(theta(4)-theta(3))*c(2)]; % viscosity
+
+xdot(1:2,1)=theta(3:4);
+xdot(3:4,1)= M\(T(:) + T_endpoint + tau - C + muscle_torque + constraint_torque);
+
+out_var = [muscle_torque(:);nan;nan;F_end(:)]';
+
+end
