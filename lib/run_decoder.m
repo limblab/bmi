@@ -1,4 +1,8 @@
 % run_dynamic_arm_bmi
+
+cd('C:\Users\system administrator\Desktop\S1_analysis')
+load_paths
+
 clear params
 params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
@@ -30,6 +34,7 @@ cd(current_folder)
 add_these = strfind(current_folder,'\');
 add_these = current_folder(1:add_these(end)-1);
 addpath([add_these filesep 'lib'])
+addpath(genpath([add_these filesep 'SDK for Windows']))
 clearxpc
 % run_decoder: This function connects to the Cerebus stream via
 % the Central application, produces cursor position predictions
@@ -155,7 +160,7 @@ try
             
             if exist('xpc','var')
                 % send predictions to xpc                
-                fwrite(xpc.xpc_write, [1 1 cursor_pos 0 0 0 0],'float32');
+                fwrite(xpc.xpc_write, [1 1 cursor_pos cursor_pos cursor_pos],'float32');
                 %                     fprintf('%.2f\t%.2f\t%.2f\t%.2f\n',[cursor_pos predictions]);
             end
             
