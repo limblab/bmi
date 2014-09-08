@@ -41,6 +41,10 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
         data.analog_channels = [];
     end
 
+    if size(data.spikes,2) ~= size(new_spikes,1)
+        data.spikes = zeros(size(data.spikes,1),size(new_spikes,1));
+    end
+    
     data.spikes = [new_spikes'; data.spikes(1:end-1,:)];
     num_new_words = size(new_words,1);
     data.words  = [new_words;     data.words(1:end-num_new_words,:)];

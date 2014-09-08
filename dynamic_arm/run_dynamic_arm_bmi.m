@@ -47,7 +47,8 @@ current_location = mfilename('fullpath');
 cd(current_folder)
 add_these = strfind(current_folder,'\');
 add_these = current_folder(1:add_these(end)-1);
-addpath(genpath(add_these))
+addpath([add_these filesep 'lib'])
+% addpath(genpath(add_these))
 clearxpc
 % run_decoder: This function connects to the Cerebus stream via
 % the Central application, produces cursor position predictions
@@ -63,7 +64,6 @@ xpc = open_xpc_udp(params);
 % Read Decoders and other files
 params = load_decoders(params);
 params = measure_force_offsets(params);
-% assignin('base','params',params);
 
 % Initialization
 
@@ -100,7 +100,6 @@ drawnow;
 iCycle = 0;
 % Run cycle
 try
-%     params = evalin('base','params');
     recording = 0;
     current_mode = params.mode;
     
@@ -211,8 +210,6 @@ try
                 %                     fprintf('%.2f\t%.2f\t%.2f\t%.2f\n',[cursor_pos predictions]);
             end
             
-%             assignin('base','params',params);
-
             %display targets and cursor plots
             if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(handles.curs_handle)
                 
@@ -273,6 +270,7 @@ try
     if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
         rmdir(handles.save_dir);
     end
+    clear m_data_1 m_data_2
     
 catch e
     if params.online
@@ -290,5 +288,6 @@ catch e
     echoudp('off');
     fclose('all');
     close all;
-    rethrow(e);
+    clear m_data_1 m_data_2
+    rethrow(e);    
 end
