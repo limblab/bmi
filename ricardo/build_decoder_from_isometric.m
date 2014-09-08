@@ -1,8 +1,8 @@
-data_location = 'D:\Data\Chewie_8I2\Chewie_2014-08-21_DCO_iso_bmi';
+data_location = 'D:\Data\Chewie_8I2\Chewie_2014-09-05_DCO_iso_ruiz';
 bdf_file = [data_location filesep 'Output_Data\bdf.mat'];
 param_file = dir([data_location filesep '*params*']);
 param_file = [data_location filesep param_file(1).name];
-decoder_type = 'cartesian';
+decoder_type = 'musc';
 load(bdf_file);
 load(param_file);
 

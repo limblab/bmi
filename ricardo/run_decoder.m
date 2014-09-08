@@ -7,12 +7,7 @@ function run_decoder(varargin)
     addpath(genpath(add_these))
     clearxpc
     % run_decoder: This function connects to the Cerebus stream via
-    % the Central application, produces prediction by a two step
-    % process in which spike trains predict emgs and emgs predict forces.
-    % the emg-to-force decoder is expected to be precomputed and passed as
-    % EMG2F_w weight matrix. The spikes to EMG weight matrix is trained online
-    % and it uses the backpropagated discrepancy between the predicted forces
-    % and the target position in the task.
+    % the Central application, produces cursor position predictions
     %
     % INPUTS : Additional parameters: "params" structure -> see adapt_params_defaults.m
 
