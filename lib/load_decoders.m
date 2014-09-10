@@ -1,5 +1,5 @@
 function params = load_decoders(params)
-
+    params.spike_chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);
     for iDecoder = 1:numel(params.decoders)
         if ~strcmp(params.decoders(iDecoder).decoder_type,'null')
             decoder = LoadDataStruct(params.decoders(iDecoder).decoder_file);
@@ -16,6 +16,11 @@ function params = load_decoders(params)
             params.decoders(iDecoder).emg_decoder = [];
             params.decoders(iDecoder).n_emgs = 0;
             params.decoders(iDecoder).n_lag_emg = 0;
+            chanIDs = [];
+            for iChan = 1:size(decoder.neuronIDs,1)
+                chanIDs{iChan} = ['chan' num2str(decoder.neuronIDs(iChan,1))];
+            end
+            params.decoders(iDecoder).chanIDs = chanIDs;
         end
     end
     if ~strcmp(params.decoders(iDecoder).decoder_type,'null')
@@ -36,6 +41,7 @@ function params = load_decoders(params)
         params.decoders(iDecoder+1).emg_decoder = [];
         params.decoders(iDecoder+1).n_emgs = 0;
         params.decoders(iDecoder+1).n_lag_emg = 0;
+        params.decoders(iDecoder+1).chanIDs = [];        
     end
     
     if any(strcmpi({params.decoders.decoder_type},params.mode))

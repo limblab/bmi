@@ -23,6 +23,10 @@ params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014
 params.decoders(2).decoder_type = 'n2e_cartesian';
 params.decoders(3).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-05_RW\Chewie_2014-09-05_RW_001_Binned_Decoder.mat';
 params.decoders(3).decoder_type = 'vel';
+params.decoders(4).decoder_file = '\\citadel\data\TestData\Ricardo_2014-09-09_DCO_iso_ruiz\Output_Data\muscle_force_filter.mat';
+params.decoders(4).decoder_type = 'emg2muscle_force';
+params.decoders(5).decoder_file = '\\citadel\data\TestData\Ricardo_2014-09-09_DCO_iso_ruiz\Output_Data\muscle_torque_filter.mat';
+params.decoders(5).decoder_type = 'emg2muscle_torque';
 params.arm_params_file = 'E:\Chewie\Chewie_2014-08-19_DCO_iso_ruiz\Chewie_2014-08-19_DCO_iso_ruiz_001_params.mat';
 params.arm_params_file = [];
 params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Chewie 8I2\Blackrock implant surgery 6-14-10\1025-0394.cmp';
@@ -104,7 +108,7 @@ t_buf = tic; %data buffering timer
 drawnow;
 iCycle = 0;
 % Run cycle
-try
+% try
     recording = 0;
     current_mode = params.mode;
     
@@ -179,7 +183,6 @@ try
             end
             
             [EMG_data,~,~] = process_emg(params,data,predictions);
-            
             m_data_1.Data.EMG_data = EMG_data;
             
             if strncmpi(params.mode,'iso',3) % ...if task was isometric
@@ -277,22 +280,22 @@ try
     end
     clear m_data_1 m_data_2
     
-catch e
-    if params.online
-        if params.save_data
-            cbmex('fileconfig', handles.cerebus_file, '', 0);
-        end
-        cbmex('close');
-    end
-    recorded_files = dir(handles.save_dir);
-    recorded_files = {recorded_files(:).name};
-    if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
-        rmdir(handles.save_dir);
-    end
-    m_data_1.Data.bmi_running = 0;
-    echoudp('off');
-    fclose('all');
-    close all;
-    clear m_data_1 m_data_2
-    rethrow(e);    
-end
+% catch e
+%     if params.online
+%         if params.save_data
+%             cbmex('fileconfig', handles.cerebus_file, '', 0);
+%         end
+%         cbmex('close');
+%     end
+%     recorded_files = dir(handles.save_dir);
+%     recorded_files = {recorded_files(:).name};
+%     if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
+%         rmdir(handles.save_dir);
+%     end
+%     m_data_1.Data.bmi_running = 0;
+%     echoudp('off');
+%     fclose('all');
+%     close all;
+%     clear m_data_1 m_data_2
+%     rethrow(e);    
+% end

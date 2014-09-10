@@ -29,7 +29,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
             disp('No handle force data read')
         end            
         
-        data.force_xpc = new_xpc_data.Force;
+        data.force_xpc = new_xpc_data.Force;   
     else
         data.sys_time = double(offline_data.timeframe(bin_count));
         new_spikes = offline_data.spikeratedata(bin_count,:)';
@@ -49,6 +49,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
     num_new_words = size(new_words,1);
     data.words  = [new_words;     data.words(1:end-num_new_words,:)];
     data.analog = new_analog;
+    data = get_binned_emg(data,analog_data);
 
     if ~isempty(new_target)
         data.pending_tgt_pos  = [ (new_target(3)+new_target(1))/2 ...
@@ -111,9 +112,8 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
 
     if ~isempty(strfind(ts_cell_array(:,1),'elec'))
         % Assign channel numbers from map file to acquired data
-        [~,elec_map_idx,spike_chan_idx] = intersect(params.elec_map(:,4),ts_cell_array(:,1));
-        chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);        
-        ts_cell_array(spike_chan_idx,1) = chan_names(elec_map_idx)';
+        [~,elec_map_idx,spike_chan_idx] = intersect(params.elec_map(:,4),ts_cell_array(:,1));        
+        ts_cell_array(spike_chan_idx,1) = params.spike_chan_names(elec_map_idx)';
         
         if params.artifact_removal
             % Artifact removal
@@ -164,7 +164,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
             new_spikes = zeros(size(params.current_decoder.neuronIDs,1),1);
             for iNeuron = 1:size(params.current_decoder.neuronIDs,1)
                 ts_col_idx = params.current_decoder.neuronIDs(iNeuron,2)+2; 
-                new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),['chan' num2str(params.current_decoder.neuronIDs(iNeuron,1))])),...
+                new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),params.current_decoder.chanIDs(iNeuron))),...
                     ts_col_idx})/binsize;
                 if params.current_decoder.neuronIDs(iNeuron,2) == 255
                     new_spikes(iNeuron) = 0;
@@ -309,4 +309,13 @@ function new_xpc_data = get_new_xpc_data(xpc)
         new_xpc_data.theta = nan(1,2);
         disp('No udp data read')
     end
+end
+function data = get_binned_emg(data,analog_data)
+    emg_chans = find(~cellfun(@isempty,cellfun(@strfind,analog_data(:,1),repmat({'EMG'},size(analog_data,1),1),'UniformOutput',false)));
+    new_emg = cellfun(@mean,analog_data(emg_chans,3))';
+    if size(new_emg,2)~=size(data.emg_binned,2)
+        data.emg_binned = zeros(10,size(new_emg,2));
+    end
+    data.emg_binned = [new_emg ; data.emg_binned];
+    data.emg_binned = data.emg_binned(1:end-1,:);
 end

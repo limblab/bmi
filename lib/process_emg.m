@@ -3,7 +3,7 @@ function [EMG_data,EMG_raw,strings_to_match] = process_emg(params,data,predictio
 
 strings_to_match = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'}; 
 
-if strcmpi(params.mode,'emg')
+if strcmpi(params.mode,'emg') || strcmpi(params.mode,'iso')
     emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
     emg_labels = data.labels(emg_channels);
     for iString = 1:length(strings_to_match)
@@ -32,9 +32,60 @@ elseif strcmpi(params.mode,'n2e') || strcmpi(params.mode,'n2e_cartesian')
     end    
     EMG_raw = predictions(idx);
     EMG_data = predictions(idx);
-elseif strcmpi(params.mode,'test')
-    EMG_data = abs([min(data.handleforce(1),0) max(data.handleforce(1),0) min(data.handleforce(2),0) max(data.handleforce(2),0)]);
+elseif strcmpi(params.mode,'test force')
+    emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
+    emg_labels = data.labels(emg_channels);
+    decoder_idx = find(~cellfun(@isempty,cellfun(@strfind,{params.decoders.decoder_type}',repmat({'emg2muscle_force'},length(params.decoders),1),'UniformOutput',false)));
+    decoder = params.decoders(decoder_idx);
+    for iRow = 1:size(decoder.outnames,1)
+        new_str_to_match{iRow} = deblank(decoder.outnames(iRow,:));
+    end
+    for iString = 1:length(strings_to_match)
+        idx(iString) = find(strcmp(emg_labels,new_str_to_match(iString)));
+    end
+    if isempty(data.emg_binned)
+        data.emg_binned = zeros(10,length(idx));
+    end
+    emg_binned = data.emg_binned(:,idx);    
+    
+    emg_predictions = [1 rowvec(emg_binned)']*decoder.H;
+    emg_predictions(emg_predictions<0) = 0;
+    for iP = 1:length(emg_predictions)
+        emg_predictions(iP) = polyval(decoder.P(:,iP),emg_predictions(iP));
+    end
+    EMG_data = emg_predictions;
+    EMG_raw = emg_predictions;
+elseif strcmpi(params.mode,'test torque')
+    emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
+    emg_labels = data.labels(emg_channels);
+    decoder_idx = find(~cellfun(@isempty,cellfun(@strfind,{params.decoders.decoder_type}',repmat({'emg2muscle_torque'},length(params.decoders),1),'UniformOutput',false)));
+    decoder = params.decoders(decoder_idx);
+    for iRow = 1:size(decoder.outnames,1)
+        new_str_to_match{iRow} = deblank(decoder.outnames(iRow,:));
+    end
+    for iString = 1:length(strings_to_match)
+        idx(iString) = find(strcmp(emg_labels,new_str_to_match(iString)));
+    end
+    if isempty(data.emg_binned)
+        data.emg_binned = zeros(10,length(idx));
+    end
+    emg_binned = data.emg_binned(:,idx);    
+    
+    emg_predictions = [1 rowvec(emg_binned)']*decoder.H;
+    emg_predictions(emg_predictions<0) = 0;
+    for iP = 1:length(emg_predictions)
+        emg_predictions(iP) = polyval(decoder.P(:,iP),emg_predictions(iP));
+    end
+    EMG_data = emg_predictions;
+    EMG_raw = emg_predictions;
+else
+    EMG_data = zeros(1,4);
     EMG_raw = zeros(1,4);
+end
+% elseif strcmpi(params.mode,'test')
+%     EMG_data = abs([min(data.handleforce(1),0) max(data.handleforce(1),0) min(data.handleforce(2),0) max(data.handleforce(2),0)]);
+%     EMG_raw = zeros(1,4);
+
 
 %     emg_channels = find(~cellfun(@isempty,strfind(data.labels(:,1),'EMG')));
 %     emg_labels = data.labels(emg_channels);
@@ -67,10 +118,7 @@ elseif strcmpi(params.mode,'test')
 %                         0.0741  0.0009  0.0889  0.0127];
 %     
 %     EMG_data = EMG_data*mixing_matrix;
-else
-    EMG_raw = zeros(1,4);
-    EMG_data = zeros(1,4);
-end
+
     
 
 
