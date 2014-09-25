@@ -46,8 +46,9 @@ switch monkey
         %Data files
 %         params.offline_data   = 'F:\Data-lab1\12A1-Jango\BinnedData\20140714\Jango_WF_20140714_HC_001_bin.mat';
 %         params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/temp_data/TRAIN_2EMGs1F.mat';
-        params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/temp_data/Jango_20140711_37m_TRAIN.mat';
-        params.save_name      = 'testing_9EMGs';
+%         params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/temp_data/Jango_20140711_37m_TRAIN.mat';
+        params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/new_data/Jango_20140711_optimdata_20min.mat';
+        params.save_name      = 'param_optim';
 %         params.save_dir       = 'F:\Data-lab1\12A1-Jango\CerebusData\Adaptation';
         params.save_dir       = '/Users/christianethier/Dropbox/Adaptation/temp_data';
         
@@ -58,13 +59,16 @@ switch monkey
         
         %EMG Decoder
 %         params.emg_decoder    = 'F:\Data-lab1\12A1-Jango\SavedFilters\Jango_WF_20140714_HC_001_E2F_Decoder.mat';
-        params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/temp_data/Jango_20140711_E2F1bin.mat';
+        params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/new_data/Jango_20140707_E2F_Decoder1bin.mat';
 %         params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/temp_data/IRF_2E1F_Decoder.mat';
         params.n_emgs         = 9;
         params.n_lag_emg      = 1;
+        tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/new_data/Jango_20140707_EMGpatterns.mat');
+        params.emg_patterns   = tmp_pat.EMGpatterns; clear tmp_pat;
         
         %Adaptation Parameters
-%          params.lambda = 2;
+          %lambda: [L1 L2 L3]:= weights for L1reg, L2reg and EMG templates respectively
+%          params.lambda = [0 1 0];
 %         params.lambda = 10;
 %         params.LR = 5e-7;
 

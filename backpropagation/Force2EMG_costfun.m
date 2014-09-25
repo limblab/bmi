@@ -1,4 +1,4 @@
-function [cost_out, cost_grad] = Force2EMG_costfun(EMG, F, w, lambda)
+function [cost_out, cost_grad] = Force2EMG_costfun(EMG, F, w, lambda, expected_emg)
     % EMG is predicted EMG
     % F is expected force
     % w are the EMG-to-Force vectors (MxN), M = num_muscle, N = num_force
@@ -20,11 +20,16 @@ function [cost_out, cost_grad] = Force2EMG_costfun(EMG, F, w, lambda)
     dFpred(isnan(dFpred)) = 0;
     
     cost_out  =  sum( sum((F-Fpred).*(F-Fpred),2)  + ... %minimize Fpred error
-                       lambda*sum(EMG.^2,2) ); %minimize overal EMG preds)
+                        lambda(2)*sum(EMG.^2,2)    + ... %minimize EMG square(L2)
+                        lambda(1)*sum(EMG,2)       + ... %minimize EMG (L1)
+                        lambda(3)*sum((EMG-expected_emg).*(EMG-expected_emg),2) ); %minimize diff with emg_patterns
     
     cost_grad = zeros(size(EMG));             
     for o = 1:n_outs
-        cost_grad = cost_grad + (-2*dFpred(:,:,o)'*diag(F(:,o)-Fpred(:,o)))' + 2*lambda*EMG;
+        cost_grad = cost_grad + (-2*dFpred(:,:,o)'*diag(F(:,o)-Fpred(:,o)))' + ...
+                                2*lambda(2)*EMG + ...
+                                lambda(1) +...
+                                lambda(3)*2*(EMG-expected_emg);
     end
     cost_grad = cost_grad/n_outs;
     

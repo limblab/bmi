@@ -47,37 +47,31 @@ if data.adapt_flag
             emgs     = data_buffer.emg_pred{trial};
             tgt_pos  = data_buffer.tgt_pos{trial};
             n_bins   = size(emgs,1);
+            tgt_id   = data_buffer.tgt_id{trial};
             
-            %which EMGs would give me the expected force:
+            %Optimization Parameters:
             TolX     = 1e-4; %function search tolerance for EMG
             TypicalX = 0.1*ones(size(emgs));
             TolFun   = 1e-4; %tolerance on cost function? not exactly sure what this should be
-            
-%             fmin_options = optimoptions('fminunc','GradObj','on','Display','none',...
-%                 'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX);
             fmin_options = optimoptions('fmincon','GradObj','on','Display','notify-detailed',...
-                'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX);            
-
-%             %initial_emgs have to higher than 0 and lower than 1 cause
-%             %gradient of the piecewise sigmoidal function is 0 there
-%             tmp_emgs = emgs;
-%             tmp_emgs(tmp_emgs<=TolX)    = tmp_emgs(tmp_emgs<=TolX) +TolX;
-%             tmp_emgs(tmp_emgs>=1-TolX) = tmp_emgs(tmp_emgs>=1-TolX)-TolX;
-              
+                                        'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX);            
             % emg bound:
             emg_min = zeros(size(emgs));
             emg_max = ones( size(emgs));
+
+            %expected EMGs from template:
+            expected_emgs = zeros(size(emgs));
+            for bin = 1:length(tgt_id)
+                expected_emgs(bin,:) = params.emg_patterns(tgt_id(bin)+1,:);
+            end
             
-%             opt_emgs = fminunc(@(EMG) Force2EMG_costfun(EMG,tgt_pos(:,1),emg_decoder.H,params.lambda),tmp_emgs,fmin_options);
-%             [opt_emgs,fval,exitflag] = fminbnd(@(EMG) Force2EMG_costfun(EMG,tgt_pos(:,1),emg_decoder.H,params.lambda),0,1);
-            [opt_emgs,~,exitflag] = fmincon(@(EMG) Force2EMG_costfun(EMG,tgt_pos,emg_decoder.H,params.lambda),emgs,[],[],[],[],emg_min,emg_max,[],fmin_options);
+              % opt_emgs = fminunc(@(EMG) Force2EMG_costfun(EMG,tgt_pos(:,1),emg_decoder.H,params.lambda),tmp_emgs,fmin_options);
+              %[opt_emgs,fval,exitflag] = fminbnd(@(EMG) Force2EMG_costfun(EMG,tgt_pos(:,1),emg_decoder.H,params.lambda),0,1);
+            [opt_emgs,~,exitflag] = fmincon(@(EMG) Force2EMG_costfun(EMG,tgt_pos,emg_decoder.H,params.lambda,expected_emgs),emgs,[],[],[],[],emg_min,emg_max,[],fmin_options);
             if ~exitflag
                 warning('optimization failed');
                 continue;
             end
-            
-            % replace negative values by 0
-%             opt_emgs(opt_emgs<0) = zeros(size(opt_emgs(opt_emgs<0)));
             
 %             h = figure; hold on;
 %             plot(tgt_pos(:,1),'b');
