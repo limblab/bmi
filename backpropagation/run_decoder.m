@@ -60,6 +60,8 @@ data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
               'words'       , [],...
               'db_buf'      , [],...
               'emgs'        , zeros( params.n_lag_emg, params.n_emgs),...
+              'stimPW'      , zeros(1,params.n_emgs),...
+              'stimPA'      , zeros(1,params.n_emgs),...
               'adapt_trial' , false,...
               'adapt_bin'   , false,...
               'adapt_flag'  , false,...
@@ -145,6 +147,9 @@ if params.save_data
         if ~strcmp(params.mode,'direct')
             emg_file   = fullfile(save_dir, [filename 'emgpreds.txt']);
         end
+        if strcmp(params.output,'stimulator')
+            stim_out_file = fullfile(save_dir, [filename 'stim_out.txt']);
+        end
         curs_pred_file = fullfile(save_dir, [filename 'curspreds.txt']);
         curs_pos_file  = fullfile(save_dir, [filename 'cursorpos.txt']);     
 end
@@ -204,32 +209,38 @@ try
             data = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
             
             %% Predictions
-            predictions = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
+            cursor_pos_pred = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
 %             predictions = sigmoid([1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H,'direct',params.N2Esig);
             
             if ~strcmp(params.mode,'direct')
                 % emg cascade
-                data.emgs = [predictions; data.emgs(1:end-1,:)];
+                data.emgs = [cursor_pos_pred; data.emgs(1:end-1,:)];
 %                 predictions = [1 rowvec(data.emgs(:))']*emg_decoder.H;
-                predictions = rowvec(data.emgs(:))'*emg_decoder.H;
+                cursor_pos_pred = rowvec(data.emgs(:))'*emg_decoder.H;
             end
             
-            %% Cursor Output
+            %% Output
             if params.cursor_assist
                 [cursor_pos,data] = cursor_assist(data,cursor_pos,cursor_traj);
             else
                 %normal behavior, cursor mvt based on predictions
-                cursor_pos = predictions;
+                cursor_pos = cursor_pos_pred;
             end
-
+            
             if exist('xpc','var')
                 % send predictions to xpc
                 fwrite(xpc, [1 1 cursor_pos],'float32');
             end
             
+            if strcmp(params.output,'stimulator')
+                [data.stimPW,data.stimPA] = EMG_to_stim(data.emgs,params.stim_params);
+                stim_cmd = stim_elect_mapping(data.stimPW,data.stimPA,params.stim_params);
+                xippmex('stimseq',stim_cmd);
+            end
+            
             %% Neurons-to-EMG Adaptation
             if params.adapt
-                [data_buffer,data,neuron_decoder] = decoder_adaptation2(params,data,bin_count,data_buffer,neuron_decoder,emg_decoder,predictions);
+                [data_buffer,data,neuron_decoder] = decoder_adaptation2(params,data,bin_count,data_buffer,neuron_decoder,emg_decoder,cursor_pos_pred);
             end
                 
             %% Save and display progress
@@ -247,9 +258,7 @@ try
                     fprintf('Progress: %.0f %%\n',100*prog);
                 end
             end
-            
-                
-            
+                  
             % save raw data
             if params.save_data
                 % spikes are timed from beginning of this bin
@@ -263,9 +272,13 @@ try
                     tmp_data   = [bin_start_t double(data.emgs(1,:))];
                     save(emg_file,'tmp_data','-append','-ascii');
                 end
+                if strcmp(params.output,'stimulator')
+                    tmp_data   = [bin_start_t double(data.stimPW) double(data.stimPA)];
+                    save(stim_out_file,'tmp_data','-append','-ascii');
+                end
                 tmp_data = [bin_start_t double(cursor_pos)];
                 save(curs_pos_file,'tmp_data','-append','-ascii');
-                tmp_data = [bin_start_t double(predictions)];
+                tmp_data = [bin_start_t double(cursor_pos_pred)];
                 save(curs_pred_file,'tmp_data','-append','-ascii');
             end
             
@@ -281,7 +294,7 @@ try
             if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(curs_handle)
                 
 %                 set(curs_handle,'XData',cursor_pos(1),'YData',cursor_pos(2));
-                set(curs_handle,'XData',predictions(1),'YData',predictions(2));
+                set(curs_handle,'XData',cursor_pos_pred(1),'YData',cursor_pos_pred(2));
 %                 
 %                 set(xpred_disp,'String',sprintf('xpred: %.2f',predictions(1)))
 %                 set(ypred_disp,'String',sprintf('ypred: %.2f',predictions(2)))
