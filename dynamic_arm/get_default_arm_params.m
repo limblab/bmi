@@ -58,12 +58,12 @@ arm_params_default.endpoint_damping_max = 5;
 % Point mass
 arm_params_default.POINT_MASS_PARAMETERS = 0;
 arm_params_default.m_pm = 1;
-arm_params_default.c_pm = 50;
-arm_params_default.emg_to_force_gain_pm = [30 30];
-arm_params_default.endpoint_stiffness_min_pm = 3;
-arm_params_default.endpoint_stiffness_max_pm = 10;
-arm_params_default.endpoint_damping_min_pm = 2;
-arm_params_default.endpoint_damping_max_pm = 5;
+arm_params_default.c_pm = 100;
+arm_params_default.emg_to_force_gain_pm = [10 10];
+arm_params_default.endpoint_stiffness_min_pm = 0;
+arm_params_default.endpoint_stiffness_max_pm = 0;
+arm_params_default.endpoint_damping_min_pm = 0;
+arm_params_default.endpoint_damping_max_pm = 0;
 
 arm_param_fields = fields(arm_params_default);
 for iField = 1:numel(arm_param_fields)

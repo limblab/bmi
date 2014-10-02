@@ -3,7 +3,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
         % read and flush data buffer
         [ts_cell_array, ~, continuous_cell_array] = cbmex('trialdata', 1);
         data.sys_time = cbmex('time');
-        new_spikes = get_new_spikes(ts_cell_array,params,bin_dur);
+        [new_spikes,data.artifact_found] = get_new_spikes(ts_cell_array,params,bin_dur);
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);       
         new_analog = get_new_analog(continuous_cell_array);       
         data.analog_channels = [continuous_cell_array{:,1}]';
@@ -108,7 +108,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_
         end
     end
 end                
-function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
+function [new_spikes,artifact_found] = get_new_spikes(ts_cell_array,params,binsize)
 
     if ~isempty(strfind(ts_cell_array(:,1),'elec'))
         % Assign channel numbers from map file to acquired data
@@ -158,7 +158,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
 %         disp(['Removed: ' num2str(sum(spike_removal_idx>0)) '. Did not remove: ' num2str(length(spike_time)) ' in ' num2str(toc) ' s.'])
         
     end
-    
+    artifact_found = 0;
     if isfield(params,'current_decoder')
         if ~isempty(params.current_decoder.H)
             new_spikes = zeros(size(params.current_decoder.neuronIDs,1),1);
@@ -170,7 +170,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
                     new_spikes(iNeuron) = 0;
                 end
             end
-            % remove artifact (80% of neurons have spikes for this bin)            
+            % remove artifact (80% of neurons have spikes for this bin)   
             if (length(nonzeros(new_spikes))>.8*length(unique(params.current_decoder.neuronIDs(:,1))))  
                 iArt = 0;
                 while (length(nonzeros(new_spikes))>.8*length(unique(params.current_decoder.neuronIDs(:,1))) && iArt<5) 
@@ -181,6 +181,7 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
                     new_spikes(:) = 0;
                 end
                 warning([num2str(iArt) ' artifacts detected, spikes removed']);
+                artifact_found = 1;
             end
 
             % remove artifacts (high freq thresh x-ing)
