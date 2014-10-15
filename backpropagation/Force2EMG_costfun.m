@@ -3,7 +3,19 @@ function [cost_out, cost_grad] = Force2EMG_costfun(EMG, F, w, lambda, expected_e
     % F is expected force
     % w are the EMG-to-Force vectors (MxN), M = num_muscle, N = num_force
     % lambda is the regularization factor to minimize predicted EMG.
+    % expected_emg correspond to the expected EMG pattern
 
+    
+    % sometimes, fmincon call the function with with NaNs in EMGs.
+    % this is a lousy attempt at solving that:
+    if any(any(isnan(EMG)))
+        cost_out = 99999;
+        cost_grad= 0.0001*ones(size(EMG));
+        return;
+    end
+    
+    % end of temp cludgy NaN solving solution--
+    
     n_EMGs = size(EMG,2);
     n_outs = size(w,2);
     n_bins = size(EMG,1);
@@ -14,8 +26,6 @@ function [cost_out, cost_grad] = Force2EMG_costfun(EMG, F, w, lambda, expected_e
     for o = 1:n_outs
         dFpred(:,:,o) = sigmoid(EMG,'derivative')*diag(w(:,o));
     end
-    
-%     dFpred = sigmoid(EMG,'derivative')*diag(w);
     
     dFpred(isnan(dFpred)) = 0;
     
