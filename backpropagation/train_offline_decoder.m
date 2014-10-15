@@ -67,10 +67,10 @@ switch monkey
         params.emg_patterns   = tmp_pat.EMGpatterns; clear tmp_pat;
         
         %Adaptation Parameters
-          %lambda: [L1 L2 L3]:= weights for L1reg, L2reg and EMG templates respectively
-%          params.lambda = [0 1 0];
+          %lambda: [L0 L1 L2 L3]:= weights for Force error, L1reg, L2reg and EMG templates respectively
+         params.lambda = [1 0 0 100];
 %         params.lambda = 10;
-%         params.LR = 5e-7;
+         params.LR = 1e-6;
 
 end
 %-------------------
