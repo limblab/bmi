@@ -32,8 +32,7 @@ params.arm_params_file = [];
 params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Chewie 8I2\Blackrock implant surgery 6-14-10\1025-0394.cmp';
 params.output = 'xpc';
 params.force_to_cursor_gain = .3;
-params.stop_trial_with_artifact = 0;
-params.stop_trial = 0;
+params.stop_task_if_x_artifacts = 1;
 params.save_firing_rates = 1;
 params.display_plots = 0;
 params.left_handed = 1;
@@ -207,6 +206,8 @@ iCycle = 0;
                 save(handles.data_file,'tmp_data','-append','-ascii');
             end
             
+            send_stop_trial = data.artifact_found || params.stop_trial;
+            
             if exist('xpc','var')
                 % send predictions to xpc
                 if ~strncmpi(params.mode,'iso',3)
@@ -216,9 +217,10 @@ iCycle = 0;
                     shoulder_pos = cursor_pos;
                     elbow_pos = cursor_pos;
                 end
-                fwrite(xpc.xpc_write, [1 1 cursor_pos shoulder_pos elbow_pos data.artifact_found 0 0 0],'float32');
+                fwrite(xpc.xpc_write, [1 1 cursor_pos shoulder_pos elbow_pos send_stop_trial 0 0 0],'float32');
                 %                     fprintf('%.2f\t%.2f\t%.2f\t%.2f\n',[cursor_pos predictions]);
             end
+            params.stop_trial = 0;
             
             %display targets and cursor plots
             if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(handles.curs_handle)
