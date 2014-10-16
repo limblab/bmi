@@ -21,7 +21,18 @@ function handles = setup_display_plots(params,handles)
     axis off
     handles.control_panel = uipanel('Units','normalized','Position',[.5 0 .5 1]);
     handles.stop_bmi = uicontrol('Style','toggle','String','Stop BMI',...
-        'Parent',handles.control_panel,'Units','normalized','Position',[.1 .85 .3 .1]);    
+        'Parent',handles.control_panel,'Units','normalized','Position',[.1 .85 .3 .1]);  
+
+    handles.label_stop_if_x_artifacts = uicontrol('Units','normalized','Style','text',...
+        'Parent',handles.control_panel,...
+        'String','Stop trial if X artifacts','Position',[.5 .85 .3 .1]);
+    handles.textbox_stop_if_x_artifacts = uicontrol('Units','normalized','Style','edit',...
+        'Parent',handles.control_panel,...
+        'String',num2str(params.stop_task_if_x_artifacts),'Position',[.5 .8 .3 .05],'Callback',@artifactchange_Callback);
+    handles.button_stop_task = uicontrol('Units','normalized','Style','pushbutton',...
+        'Parent',handles.control_panel,...
+        'String','Stop trial','Position',[.5 .7 .3 .05],'Callback',@stoptask_Callback);
+    
     handles.record = uicontrol('Style','toggle','String','Start recording',...
         'Parent',handles.control_panel,'Units','normalized','Position',[.1 .7 .3 .1],'Value',0,...
         'Callback',@togglebutton_Callback);   
@@ -135,5 +146,18 @@ function force_y_offsetchange_Callback(hObject,eventdata)
     new_y_offset = str2double(get(hObject,'String'));
     params = evalin('base','params');
     params.force_offset(2) = new_y_offset;    
+    assignin('base','params',params);
+end
+
+function artifactchange_Callback(hObject,eventdata)
+    new_X_artifact = str2double(get(hObject,'String'));
+    params = evalin('base','params');
+    params.stop_task_if_x_artifacts = new_X_artifact;    
+    assignin('base','params',params);
+end
+
+function stoptask_Callback(hObject,eventdata)    
+    params = evalin('base','params');
+    params.stop_trial = 1;
     assignin('base','params',params);
 end

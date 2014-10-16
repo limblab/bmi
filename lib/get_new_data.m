@@ -181,7 +181,9 @@ function [new_spikes,artifact_found] = get_new_spikes(ts_cell_array,params,binsi
                     new_spikes(:) = 0;
                 end
                 warning([num2str(iArt) ' artifacts detected, spikes removed']);
-                artifact_found = 1;
+                if iArt >= params.stop_task_if_x_artifacts
+                    artifact_found = 1;
+                end
             end
 
             % remove artifacts (high freq thresh x-ing)
