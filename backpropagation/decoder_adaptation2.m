@@ -48,13 +48,15 @@ if data.adapt_flag
             tgt_pos  = data_buffer.tgt_pos{trial};
             n_bins   = size(emgs,1);
             tgt_id   = data_buffer.tgt_id{trial};
+            accum_n  = accum_n + 1;
             
             %Optimization Parameters:
             TolX     = 1e-4; %function search tolerance for EMG
             TypicalX = 0.1*ones(size(emgs));
             TolFun   = 1e-4; %tolerance on cost function? not exactly sure what this should be
-            fmin_options = optimoptions('fmincon','GradObj','on','Display','notify-detailed',...
-                                        'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX);            
+            fmin_options = optimset('fmincon');
+            fmin_options = optimset(fmin_options,'Algorithm','interior-point','GradObj','on','Display','notify-detailed',...
+                                        'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX,'FunValCheck','on');
             % emg bound:
             emg_min = zeros(size(emgs));
             emg_max = ones( size(emgs));
@@ -68,7 +70,7 @@ if data.adapt_flag
               % opt_emgs = fminunc(@(EMG) Force2EMG_costfun(EMG,tgt_pos(:,1),emg_decoder.H,params.lambda),tmp_emgs,fmin_options);
               %[opt_emgs,fval,exitflag] = fminbnd(@(EMG) Force2EMG_costfun(EMG,tgt_pos(:,1),emg_decoder.H,params.lambda),0,1);
             [opt_emgs,~,exitflag] = fmincon(@(EMG) Force2EMG_costfun(EMG,tgt_pos,emg_decoder.H,params.lambda,expected_emgs),emgs,[],[],[],[],emg_min,emg_max,[],fmin_options);
-            if ~exitflag
+            if ~exitflag || any(any(isnan(opt_emgs)))
                 warning('optimization failed');
                 continue;
             end
@@ -94,7 +96,7 @@ if data.adapt_flag
              %g(2:end, :) = g(2:end, :) - lambda*S2EMG_w(2:end, :);
             % accumulate gradient
             accum_g = accum_g + g;
-            accum_n = accum_n + 1;
+            
         end
         % update neuron_decoder
         accum_g = accum_g/accum_n;
