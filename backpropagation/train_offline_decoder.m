@@ -63,12 +63,13 @@ switch monkey
 %         params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/temp_data/IRF_2E1F_Decoder.mat';
         params.n_emgs         = 9;
         params.n_lag_emg      = 1;
-        tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/new_data/Jango_20140707_EMGpatterns.mat');
-        params.emg_patterns   = tmp_pat.EMGpatterns; clear tmp_pat;
+        
+%         tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/new_data/Jango_20140707_EMGpatterns.mat');
+%         params.emg_patterns   = tmp_pat.EMGpatterns; clear tmp_pat;
         
         %Adaptation Parameters
           %lambda: [L0 L1 L2 L3]:= weights for Force error, L1reg, L2reg and EMG templates respectively
-         params.lambda = [1 0 0 100];
+         params.lambda = [1 0 4 0];
 %         params.lambda = 10;
          params.LR = 1e-6;
 

@@ -240,7 +240,7 @@ try
             
             %% Neurons-to-EMG Adaptation
             if params.adapt
-                [data_buffer,data,neuron_decoder] = decoder_adaptation2(params,data,bin_count,data_buffer,neuron_decoder,emg_decoder,cursor_pos_pred);
+                [data_buffer,data,neuron_decoder] = decoder_adaptation4(params,data,bin_count,data_buffer,neuron_decoder,emg_decoder,cursor_pos_pred);
             end
                 
             %% Save and display progress
