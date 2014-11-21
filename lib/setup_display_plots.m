@@ -102,7 +102,7 @@ end
 function mode_selection(source,eventdata)
     params = evalin('base','params');
     params.mode = get(eventdata.NewValue,'String');
-    params.task_name = ['DCO_' params.mode];
+    params.task_name = [params.task_name(1:strfind(params.task_name,'_')) params.mode];
     params = load_decoders(params);
     assignin('base','params',params);
 end

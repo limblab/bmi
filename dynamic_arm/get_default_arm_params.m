@@ -2,21 +2,21 @@ function arm_params = get_default_arm_params(arm_params_in)
 
 % Monkey
 arm_params_default.GENERAL_PARAMETERS = 0;
-arm_params_default.control_mode = 'ruiz';
+arm_params_default.control_mode = 'hu';
 arm_params_default.left_handed = 1;
-arm_params_default.m = [1, 1];
-arm_params_default.m_end = 1;
-arm_params_default.l = [.22, .22]; %segment lengths l1, l2
+arm_params_default.m = [.5, .5];
+arm_params_default.m_end = 0;
+arm_params_default.l = [.22, .25]; %segment lengths l1, l2
 arm_params_default.null_angles = [pi/4 3*pi/4];
 arm_params_default.X_sh = [.05 -.3];
-arm_params_default.c = [5, 5];
+arm_params_default.c = [0, 0];
 arm_params_default.emg_min = zeros(1,4);
 arm_params_default.emg_max = 1*ones(1,4);
 arm_params_default.emg_adaptation_rate = -1;
 arm_params_default.walls = 1;
 arm_params_default.EMG_filter = 0;
 arm_params_default.T = 0*[2;-.2];
-arm_params_default.max_torque = 10;
+arm_params_default.max_torque = 1000;
 arm_params_default.online = 1;
 
 % Hill arm
@@ -40,12 +40,12 @@ arm_params_default.emg_thres = .1;
 
 % Hu/Perreault arm
 arm_params_default.HU_MODEL_PARAMETERS = 0;
-arm_params_default.emg_to_torque_gain = [5 5];
+arm_params_default.emg_to_torque_gain = [1 1];
 arm_params_default.joint_stiffness_min = [1 1];
-arm_params_default.joint_stiffness_max = [5 5];
-arm_params_default.joint_damping_min = [.2 .2];
-arm_params_default.joint_damping_max = [.5 .5];
-arm_params_default.block_shoulder = 0;
+arm_params_default.joint_stiffness_max = [30 30];
+arm_params_default.joint_damping_min = [.4 .4];
+arm_params_default.joint_damping_max = [.4 .4];
+arm_params_default.block_shoulder = 1;
 
 % Ruiz arm
 arm_params_default.RUIZ_MODEL_PARAMETERS = 0;

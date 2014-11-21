@@ -32,6 +32,9 @@ if params.save_data
     save(fullfile(handles.save_dir, [handles.filename '_params.mat']),'headers','-append');
     
     handles.cerebus_file = fullfile(handles.save_dir, handles.filename);
+    if strfind(handles.cerebus_file,'DCO')
+        pause
+    end
     cbmex('fileconfig', handles.cerebus_file, '', 0)
     drawnow
 end

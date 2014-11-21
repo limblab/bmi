@@ -1,8 +1,8 @@
 function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w,xpc,m_data_2)
     if params.online
         % read and flush data buffer
-        [ts_cell_array, ~, continuous_cell_array] = cbmex('trialdata', 1);
-        data.sys_time = cbmex('time');
+        [ts_cell_array, data.sys_time, continuous_cell_array] = cbmex('trialdata', 1);
+%         data.sys_time = cbmex('time');
         [new_spikes,data.artifact_found] = get_new_spikes(ts_cell_array,params,bin_dur);
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);       
         new_analog = get_new_analog(continuous_cell_array);       

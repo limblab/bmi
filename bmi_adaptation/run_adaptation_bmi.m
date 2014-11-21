@@ -1,11 +1,20 @@
+clear;
+clc;
+close all;
+
 % run_adaptation_bmi
 
+%%%%%%%%%%%%
+% Must specify this stuff each day
+date = '2014-10-22';
 monkey = 'Mihili';
-use_array = 'M1';
+use_array = 'PMd'; %which array is controlling
+dec_date = '2014-10-22';
 
-data_root = fullfile('E:\', params.monkey_name,'Matt','BMIAdaptation',use_array);
-
-use_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-05_RW\Chewie_2014-09-05_RW_001'
+task = 'CO';
+data_root = fullfile('E:\', monkey,'Matt','BMIAdaptation',use_array);
+use_file = [data_root filesep dec_date filesep 'Mihili_' use_array '_' task '_BC_BL_' dec_date(6:7) dec_date(9:10) dec_date(1:4) '_001'];
+%%%%%%%%%%%%%
 
 cd('C:\Users\system administrator\Desktop\S1_analysis')
 load_paths
@@ -23,17 +32,15 @@ clearxpc
 % pre-define the parameters
 clear params
 params.monkey_name = monkey;
-params.save_dir = data_root;
+params.save_dir = fullfile(data_root,date);
 params.mode = 'vel'; 
 params.task_name = ['CO_' params.mode];
-params.decoders(1).decoder_file = [use_file '_vel_Decoder.mat'];
+params.decoders(1).decoder_file = [use_file '_Decoder_vel.mat'];
 params.decoders(1).decoder_type = 'vel';
-switch lower(use_array)
-    case 'm1'
-        params.map_file = '\\citadel\limblab\lab_folder\Animal-Miscellany\Mihili 12A3\M1 SN 6250-000989.cmp';
-    case 'pmd'
-        params.map_file = '\\citadel\limblab\lab_folder\Animal-Miscellany\Mihili 12A3\PMd SN 6251-000987.cmp';
-end
+
+%params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Mihili 12A3\M1 SN 6250-000989.cmp';
+params.map_file = [data_root filesep monkey '_' use_array '_map.cmp'];
+
 params.arm_model = '';
 params.output = 'xpc';
 params.save_firing_rates = 1;
@@ -44,10 +51,14 @@ params.artifact_removal = 0;
 params.artifact_removal_window = 0.001;
 params.artifact_removal_num_channels = 10;
 
+% some stuff Ricardo added
+params.stop_task_if_x_artifacts = 1;
+
+
 if exist('params','var')
-    params = bmi_params_defaults(params);
+    params = bmi_adaptation_params(params);
 else
-    params = bmi_params_defaults;
+    params = bmi_adprimaaptation_params;
 end
 params.elec_map = read_cmp(params.map_file);
 

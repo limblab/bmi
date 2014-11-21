@@ -46,9 +46,9 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance(params)
 
     m_data_1.Data.bmi_running = 1;
     if params.debug
-        dos('start matlab -sd "C:\Users\system administrator\Desktop\bmi\ricardo" -nosplash -minimize -r arm_model_container');
+        dos('start matlab -sd "C:\Users\system administrator\Desktop\bmi\dynamic_arm" -nosplash -minimize -r arm_model_container');
     else
-        dos('start matlab -sd "C:\Users\system administrator\Desktop\bmi\ricardo" -nosplash -nodesktop -minimize -r arm_model_container');
+        dos('start matlab -sd "C:\Users\system administrator\Desktop\bmi\dynamic_arm" -nosplash -nodesktop -minimize -r arm_model_container');
     end
 
     disp('Opening dynamic arm Matlab instance, please wait')

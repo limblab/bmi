@@ -1,4 +1,4 @@
-function bmi_params = bmi_params_defaults(varargin)
+function bmi_params = bmi_adaptation_params(varargin)
 %   'mode'          : either 'direct' or 'emg_cascade'
 %   'output'        : either 'stimulator' or 'xpc' or 'none'
 %   'adapt'         : enable adaptation (emg_cascade mode only for now)

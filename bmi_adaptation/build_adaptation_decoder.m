@@ -1,14 +1,21 @@
+
+%%%%%%%%%%%%%
+% Must specify these things about the data
 monkey = 'Mihili';
-
-root_dir = '';
-datafile = 'Mihili_M1_CO_BL_09242014_001';
+array = 'PMd';
 task = 'CO';
+root_dir = ['E:\Mihili\Matt\BMIAdaptation\' array];
+date = '2014-10-22';
+datafile = [monkey '_' array '_' task '_BC_BL_'  date(6:7) date(9:10) date(1:4) '_001'];
+%%%%%%%%%%%%%
 
+
+%%%%%%%%%%%
+% Must set these parameters about the decoding
 useTunedSubset = false; % not fully implemented yet
-
 latency = 0.1;
 doUnsorted = 1;
-
+numlags = 10;
 BDF2BinArgs = struct('binsize',0.05,...
     'starttime',0,...
     'stoptime',0,...
@@ -23,17 +30,19 @@ BDF2BinArgs = struct('binsize',0.05,...
     'ArtRemEnable',0,...
     'NumChan',10,...
     'TimeWind',5e-04);
+%%%%%%%%%%%%%
+
 
 % convert the file to BDF
 disp('Converting data file to BDF...');
-convertDataToBDF(root_dir,'');
+convertDataToBDF(root_dir,date,'M1','datafolder','','bdffolder','');
 
 % load BDF
-load(fullfile(root_dir,[datafile '.mat']));
+load(fullfile(root_dir,date,[datafile '.mat']));
 
 % bin data file
 disp('Done. Binning data file...');
-out_file = fullfile(root_dir,[datafile '_binned.mat']);
+out_file = fullfile(root_dir,date,[datafile '_binned.mat']);
 
 if BDF2BinArgs.ArtRemEnable
     disp('Looking for Artifacts...');
@@ -46,23 +55,23 @@ save(out_file,'binnedData');
 
 if ~useTunedSubset % just build a normal decoder with the whole file
     
-    DecoderOptions = struct('foldlength',foldLength, ...
-        'PredEMGs',0, ...
+    neuronIDs = [(1:95)' zeros(95,1)];
+    DecoderOptions = struct('PredEMGs',0, ...
         'PredCursPos',0, ...
         'PredVeloc',1, ...
         'PredForce',0, ...
-        'fillen',numlags*binsize, ...
-        'UseAllInputs',1, ...
-        'PolynomialOrder',3, ...
+        'fillen',numlags*BDF2BinArgs.binsize, ...
+        'UseAllInputs',neuronIDs, ...
+        'PolynomialOrder',0, ...
         'numPCs',0, ...
         'Use_Thresh',0, ...
         'Use_EMGs',0, ...
         'Use_Ridge',0, ...
         'Use_SD',0);
     
-    [filt_struct, ~] = BuildModel(binnedData, DecoderOptions);
+    [filt_struct, predData] = BuildModel(binnedData, DecoderOptions);
     
-    filt_file = fullfile(root_dir,[datafile '_Decoder_vel.mat']);
+    filt_file = fullfile(root_dir,date,[datafile '_Decoder_vel.mat']);
     disp('Saving prediction model...');
     save(filt_file,'filt_struct');
     

@@ -1,5 +1,4 @@
 % run_dynamic_arm_bmi
-
 cd('C:\Users\system administrator\Desktop\S1_analysis')
 load_paths
 current_location = mfilename('fullpath');
@@ -13,21 +12,24 @@ addpath(genpath([add_these filesep 'SDK for Windows']))
 
 clear params
 params.monkey_name = 'Chewie';
+params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
-params.mode = 'n2e_cartesian'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
-params.arm_model = 'point_mass'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
-params.task_name = ['UR_' params.mode];
-params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-musc_Binned_Decoder.mat';
+params.mode = 'n2e'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
+params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
+params.task_name = ['RP_' params.mode];
+% params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-musc_Binned_Decoder.mat';
+params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-11-18_DCO_iso_ruiz\Output_Data\Chewie_2014-11-18_DCO_iso_ruiz_EMG_decoder.mat';
 params.decoders(1).decoder_type = 'n2e';
 params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-cartesian_Binned_Decoder.mat';
 params.decoders(2).decoder_type = 'n2e_cartesian';
 params.decoders(3).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-05_RW\Chewie_2014-09-05_RW_001_Binned_Decoder.mat';
 params.decoders(3).decoder_type = 'vel';
-params.decoders(4).decoder_file = '\\citadel\data\TestData\Ricardo_2014-09-11_DCO_iso_ruiz\Output_Data\muscle_force_filter.mat';
-params.decoders(4).decoder_type = 'emg2muscle_force';
-params.decoders(5).decoder_file = '\\citadel\data\TestData\Ricardo_2014-09-11_DCO_iso_ruiz\Output_Data\muscle_torque_filter.mat';
-params.decoders(5).decoder_type = 'emg2muscle_torque';
-params.arm_params_file = 'E:\Chewie\Chewie_2014-08-19_DCO_iso_ruiz\Chewie_2014-08-19_DCO_iso_ruiz_001_params.mat';
+% params.decoders(4).decoder_file = '\\citadel\data\TestData\Ricardo_2014-09-11_DCO_iso_ruiz\Output_Data\muscle_force_filter.mat';
+% params.decoders(4).decoder_type = 'emg2muscle_force';
+% params.decoders(5).decoder_file = '\\citadel\data\TestData\Ricardo_2014-09-11_DCO_iso_ruiz\Output_Data\muscle_torque_filter.mat';
+% params.decoders(5).decoder_type = 'emg2muscle_torque';
+% params.arm_params_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-11-19_RP_n2e_ruiz\Chewie_2014-11-19_RP_n2e_ruiz_001_params.mat';
+% params.arm_params_file = 'E:\Chewie\Chewie_2014-11-20_RP_n2e_hu\Chewie_2014-11-20_RP_n2e_hu_001_params.mat';
 params.arm_params_file = [];
 params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Chewie 8I2\Blackrock implant surgery 6-14-10\1025-0394.cmp';
 params.output = 'xpc';
@@ -120,10 +122,22 @@ iCycle = 0;
         params = evalin('base','params');
         if (reached_cycle_t)
             if get(handles.record,'Value') && ~recording
-                recording = 1;
+                recording = 1;            
                 [params,handles] = setup_datafiles(params,handles,data,offline_data,w,xpc,m_data_2);
                 cbmex('fileconfig', handles.cerebus_file, '', 1);
-                data.sys_time = cbmex('time');
+%                 i = 0;  
+%                 old_time = -inf;
+%                 while (true)
+%                     i = i+1;                    
+%                     [ts_cell_array, data.sys_time, continuous_cell_array] = cbmex('trialdata', 1);
+% %                     [i old_time data.sys_time]
+%                     if (data.sys_time<old_time)
+%                         break;
+%                     end
+%                     old_time = data.sys_time;
+%                     pause(0.001)
+%                 end
+%                 data.sys_time = cbmex('time');
             end
             if ~get(handles.record,'Value') && recording
                 recording = 0;

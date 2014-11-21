@@ -25,10 +25,13 @@ elseif strcmpi(params.mode,'n2e') || strcmpi(params.mode,'n2e_cartesian')
         emg_labels{iLabel} = ['EMG_' deblank(temp(iLabel,:))];        
     end
     for iString = 1:length(strings_to_match)
-        idx(iString) = find(strcmp(emg_labels,strings_to_match(iString)));
+        temp = find(strcmp(emg_labels,strings_to_match(iString)));
+        if ~isempty(temp)
+            EMG_raw(iString) = predictions(temp);
+            EMG_data(iString) = predictions(temp);
+        end
     end
-    EMG_raw = predictions(idx);
-    EMG_data = predictions(idx);
+
 elseif strcmpi(params.mode,'test force') || strcmpi(params.mode,'test torque')
     EMG_data = abs([min(data.handleforce(1),0) max(data.handleforce(1),0) min(data.handleforce(2),0) max(data.handleforce(2),0)]);
     EMG_raw = zeros(1,4);
