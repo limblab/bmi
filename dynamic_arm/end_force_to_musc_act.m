@@ -1,5 +1,5 @@
 % Endpoint forces to muscle activations
-function estimated_emg = end_force_to_musc_act(arm_params,F)
+function [estimated_emg,normalization_torque] = end_force_to_musc_act(arm_params,F)
 
 l = arm_params.l;
 
@@ -21,8 +21,11 @@ theta(1) = phi - psi;
 J = [-l(1)*sin(theta(1))-l(2)*sin(theta(2)) -l(2)*sin(theta(2));...
     l(1)*cos(theta(1))+l(2)*cos(theta(2)) l(2)*cos(theta(2))];
 
-T = (-pinv(J)*F')';
-min_99_prctile = min([prctile(T,90) prctile(-T,90)]);
+% T = (-pinv(J)*F')';
+
+T = (J'*F')';
+
+min_99_prctile = min([prctile(T,99) prctile(-T,99)]);
 mag_T = sqrt(T(:,1).^2+T(:,2).^2);
 angle_T = atan2(T(:,2),T(:,1));
 T(mag_T>min_99_prctile,:) = [min_99_prctile*cos(angle_T(mag_T>min_99_prctile))...
@@ -38,7 +41,11 @@ else
     T_flexors(T>0) = abs(T(T>0));
     T_extensors(T<0) = abs(T(T<0));
 end
-    
+
+max_flexors = max(T_flexors);
+max_extensors = max(T_extensors);
+normalization_torque = [max_flexors(1) max_extensors(1) max_flexors(2) max_extensors(2)];
+
 T_flexors = T_flexors./repmat(max(T_flexors),size(T_flexors,1),1);
 T_flexors(isnan(T_flexors)) = 0;
 T_extensors = T_extensors./repmat(max(T_extensors),size(T_extensors,1),1);
