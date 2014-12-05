@@ -1,5 +1,5 @@
 % run_dynamic_arm_bmi
-cd('C:\Users\system administrator\Desktop\S1_analysis')
+cd('C:\Users\system administrator\Desktop\s1_analysis')
 load_paths
 current_location = mfilename('fullpath');
 [current_folder,~,~] = fileparts(current_location);

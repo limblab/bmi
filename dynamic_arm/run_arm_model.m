@@ -144,6 +144,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                     arm_params.musc_act(1:2) = 0;
                     temp = min((.00001+arm_params.musc_act(3))/(.00001+arm_params.musc_act(4)),...
                         (.00001+arm_params.musc_act(4))/(.00001+arm_params.musc_act(3)));
+%                     temp = 1;
                     cocontraction_new = temp * (arm_params.musc_act(3) + arm_params.musc_act(4));
                     arm_params.cocontraction = (1-arm_params.cocontraction_filter)*cocontraction_new +...
                         arm_params.cocontraction_filter*arm_params.cocontraction;

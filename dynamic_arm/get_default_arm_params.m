@@ -18,7 +18,7 @@ arm_params_default.EMG_filter = 0;
 arm_params_default.T = 0*[2;-.2];
 arm_params_default.max_torque = 1000;
 arm_params_default.online = 1;
-arm_params_default.cocontraction_filter = 0.1;
+arm_params_default.cocontraction_filter = 0.9;
 
 % Hill arm
 arm_params_default.HILL_MODEL_PARAMETERS = 0;
