@@ -14,11 +14,11 @@ clear params
 params.monkey_name = 'Chewie';
 % params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
-params.mode = 'n2e'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
+params.mode = 'iso'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
 params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
 params.task_name = ['RP_' params.mode];
 % params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-musc_Binned_Decoder.mat';
-params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-11-24_DCO_iso_hu\Output_Data\bdf-musc_Binned_Decoder.mat';
+params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-11-26_DCO_iso_hu\Output_Data\bdf_Binned_Decoder.mat';
 params.decoders(1).decoder_type = 'n2e';
 params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-cartesian_Binned_Decoder.mat';
 params.decoders(2).decoder_type = 'n2e_cartesian';
@@ -201,7 +201,7 @@ iCycle = 0;
             m_data_1.Data.EMG_data = EMG_data;
             
             if strncmpi(params.mode,'iso',3) % ...if task was isometric
-                cursor_pos = -params.force_to_cursor_gain*data.handleforce + params.force_offset;
+                cursor_pos = -params.force_to_cursor_gain*data.handleforce + params.force_offset;                
             else % ...if task was a movement task
                 cursor_pos = m_data_2.Data.x_hand;
             end
@@ -216,7 +216,7 @@ iCycle = 0;
                 end
                 tmp_data = [bin_start_t spikes predictions cursor_pos ...
                     m_data_2.Data.shoulder_pos m_data_2.Data.elbow_pos ...
-                    EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force];
+                    EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force m_data_2.Data.cocontraction];
                 save(handles.data_file,'tmp_data','-append','-ascii');
             end
             
@@ -231,7 +231,7 @@ iCycle = 0;
                     shoulder_pos = cursor_pos;
                     elbow_pos = cursor_pos;
                 end
-                fwrite(xpc.xpc_write, [1 1 cursor_pos shoulder_pos elbow_pos send_stop_trial 0 0 0],'float32');
+                fwrite(xpc.xpc_write, [1 1 cursor_pos shoulder_pos elbow_pos send_stop_trial m_data_2.Data.cocontraction 0 0],'float32');
                 %                     fprintf('%.2f\t%.2f\t%.2f\t%.2f\n',[cursor_pos predictions]);
             end
             params.stop_trial = 0;

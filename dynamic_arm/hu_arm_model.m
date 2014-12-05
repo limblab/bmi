@@ -46,8 +46,12 @@ emg_diff = [arm_params.musc_act(1)-arm_params.musc_act(2)...
 
 muscle_torque = (arm_params.emg_to_torque_gain.*emg_diff)';
 
+% emg_coactivation = [arm_params.musc_act(1)+arm_params.musc_act(2);...
+%     arm_params.musc_act(3)+arm_params.musc_act(4)];
+
 emg_coactivation = [arm_params.musc_act(1)+arm_params.musc_act(2);...
-    arm_params.musc_act(3)+arm_params.musc_act(4)];
+    arm_params.cocontraction];
+
 joint_error = [theta(5)-theta(1);(theta(6)-theta(5))-(theta(2)-theta(1))];
 joint_stiffness = emg_coactivation.*(arm_params.joint_stiffness_max(:)-arm_params.joint_stiffness_min(:))+...
     arm_params.joint_stiffness_min(:);

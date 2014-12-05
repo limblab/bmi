@@ -13,7 +13,8 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
     options = odeset('RelTol',1e-2,'AbsTol',1e-2);
     arm_params_base = [];
     flag_reset = 0;
-    EMG_data = zeros(size(m_data_1.Data.EMG_data));
+    EMG_data = zeros(size(m_data_1.Data.EMG_data));    
+    temp_cocontraction = 0;
     while ((m_data_1.Data.bmi_running)) % && i < 300)
         tic
         i = i+1;
@@ -27,6 +28,8 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             save('temp_arm_params','arm_params');
             disp('Saved arm parameters')
         end        
+        
+        arm_params.cocontraction = temp_cocontraction;
         
         if ~strcmp(arm_params.control_mode,'point_mass')
             arm_params.x_gain = -2*arm_params.left_handed+1;
@@ -54,7 +57,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
 %                 arm_params.emg_min = min(arm_params.emg_min,EMG_data);
 %                 arm_params.emg_min = (arm_params.emg_min-arm_params.emg_max)*exp(-dt_hist(1)/arm_params.emg_adaptation_rate)+arm_params.emg_max;
 %             end
-            EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min); 
+            EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);
             EMG_data(EMG_data<0) = 0;
             vel_data = m_data_1.Data.vel_predictions;
         else
@@ -126,7 +129,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         old_X_h = arm_params.X_h;
         
         arm_params.F_end(1) = arm_params.x_gain*arm_params.F_end(1);
-        arm_params.T = arm_params.x_gain*arm_params.T;
+        arm_params.T = arm_params.x_gain*arm_params.T;        
         
         switch(arm_params.control_mode)
             case 'hill'
@@ -136,6 +139,16 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 [t,x] = ode15s(@(t,x0) prosthetic_arm_model(t,x0(1:4),arm_params),t_temp,x0(1:4),options);
                 [~,out_var] = prosthetic_arm_model(t,x(end,:),arm_params);
             case 'hu'
+                if arm_params.block_shoulder
+                    EMG_data(1:2) = 0;
+                    arm_params.musc_act(1:2) = 0;
+                    temp = min((.00001+arm_params.musc_act(3))/(.00001+arm_params.musc_act(4)),...
+                        (.00001+arm_params.musc_act(4))/(.00001+arm_params.musc_act(3)));
+                    cocontraction_new = temp * (arm_params.musc_act(3) + arm_params.musc_act(4));
+                    arm_params.cocontraction = (1-arm_params.cocontraction_filter)*cocontraction_new +...
+                        arm_params.cocontraction_filter*arm_params.cocontraction;
+                    temp_cocontraction = arm_params.cocontraction;
+                end
                 [t,x] = ode15s(@(t,x0_b) hu_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
                 [~,out_var] = hu_arm_model(t,x(end,:),arm_params);
                 x0 = x0_b(1:4);
@@ -173,6 +186,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         m_data_2.Data.musc_force = musc_force;
         m_data_2.Data.F_end = F_end;
         m_data_2.Data.theta = encoder_theta;
+        m_data_2.Data.cocontraction = arm_params.cocontraction;
         
         arm_params.theta = x(end,1:2);
         if ~strcmp(arm_params.control_mode,'point_mass')

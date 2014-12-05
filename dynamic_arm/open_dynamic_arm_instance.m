@@ -10,7 +10,7 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance(params)
     fid = fopen('data_1.dat','w');
     fwrite(fid, EMG_data, 'double');
     fwrite(fid, bmi_running, 'double');
-    fwrite(fid, vel_predictions, 'double');
+    fwrite(fid, vel_predictions, 'double');    
     fclose(fid);
 
     model_running = 0;
@@ -20,6 +20,7 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance(params)
     shoulder_pos = zeros(1,2);
     elbow_pos = zeros(1,2);
     theta = zeros(1,2);
+    cocontraction = 0;
     fid = fopen('data_2.dat','w');
     fwrite(fid, model_running, 'double');
     fwrite(fid, x_hand, 'double');
@@ -28,6 +29,7 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance(params)
     fwrite(fid, shoulder_pos, 'double');
     fwrite(fid, elbow_pos, 'double');
     fwrite(fid, theta, 'double');
+    fwrite(fid, cocontraction, 'double');
     fclose(fid);
 
     m_data_1 = memmapfile('data_1.dat',...
@@ -42,7 +44,8 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance(params)
     'double',[1 2],'F_end';...
     'double',[1 2],'shoulder_pos';...
     'double',[1 2],'elbow_pos';...
-    'double',[1 2],'theta'},'Writable',true);
+    'double',[1 2],'theta';...
+    'double',[1 1],'cocontraction'},'Writable',true);
 
     m_data_1.Data.bmi_running = 1;
     if params.debug

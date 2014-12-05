@@ -18,6 +18,7 @@ arm_params_default.EMG_filter = 0;
 arm_params_default.T = 0*[2;-.2];
 arm_params_default.max_torque = 1000;
 arm_params_default.online = 1;
+arm_params_default.cocontraction_filter = 0.1;
 
 % Hill arm
 arm_params_default.HILL_MODEL_PARAMETERS = 0;
@@ -40,11 +41,11 @@ arm_params_default.emg_thres = .1;
 
 % Hu/Perreault arm
 arm_params_default.HU_MODEL_PARAMETERS = 0;
-arm_params_default.emg_to_torque_gain = [1 1];
-arm_params_default.joint_stiffness_min = [1 1];
-arm_params_default.joint_stiffness_max = [30 30];
-arm_params_default.joint_damping_min = [.4 .4];
-arm_params_default.joint_damping_max = [.4 .4];
+arm_params_default.emg_to_torque_gain = [4 4];
+arm_params_default.joint_stiffness_min = [0 0];
+arm_params_default.joint_stiffness_max = [10 10];
+arm_params_default.joint_damping_min = [.8 .8];
+arm_params_default.joint_damping_max = [.8 .8];
 arm_params_default.block_shoulder = 1;
 
 % Ruiz arm
@@ -64,6 +65,9 @@ arm_params_default.endpoint_stiffness_min_pm = 0;
 arm_params_default.endpoint_stiffness_max_pm = 0;
 arm_params_default.endpoint_damping_min_pm = 0;
 arm_params_default.endpoint_damping_max_pm = 0;
+
+arm_params_default.NON_PARAMETERS = 0;
+arm_params_default.cocontraction = 0;
 
 arm_param_fields = fields(arm_params_default);
 for iField = 1:numel(arm_param_fields)
