@@ -264,7 +264,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 'YData',[xS(2) xE(2) xH(2)])
             set(h.h_plot_arm_2,'XData',[xS(1) xE2(1) xH2(1)],...
                 'YData',[xS(2) xE2(2) xH2(2)])
-            set(h.h_emg_bar,'YData',[EMG_data arm_params.commanded_vel])
+            set(h.h_emg_bar,'YData',[EMG_data arm_params.commanded_vel arm_params.cocontraction])
             drawnow                       
             set(h.h_plot_dt,'YData',dt_hist)
         end
