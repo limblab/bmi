@@ -14,7 +14,7 @@ clear params
 params.monkey_name = 'Chewie';
 % params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
-params.mode = 'iso'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
+params.mode = 'emg'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
 params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
 params.task_name = ['RP_' params.mode];
 % params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-musc_Binned_Decoder.mat';
