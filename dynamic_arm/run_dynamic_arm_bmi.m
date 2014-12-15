@@ -110,6 +110,7 @@ data = get_default_data(params);
 t_buf = tic; %data buffering timer
 drawnow;
 iCycle = 0;
+old_handleforce = [0 0];
 % Run cycle
 % try
     recording = 0;
@@ -220,7 +221,9 @@ iCycle = 0;
                 save(handles.data_file,'tmp_data','-append','-ascii');
             end
             
-            send_stop_trial = data.artifact_found || params.stop_trial;
+            dforce = sqrt(sum((data.handleforce - old_handleforce).^2));
+            send_stop_trial = data.artifact_found || params.stop_trial || dforce < params.stop_task_if_x_force;
+            old_handleforce = data.handleforce;
             
             if exist('xpc','var')
                 % send predictions to xpc

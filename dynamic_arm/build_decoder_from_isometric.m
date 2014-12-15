@@ -1,9 +1,13 @@
-data_location = 'D:\Data\Chewie_8I2\Chewie_2014-11-26_DCO_iso_hu';
-bdf_file = [data_location filesep 'Output_Data\bdf.mat'];
-param_file = dir([data_location filesep '*params*']);
-param_file = [data_location filesep param_file(1).name];
+% data_location = 'D:\Data\Chewie_8I2\Chewie_2014-11-26_DCO_iso_hu';
+data_location = 'D:\Data\Chewie_8I2\Chewie_2014-12-04_DCO_iso_hu_Thr5_pseudo_emg';
+% bdf_file = [data_location filesep 'Output_Data\bdf.mat'];
+bdf_file = [data_location '\BDFStructs\Chewie_2014-12-04_DCO_iso_hu_Thr5_pseudo_emg_001.mat'];
+param_file = dir([data_location filesep 'CerebusData\*params*']);
+param_file = [data_location filesep 'CerebusData\' param_file(1).name];
 decoder_type = 'musc';
-load(bdf_file);
+bdf = load(bdf_file);
+temp = fields(bdf);
+bdf = bdf.(temp{1});
 load(param_file);
 
 F = -bdf.force(:,2:3);

@@ -25,10 +25,18 @@ function handles = setup_display_plots(params,handles)
 
     handles.label_stop_if_x_artifacts = uicontrol('Units','normalized','Style','text',...
         'Parent',handles.control_panel,...
-        'String','Stop trial if X artifacts','Position',[.5 .85 .3 .1]);
+        'String','Stop trial if X artifacts','Position',[.43 .92 .3 .065]);
     handles.textbox_stop_if_x_artifacts = uicontrol('Units','normalized','Style','edit',...
         'Parent',handles.control_panel,...
-        'String',num2str(params.stop_task_if_x_artifacts),'Position',[.5 .8 .3 .05],'Callback',@artifactchange_Callback);
+        'String',num2str(params.stop_task_if_x_artifacts),'Position',[.74 .92 .18 .05],'Callback',@artifactchange_Callback);
+    
+    handles.label_stop_if_x_force = uicontrol('Units','normalized','Style','text',...
+        'Parent',handles.control_panel,...
+        'String','Stop trial if |dforce|<X','Position',[.43 .83 .3 .065]);
+    handles.textbox_stop_if_x_force = uicontrol('Units','normalized','Style','edit',...
+        'Parent',handles.control_panel,...
+        'String',num2str(params.stop_task_if_x_force),'Position',[.74 .83 .18 .05],'Callback',@minforcechange_Callback);
+    
     handles.button_stop_task = uicontrol('Units','normalized','Style','pushbutton',...
         'Parent',handles.control_panel,...
         'String','Stop trial','Position',[.5 .7 .3 .05],'Callback',@stoptask_Callback);
@@ -153,6 +161,13 @@ function artifactchange_Callback(hObject,eventdata)
     new_X_artifact = str2double(get(hObject,'String'));
     params = evalin('base','params');
     params.stop_task_if_x_artifacts = new_X_artifact;    
+    assignin('base','params',params);
+end
+
+function minforcechange_Callback(hObject,eventdata)
+    new_min_force = str2double(get(hObject,'String'));
+    params = evalin('base','params');
+    params.stop_task_if_x_force = new_min_force;    
     assignin('base','params',params);
 end
 
