@@ -1,4 +1,4 @@
-function [data_buffer,data,neuron_decoder] = decoder_adaptation3(params,data,bin_count,data_buffer,neuron_decoder,emg_decoder,force_pred)
+function [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder,force_pred)
 
 data.fix_decoder = params.adapt_freeze && mod(data.sys_time,params.adapt_time+params.fixed_time)>=params.adapt_time;
 
@@ -49,14 +49,30 @@ if data.adapt_flag
             n_bins   = size(emgs,1);
             tgt_id   = data_buffer.tgt_id{trial};
             
-            %which EMGs would give me the expected force:
-            opt_emgs = zeros(size(emgs));
-            for bin = 1:length(tgt_id)
-                opt_emgs(bin,:) = params.emg_patterns(tgt_id(bin)+1,:);
+            % The following cod finds optimal EMGs, for each target presented in the trial
+            % for each tgt, there should only be one time point
+            % there should be one center (id=0) and one outer tgt per trial
+            % Use average emg as initial estimate
+            unique_tgt_ids = unique(tgt_id,'stable');
+            num_tgts       = length(unique_tgt_ids);
+            unique_tgt_pos = zeros(num_tgts,size(tgt_pos,2));
+            expected_emgs  = zeros(num_tgts,size(emgs,2));
+            for t = 1:num_tgts
+                unique_tgt_pos(t,:) = tgt_pos(find(tgt_id==unique_tgt_ids(t),1,'last'),:);
+                expected_emgs(t,:)  = params.emg_patterns(unique_tgt_ids(t)+1,:);
+            end
+            
+            % based on unique_opt_emgs for each target, fill in for all time points
+            opt_emgs = nan(size(emgs));
+            for t= 1:num_tgts
+                tgt_idx = tgt_id==unique_tgt_ids(t);
+                opt_emgs(tgt_idx,:) = repmat(expected_emgs(t,:),sum(tgt_idx),1);
             end
             
             % emg error:
             de = opt_emgs-emgs;
+              
+%             de = flip(max(de,0));
             
             % look back at neurons
             g = zeros(size(neuron_decoder.H));

@@ -46,32 +46,51 @@ switch monkey
         %Data files
 %         params.offline_data   = 'F:\Data-lab1\12A1-Jango\BinnedData\20140714\Jango_WF_20140714_HC_001_bin.mat';
 %         params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/temp_data/TRAIN_2EMGs1F.mat';
-%         params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/temp_data/Jango_20140711_37m_TRAIN.mat';
-        params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/new_data/Jango_20140711_optimdata_20min.mat';
-        params.save_name      = 'param_optim';
-%         params.save_dir       = 'F:\Data-lab1\12A1-Jango\CerebusData\Adaptation';
+        params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/Data/Jango3/Jango_20141014_traindata.mat';
         params.save_dir       = '/Users/christianethier/Dropbox/Adaptation/temp_data';
         
         %Neuron Decoder
         params.neuron_decoder = 'new_zeros';
-        params.n_neurons      = 95;
-%         params.n_neurons      = size(params.neuronIDs,1);
-        
+        params.n_neurons      = 96;
         %EMG Decoder
 %         params.emg_decoder    = 'F:\Data-lab1\12A1-Jango\SavedFilters\Jango_WF_20140714_HC_001_E2F_Decoder.mat';
-        params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/new_data/Jango_20140707_E2F_Decoder1bin.mat';
-%         params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/temp_data/IRF_2E1F_Decoder.mat';
-        params.n_emgs         = 9;
+%         params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/Data/GenericPD_4WristMuscles.mat';
+        params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/Data/Jango3/Jango_20141014_E2F_xcor_norm_scaled.mat';
+        params.n_emgs         = 12;
         params.n_lag_emg      = 1;
         
-%         tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/new_data/Jango_20140707_EMGpatterns.mat');
-%         params.emg_patterns   = tmp_pat.EMGpatterns; clear tmp_pat;
+%         tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/Data/Jango/Jango_WF_20141104_HC_001_EMGpatterns+PD.mat');
+        tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/Data/Jango3/Jango_20141014_opt_emgpat_12EMGs.mat');
+        params.emg_patterns   = tmp_pat.emg_patterns; clear tmp_pat;
         
         %Adaptation Parameters
-          %lambda: [L0 L1 L2 L3]:= weights for Force error, L1reg, L2reg and EMG templates respectively
-         params.lambda = [1 0 4 0];
-%         params.lambda = 10;
-         params.LR = 1e-6;
+%           %lambda: [L0 L1 L2 L3]:= weights for Force error, L1reg, L2reg and EMG templates respectively
+%          params.lambda = [1 0 0.5 0];
+% %          params.lambda = [1 0 1 1];
+         params.LR = 2e-6;
+         
+    case 'Spike'
+        %Data files
+        params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/Data/Spike/BinnedData/Spike_20120307_traindata.mat';
+        params.save_dir       = '/Users/christianethier/Dropbox/Adaptation/temp_data';
+        
+        %Neuron Decoder
+        params.neuron_decoder = 'new_zeros';
+
+        %EMG Decoder
+        params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/Data/Spike/decoders/Spike_20120307_E2F_13EMGs.mat';
+%         params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/Data/GenericPD_4WristMuscles.mat';
+        params.n_emgs         = 13;
+        params.n_lag_emg      = 1;
+
+        %EMG Patterns
+        tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/Data/Spike/decoders/Spike_20120307_optpat_13EMGs.mat');
+        params.emg_patterns   = tmp_pat.emg_patterns; clear tmp_pat;
+        
+        %Adaptation Parameters
+%          params.lambda = [1 0 4 100];
+         %params.lambda = [1 0 4 100];
+         params.LR = 2e-6;                
 
 end
 %-------------------

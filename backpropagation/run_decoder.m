@@ -209,14 +209,15 @@ try
             data = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
             
             %% Predictions
-            cursor_pos_pred = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
-%             predictions = sigmoid([1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H,'direct',params.N2Esig);
+%             pred = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
+            pred = sigmoid([1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H,'direct');
             
             if ~strcmp(params.mode,'direct')
                 % emg cascade
-                data.emgs = [cursor_pos_pred; data.emgs(1:end-1,:)];
-%                 predictions = [1 rowvec(data.emgs(:))']*emg_decoder.H;
+                data.emgs = [pred; data.emgs(1:end-1,:)];
                 cursor_pos_pred = rowvec(data.emgs(:))'*emg_decoder.H;
+            else
+                cursor_pos_pred = pred;
             end
             
             %% Output
@@ -240,7 +241,7 @@ try
             
             %% Neurons-to-EMG Adaptation
             if params.adapt
-                [data_buffer,data,neuron_decoder] = decoder_adaptation4(params,data,bin_count,data_buffer,neuron_decoder,emg_decoder,cursor_pos_pred);
+                [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder,cursor_pos_pred);
             end
                 
             %% Save and display progress
@@ -501,16 +502,14 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
                 [data.tgt_pos,data.tgt_size] = get_default_tgt_pos_size(data.tgt_id);
                 data.tgt_bin  = bin_count;
                 data.tgt_on   = true;
-                data.pending_tgt_pos = [NaN NaN];
-                data.pending_tgt_size= [NaN NaN];
+%                 data.pending_tgt_pos = [NaN NaN];
+%                 data.pending_tgt_size= [NaN NaN];
                 % fprintf('OT_on : %d\n',new_tgt_id);
             end
             % new word CT_ON?
             if new_words(i,2) == w.CT_On
                 data.tgt_id   = 0;
                 data.tgt_ts   = new_words(i,1);
-%                 data.tgt_pos  = [0 0];
-%                 data.tgt_size = CT_size;
                 [data.tgt_pos,data.tgt_size] = get_default_tgt_pos_size(data.tgt_id);
                 data.tgt_bin  = bin_count;
                 data.tgt_on   = true;

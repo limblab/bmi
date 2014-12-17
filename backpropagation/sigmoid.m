@@ -1,8 +1,8 @@
 function res = sigmoid(x,mode, varargin)
 %piecewise sigmoid.
-% f(x) = {  0      , x <=  0;
-%          [0,10]  , 0 <x< 1;
-%           10     , x >=  1;
+% f(x) = {  0         , x <=  0;
+%          sig[0,1]   , 0 <x< 1;
+%           1         , x >=  1;
 
 bottom = 0;
 top    = 1;
