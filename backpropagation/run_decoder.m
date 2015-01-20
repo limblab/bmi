@@ -26,6 +26,7 @@ if strcmpi(params.output,'xpc')
     xpc = udp(XPC_IP,XPC_PORT);
     set(xpc,'ByteOrder','littleEndian');
     set(xpc,'LocalHost','192.168.0.10');
+%     set(xpc,'LocalHost','192.168.42.129');
     fopen(xpc);
 end
 
@@ -115,9 +116,9 @@ end
 if params.save_data
         
         if params.online
-            date_str = datestr(now,'yyyy_mm_dd_HHMMSS');
+            date_str = datestr(now,'yyyymmdd_HHMMSS');
             filename = [params.save_name '_' date_str '_'];
-            date_str = datestr(now,'yyyy_mm_dd');
+            date_str = datestr(now,'yyyymmdd');
         else
             [path_name,filename,~] = fileparts(params.offline_data);
             filename = [filename '_'];
@@ -209,8 +210,8 @@ try
             data = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
             
             %% Predictions
-%             pred = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
-            pred = sigmoid([1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H,'direct');
+            pred = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
+%             pred = sigmoid([1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H,'direct');
             
             if ~strcmp(params.mode,'direct')
                 % emg cascade
