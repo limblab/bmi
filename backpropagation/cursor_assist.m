@@ -4,6 +4,13 @@ function [cursor_pos,data] = cursor_assist(data,cursor_pos,cursor_traj)
  
  current_ave_fr = mean(data.spikes(1,:));
  
+ if isnan(data.tgt_id) || isnan(data.tgt_on)
+     % tgt not on yet, already completed back path, or next trial has started already
+     % make the cursor move around zero
+     cursor_pos = max([-1 -1],min([1 1],cursor_pos + 0.5*rand(1,2) - 0.25));
+     return;
+ end
+ 
  if data.tgt_on && data.tgt_id % outer target on
      if ~data.effort_flag && current_ave_fr >= 1.25*data.ave_fr
          data.effort_flag = true;
