@@ -1,6 +1,6 @@
 function [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder,force_pred)
 
-data.fix_decoder = params.adapt_freeze && mod(data.sys_time,params.adapt_time+params.fixed_time)>=params.adapt_time;
+data.fix_decoder = params.adapt_params.adapt_freeze && mod(data.sys_time,params.adapt_params.adapt_time+params.adapt_params.fixed_time)>=params.adapt_params.adapt_time;
 
 % if params.cursor_assist
 %     data.adapt_trial = true; % adapt every trial during cursor assist
@@ -8,8 +8,8 @@ data.fix_decoder = params.adapt_freeze && mod(data.sys_time,params.adapt_time+pa
 
 % adapt trial and within adapt window?
 if data.adapt_trial && data.tgt_on && params.adapt && ~any(isnan(data.tgt_pos)) && ...
-        (bin_count - data.tgt_bin)*params.binsize >= params.delay && ...
-        (bin_count - data.tgt_bin)*params.binsize <= (params.delay+params.duration)
+        (bin_count - data.tgt_bin)*params.binsize >= params.adapt_params.delay && ...
+        (bin_count - data.tgt_bin)*params.binsize <= (params.adapt_params.delay+params.adapt_params.duration)
     
     % adaptation_period during an adaptation trial. Accumulate data
     if data.trial_count > data_buffer.trial_number{1}
@@ -42,7 +42,7 @@ if data.adapt_flag
         accum_g = zeros(size(neuron_decoder.H));
         accum_n = 0;
         
-        for trial = 1:params.batch_length
+        for trial = 1:params.adapt_params.batch_length
             spikes   = data_buffer.spikes{trial};
             emgs     = data_buffer.emg_pred{trial};
             tgt_pos  = data_buffer.tgt_pos{trial};
@@ -59,7 +59,7 @@ if data.adapt_flag
             expected_emgs  = zeros(num_tgts,size(emgs,2));
             for t = 1:num_tgts
                 unique_tgt_pos(t,:) = tgt_pos(find(tgt_id==unique_tgt_ids(t),1,'last'),:);
-                expected_emgs(t,:)  = params.emg_patterns(unique_tgt_ids(t)+1,:);
+                expected_emgs(t,:)  = params.adapt_params.emg_patterns(unique_tgt_ids(t)+1,:);
             end
             
             % based on unique_opt_emgs for each target, fill in for all time points
@@ -89,7 +89,7 @@ if data.adapt_flag
         end
         % update neuron_decoder
         accum_g = accum_g/accum_n;
-        neuron_decoder.H = neuron_decoder.H + params.LR*accum_g;
+        neuron_decoder.H = neuron_decoder.H + params.adapt_params.LR*accum_g;
     end
     
 end

@@ -46,7 +46,7 @@ switch monkey
         %Data files
 %         params.offline_data   = 'F:\Data-lab1\12A1-Jango\BinnedData\20140714\Jango_WF_20140714_HC_001_bin.mat';
 %         params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/temp_data/TRAIN_2EMGs1F.mat';
-        params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/Data/Jango3/Jango_20141014_traindata.mat';
+        params.offline_data   = '/Users/christianethier/Dropbox/Adaptation/Data/Jango_20150107/Jango_20150107_WFHC_001_bin.mat';
         params.save_dir       = '/Users/christianethier/Dropbox/Adaptation/temp_data';
         
         %Neuron Decoder
@@ -55,19 +55,19 @@ switch monkey
         %EMG Decoder
 %         params.emg_decoder    = 'F:\Data-lab1\12A1-Jango\SavedFilters\Jango_WF_20140714_HC_001_E2F_Decoder.mat';
 %         params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/Data/GenericPD_4WristMuscles.mat';
-        params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/Data/Jango3/Jango_20141014_E2F_xcor_norm_scaled.mat';
-        params.n_emgs         = 12;
+        params.emg_decoder    = '/Users/christianethier/Dropbox/Adaptation/Data/Generic_Decoders/Jango_E2F_8FakeEMGs.mat';
+        params.n_emgs         = 8;
         params.n_lag_emg      = 1;
         
 %         tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/Data/Jango/Jango_WF_20141104_HC_001_EMGpatterns+PD.mat');
-        tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/Data/Jango3/Jango_20141014_opt_emgpat_12EMGs.mat');
-        params.emg_patterns   = tmp_pat.emg_patterns; clear tmp_pat;
+        tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/Data/Generic_Decoders/Jango_opt_emgpat_8FakeEMGs.mat');
+        params.adapt_params.emg_patterns   = tmp_pat.emg_patterns; clear tmp_pat;
         
         %Adaptation Parameters
 %           %lambda: [L0 L1 L2 L3]:= weights for Force error, L1reg, L2reg and EMG templates respectively
 %          params.lambda = [1 0 0.5 0];
 % %          params.lambda = [1 0 1 1];
-         params.LR = 2e-6;
+         params.adapt_params.LR = 2e-6;
          
     case 'Spike'
         %Data files
@@ -85,7 +85,7 @@ switch monkey
 
         %EMG Patterns
         tmp_pat               = load('/Users/christianethier/Dropbox/Adaptation/Data/Spike/decoders/Spike_20120307_optpat_13EMGs.mat');
-        params.emg_patterns   = tmp_pat.emg_patterns; clear tmp_pat;
+        params.adapt_params.emg_patterns   = tmp_pat.emg_patterns; clear tmp_pat;
         
         %Adaptation Parameters
 %          params.lambda = [1 0 4 100];

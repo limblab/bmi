@@ -82,7 +82,7 @@ data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
           
 % dataset to store older data for batch adaptation
 data_buffer = dataset();                 
-for i=params.batch_length
+for i=params.adapt_params.batch_length
     data_buffer = [data_buffer;...
         dataset({{data.trial_count}, 'trial_number'}, ...
         {{data.spikes} ,'spikes'},...
@@ -211,11 +211,12 @@ try
             
             %% Predictions
             pred = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
-%             pred = sigmoid([1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H,'direct');
             
             if ~strcmp(params.mode,'direct')
                 % emg cascade
-                data.emgs = [pred; data.emgs(1:end-1,:)];
+                %apply sigmoid and store new emg prediction
+                data.emgs = [sigmoid(pred,'direct'); data.emgs(1:end-1,:)];
+%                 data.emgs = [pred; data.emgs(1:end-1,:)];
                 cursor_pos_pred = rowvec(data.emgs(:))'*emg_decoder.H;
             else
                 cursor_pos_pred = pred;
@@ -420,9 +421,13 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
             end
             
             % load existing emg decoder
-            emg_decoder = LoadDataStruct(params.emg_decoder);
-            if ~isfield(emg_decoder, 'H')
-                error('Invalid emg-to-force decoder');
+            if ~isstruct(params.emg_decoder)
+                emg_decoder = LoadDataStruct(params.emg_decoder);
+                if ~isfield(emg_decoder, 'H')
+                    error('Invalid emg-to-force decoder');
+                end
+            else
+                emg_decoder = params.emg_decoder;
             end
             params.n_lag_emg = round(emg_decoder.fillen/emg_decoder.binsize);
 %             params.n_emgs = round((size(emg_decoder.H,1)-1)/params.n_lag_emg);
@@ -489,7 +494,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
                 data.traj_pct = 0;
                 data.tgt_id   = nan;
                 data.trial_count = data.trial_count+1;
-                if ~params.online
+                if ~params.online && params.adapt
                     data.adapt_trial = true;
                 end
             end
