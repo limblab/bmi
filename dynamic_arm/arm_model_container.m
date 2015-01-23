@@ -1,3 +1,10 @@
+current_location = mfilename('fullpath');
+[current_folder,~,~] = fileparts(current_location);
+cd(current_folder)
+add_these = strfind(current_folder,'\');
+add_these = current_folder(1:add_these(end)-1);
+addpath([add_these filesep 'lib'])
+
 load('temp_arm_params')
 arm_params.online = 1;
 if arm_params.online
@@ -15,6 +22,7 @@ if arm_params.online
 
     m_data_1 = memmapfile('data_1.dat',...
     'Format',{'double',[1 4],'EMG_data';...
+    'uint8',[10 10],'EMG_labels';...
     'double',[1 1],'bmi_running';...
     'double',[1 2],'vel_predictions'},'Writable',true);
 
@@ -30,6 +38,7 @@ if arm_params.online
 else
     xpc = [];
     m_data_1.Data.EMG_data = zeros(1,4);
+    m_data_1.Data.EMG_labels = uint8(zeros(10,10));
     m_data_1.Data.bmi_running = 2;
     m_data_1.Data.vel_predictions = zeros(1,2);
     m_data_2.Data.model_running = 0;    

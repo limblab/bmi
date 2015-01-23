@@ -88,7 +88,7 @@ xdot(3:4,1)= M\(T(:) + T_endpoint + tau - C + motor_torque + constraint_torque);
 
 tau_b = [-theta(7)*c(1);-(theta(8)-theta(7))*c(2)]; % viscosity
 xdot(5:6,1)=theta(7:8);
-xdot(7:8,1)= M_b\(T_endpoint_reference + tau_b - C_b + muscle_torque + constraint_torque_b + muscle_damping_torque_b);
+xdot(7:8,1)= M_b\(T(:) + T_endpoint_reference + tau_b - C_b + muscle_torque + constraint_torque_b + muscle_damping_torque_b);
 
 if arm_params.block_shoulder
     xdot([1 5]) = 0;

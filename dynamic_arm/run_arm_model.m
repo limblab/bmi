@@ -51,13 +51,36 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         old_EMG_data = EMG_data;
         if arm_params.online   
             EMG_data = m_data_1.Data.EMG_data;
+            EMG_labels = m_data_1.Data.EMG_labels;
+            EMG_labels = EMG_label_conversion(EMG_labels);
+            
+            EMG_idx = zeros(1,4);
+            EMG_order = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'}; 
+            for iEMG = 1:length(EMG_order)
+                temp = find(~cellfun(@isempty,strfind(EMG_labels,EMG_order{iEMG})));
+                if ~isempty(temp)
+                    EMG_idx(iEMG) = temp;
+                end
+            end            
+            BRD_idx = find(~cellfun(@isempty,strfind(EMG_labels,'EMG_BRD')));
+            if ~isempty(BRD_idx) && arm_params.use_brd
+                EMG_idx(3) = BRD_idx;
+            end
+            temp_emg = zeros(1,4);
+            for iEMG = 1:4
+                if EMG_idx(iEMG)>0
+                    temp_emg(iEMG) = EMG_data(EMG_idx(iEMG));
+                end
+            end
+            EMG_data = temp_emg;  
 %             if arm_params.emg_adaptation_rate>0
 %                 arm_params.emg_max = max(arm_params.emg_max,EMG_data);
 %                 arm_params.emg_max = arm_params.emg_max*exp(-dt_hist(1)/arm_params.emg_adaptation_rate);
 %                 arm_params.emg_min = min(arm_params.emg_min,EMG_data);
 %                 arm_params.emg_min = (arm_params.emg_min-arm_params.emg_max)*exp(-dt_hist(1)/arm_params.emg_adaptation_rate)+arm_params.emg_max;
 %             end
-            EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);
+
+            EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);            
             EMG_data(EMG_data<0) = 0;
             vel_data = m_data_1.Data.vel_predictions;
         else
@@ -65,6 +88,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             EMG_data = 500+500*[cos(temp_t(1)) cos(temp_t(2)+pi/2) cos(temp_t(3)+pi/4) cos(temp_t(4)+3*pi/4)];
             EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
             EMG_data = EMG_data.^2;
+            EMG_labels = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'};            
             vel_data = 1*[cos(.1*temp_t(1)) cos(.3*temp_t(2)+pi/2)];
         end        
                
@@ -116,7 +140,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             if arm_params.X_h(2) > .1
                 arm_params.F_end(2) = -(arm_params.X_h(2)-(.1))*500;
             end
-        end
+        end       
         
         arm_params.musc_act = EMG_data;
         arm_params.musc_l0 = sqrt(2*arm_params.m_ins.^2)+...
@@ -258,7 +282,16 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
 
         dt_hist = circshift(dt_hist,[0 1]);
         dt_hist(1) = toc; 
-        if mod(i,5)==0           
+        if mod(i,5)==0  
+            if any(~cellfun(@isempty,strfind(EMG_labels,'EMG_BRD'))) && arm_params.use_brd
+                temp_label = get(h.h_emg_axis,'XTickLabel');
+                temp_label{3} = 'Brd(up)';
+                set(h.h_emg_axis,'XTickLabel',temp_label);
+            else                
+                temp_label = get(h.h_emg_axis,'XTickLabel');
+                temp_label{3} = 'Bi(up)';
+                set(h.h_emg_axis,'XTickLabel',temp_label);
+            end
             set(h.h_plot_force,'XData',[0 F_x],'YData',[0 F_y])
             set(h.h_plot_arm,'XData',[xS(1) xE(1) xH(1)],...
                 'YData',[xS(2) xE(2) xH(2)])

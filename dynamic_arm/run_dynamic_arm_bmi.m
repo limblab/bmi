@@ -18,7 +18,7 @@ params.mode = 'emg'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test
 params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
 params.task_name = ['RP_' params.mode];
 % params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-musc_Binned_Decoder.mat';
-params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-11-26_DCO_iso_hu\Output_Data\bdf_Binned_Decoder.mat';
+params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-01-22_RP_emg_hu\SavedFilters\Chewie_2015-01-22_RP_emg_hu_002_Decoder.mat';
 params.decoders(1).decoder_type = 'n2e';
 params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-cartesian_Binned_Decoder.mat';
 params.decoders(2).decoder_type = 'n2e_cartesian';
@@ -35,6 +35,7 @@ params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Chewie 8I2\Bl
 params.output = 'xpc';
 params.force_to_cursor_gain = .3;
 params.stop_task_if_x_artifacts = 1;
+params.stop_task_if_x_force = 0;
 params.save_firing_rates = 1;
 params.display_plots = 0;
 params.left_handed = 1;
@@ -198,8 +199,9 @@ old_handleforce = [0 0];
                 m_data_1.Data.vel_predictions = predictions;
             end
             
-            [EMG_data,~,~] = process_emg(params,data,predictions);
+            [EMG_data,~,EMG_labels] = process_emg(params,data,predictions);
             m_data_1.Data.EMG_data = EMG_data;
+            m_data_1.Data.EMG_labels = EMG_label_conversion(EMG_labels);
             
             if strncmpi(params.mode,'iso',3) % ...if task was isometric
                 cursor_pos = -params.force_to_cursor_gain*data.handleforce + params.force_offset;                
@@ -221,9 +223,9 @@ old_handleforce = [0 0];
                 save(handles.data_file,'tmp_data','-append','-ascii');
             end
             
-            dforce = sqrt(sum((data.handleforce - old_handleforce).^2));
+            dforce = sqrt(sum((data.handleforce - old_handleforce).^2));      
             send_stop_trial = data.artifact_found || params.stop_trial || dforce < params.stop_task_if_x_force;
-            old_handleforce = data.handleforce;
+            old_handleforce = 0.5*old_handleforce + 0.5*data.handleforce;
             
             if exist('xpc','var')
                 % send predictions to xpc
