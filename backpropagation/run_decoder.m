@@ -186,7 +186,11 @@ if params.online
     cbmex('trialconfig',1,'nocontinuous');
 else
     %Binned Data File
-    offline_data = LoadDataStruct(params.offline_data);
+    if ~isstruct(params.offline_data)
+        offline_data = LoadDataStruct(params.offline_data);
+    else
+        offline_data = params.offline_data;
+    end
     max_cycles = length(offline_data.timeframe);
     bin_start_t = double(offline_data.timeframe(1));
 end
@@ -371,17 +375,26 @@ end
 
 %% optionally Save decoder at the end
 if params.adapt
-%     YesNo = questdlg('Would you like to save the adapted decoder?','Save Decoder?','Yes','No','Yes');
-    YesNo = 'Yes';
-    if strcmp(YesNo,'Yes')
-        dec_dir = [params.save_dir filesep datestr(now,'yyyy_mm_dd')];
-        if ~isdir(dec_dir)
-            mkdir(dec_dir);
-        end
-        filename = [dec_dir filesep 'Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
-        save(filename,'-struct','neuron_decoder');
+    % auto save:
+%     dec_dir = [params.save_dir filesep datestr(now,'yyyy_mm_dd')];
+%     if ~isdir(dec_dir)
+%         mkdir(dec_dir);
+%     end
+%     filename = [dec_dir filesep 'Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
+%     save(filename,'-struct','neuron_decoder');
+%     fprintf('Saved Decoder File :\n%s\n',filename);
+%     assignin('base','new_decoder_str',filename);
+%     assignin('base','new_decoder',neuron_decoder);
+
+    %Save dialog
+        dec_dir = [params.save_dir];
+        filename = ['Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
+        [filename, filepath] = uiputfile(fullfile(dec_dir,filename),'Save your new decoder');
+    if filepath
+        save(fullfile(filepath,filename),'-struct','neuron_decoder');
         fprintf('Saved Decoder File :\n%s\n',filename);
-        assignin('base','new_decoder',filename);        
+        assignin('base','new_decoder_str',filename);
+        assignin('base','new_decoder',neuron_decoder);
     else
         disp('Decoder not saved');
     end
@@ -408,10 +421,14 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
                 end
             else
                 % load existing neuron decoder
-                neuron_decoder = LoadDataStruct(params.neuron_decoder);
-                if ~isfield(neuron_decoder, 'H')
-                    disp('Invalid neuron-to-emg decoder');
-                    return;
+                if ~isstruct(params.neuron_decoder)
+                    neuron_decoder = LoadDataStruct(params.neuron_decoder);
+                    if ~isfield(neuron_decoder, 'H')
+                        disp('Invalid neuron-to-emg decoder');
+                        return;
+                    end
+                else
+                    neuron_decoder = params.neuron_decoder;
                 end
                 % overwrite parameters according to loaded decoder
                 params.n_lag     = round(neuron_decoder.fillen/neuron_decoder.binsize);
@@ -441,9 +458,13 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
             end
             params.n_forces = size(emg_decoder.H,2);
         case 'direct'
-            neuron_decoder = LoadDataStruct(params.neuron_decoder);
-            if ~isfield(neuron_decoder, 'H')
-                error('Invalid Decoder');
+            if ~isstruct(params.neuron_decoder)
+                neuron_decoder = LoadDataStruct(params.neuron_decoder);
+                if ~isfield(neuron_decoder, 'H')
+                    error('Invalid Decoder');
+                end
+            else
+                neuron_decoder = params.neuron_decoder;
             end
             % overwrite parameters according to loaded decoder            
             params.n_lag = round(neuron_decoder.fillen/neuron_decoder.binsize);
