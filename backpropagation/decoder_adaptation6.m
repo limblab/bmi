@@ -1,10 +1,10 @@
-function [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder)
+function [data_buffer,data,neuron_decoder] = decoder_adaptation6(params,data,bin_count,data_buffer,neuron_decoder,emg_decoder)
+% this version 6 adapts the neurons-to-emg decoder looking back at the data
+% once per trial, and find the optimal EMG that would produce the force
+% matching the actual cursor position at all time points. It is
+% computationally expensive.
 
 data.fix_decoder = params.adapt_params.adapt_freeze && mod(data.sys_time,params.adapt_params.adapt_time+params.adapt_params.fixed_time)>=params.adapt_params.adapt_time;
-
-% if params.cursor_assist
-%     data.adapt_trial = true; % adapt every trial during cursor assist
-% end
 
 % adapt trial and within adapt window?
 if data.adapt_trial && data.tgt_on && params.adapt && ~any(isnan(data.tgt_pos)) && ...
@@ -47,39 +47,46 @@ if data.adapt_flag
         for trial = 1:min(params.adapt_params.batch_length,data_buffer.trial_number{1})
             spikes   = data_buffer.spikes{trial};
             emgs     = data_buffer.emg_pred{trial};
-            tgt_pos  = data_buffer.tgt_pos{trial};
-            n_bins   = size(emgs,1);
+            [n_bins, n_emgs] = size(emgs);
+            curs_act = data_buffer.curs_act{trial};
+            opt_emgs = emgs;
             tgt_id   = data_buffer.tgt_id{trial};
             
-            % The following cod finds optimal EMGs, for each target presented in the trial
-            % for each tgt, there should only be one time point
-            % there should be one center (id=0) and one outer tgt per trial
-            % Use average emg as initial estimate
-            unique_tgt_ids = unique(tgt_id,'stable');
-            num_tgts       = length(unique_tgt_ids);
-            unique_tgt_pos = zeros(num_tgts,size(tgt_pos,2));
-            expected_emgs  = zeros(num_tgts,size(emgs,2));
-            for t = 1:num_tgts
-                unique_tgt_pos(t,:) = tgt_pos(find(tgt_id==unique_tgt_ids(t),1,'last'),:);
-                expected_emgs(t,:)  = params.adapt_params.emg_patterns(unique_tgt_ids(t)+1,:);
-            end
+            %Optimization Parameters:
+            TolX     = 1e-4; %function search tolerance for EMG
+            TypicalX = 0.1*ones(1,n_emgs);
+            TolFun   = 1e-4; %tolerance on cost function? not exactly sure what this should be
+%             fmin_options = optimoptions('fmincon','GradObj','on','Display','notify-detailed',...
+%                                         'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX);
+            fmin_options = optimset('fmincon');
+            fmin_options = optimset(fmin_options,'Algorithm','interior-point','GradObj','on','Display','notify-detailed',...
+                                        'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX,'FunValCheck','on');
+                                    
+            %emg bound:
+            emg_min = zeros(1,n_emgs);
+            emg_max = ones(1,n_emgs);
             
-            % based on unique_opt_emgs for each target, fill in for all time points
-            opt_emgs = nan(size(emgs));
-            for t= 1:num_tgts
-                tgt_idx = tgt_id==unique_tgt_ids(t);
-                opt_emgs(tgt_idx,:) = repmat(expected_emgs(t,:),sum(tgt_idx),1);
-            end
-            
-            % emg error:
-            de = opt_emgs-emgs;
-              
-%             de = flip(max(de,0));
-            
-            % look back at neurons
+            % gradient
             g = zeros(size(neuron_decoder.H));
+            
+            % optimize one bin at a time.
             for t = 1:n_bins
-                g = g + [1 rowvec(spikes(t:(t+params.n_lag-1),:))']'*de(t,:);
+                if ~tgt_id(t)
+                    % center target
+                    opt_emgs(t,:) = zeros(1,n_emgs);
+                else
+                    init_emg_val = opt_emgs(max(1,t-1),:);
+                    [opt_emgs(t,:),~,exitflag] = fmincon(@(EMG) Force2EMG_costfun_sig(EMG,curs_act(t,:),params.emg_decoder,params.adapt_params.lambda),init_emg_val,[],[],[],[],emg_min,emg_max,[],fmin_options);
+                    if ~exitflag
+                        warning('optimization failed');
+                        continue;
+                    end
+                end
+                % emg error:
+                de = opt_emgs(t,:)-emgs(t,:);
+                
+                % look back at neurons
+                g = g + [1 rowvec(spikes(t:(t+params.n_lag-1),:))']'*de;
             end
             g = g/n_bins;
 

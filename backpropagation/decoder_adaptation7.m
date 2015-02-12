@@ -1,4 +1,4 @@
-function [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder)
+function [data_buffer,data,neuron_decoder] = decoder_adaptation7(params,data,bin_count,data_buffer,neuron_decoder)
 
 data.fix_decoder = params.adapt_params.adapt_freeze && mod(data.sys_time,params.adapt_params.adapt_time+params.adapt_params.fixed_time)>=params.adapt_params.adapt_time;
 
@@ -47,32 +47,23 @@ if data.adapt_flag
         for trial = 1:min(params.adapt_params.batch_length,data_buffer.trial_number{1})
             spikes   = data_buffer.spikes{trial};
             emgs     = data_buffer.emg_pred{trial};
-            tgt_pos  = data_buffer.tgt_pos{trial};
-            n_bins   = size(emgs,1);
-            tgt_id   = data_buffer.tgt_id{trial};
+            [n_bins, n_emgs] = size(emgs);
+            tgt_id  = data_buffer.tgt_id{trial};
+            out_tgt_id= unique(nonzeros(tgt_id));
             
-            % The following cod finds optimal EMGs, for each target presented in the trial
-            % for each tgt, there should only be one time point
-            % there should be one center (id=0) and one outer tgt per trial
-            % Use average emg as initial estimate
-            unique_tgt_ids = unique(tgt_id,'stable');
-            num_tgts       = length(unique_tgt_ids);
-            unique_tgt_pos = zeros(num_tgts,size(tgt_pos,2));
-            expected_emgs  = zeros(num_tgts,size(emgs,2));
-            for t = 1:num_tgts
-                unique_tgt_pos(t,:) = tgt_pos(find(tgt_id==unique_tgt_ids(t),1,'last'),:);
-                expected_emgs(t,:)  = params.adapt_params.emg_patterns(unique_tgt_ids(t)+1,:);
-            end
+            expected_emgs = nan(n_bins,n_emgs);
             
-            % based on unique_opt_emgs for each target, fill in for all time points
-            opt_emgs = nan(size(emgs));
-            for t= 1:num_tgts
-                tgt_idx = tgt_id==unique_tgt_ids(t);
-                opt_emgs(tgt_idx,:) = repmat(expected_emgs(t,:),sum(tgt_idx),1);
-            end
+            % center: emg = 0
+            expected_emgs(tgt_id==0,:) = 0;
+            
+            %target: time scale of opt_emgs
+            n_tgt_bins = nnz(tgt_id);
+            n_pat_bins = size(params.adapt_params.emg_patterns,1);
+            expected_emgs(tgt_id==out_tgt_id,:)  = ...
+                        resample(params.adapt_params.emg_patterns(:,:,out_tgt_id+1), n_tgt_bins,n_pat_bins);
             
             % emg error:
-            de = opt_emgs-emgs;
+            de = expected_emgs-emgs;
               
 %             de = flip(max(de,0));
             

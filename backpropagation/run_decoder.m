@@ -61,6 +61,8 @@ data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
               'words'       , [],...
               'db_buf'      , [],...
               'emgs'        , zeros( params.n_lag_emg, params.n_emgs),...
+              'curs_pred'   , [NaN NaN],...
+              'curs_act'    , [NaN NaN],...
               'stimPW'      , zeros(1,params.n_emgs),...
               'stimPA'      , zeros(1,params.n_emgs),...
               'adapt_trial' , false,...
@@ -82,14 +84,15 @@ data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
           
 % dataset to store older data for batch adaptation
 data_buffer = dataset();                 
-for i=params.adapt_params.batch_length
+for i=1:params.adapt_params.batch_length
     data_buffer = [data_buffer;...
         dataset({{data.trial_count}, 'trial_number'}, ...
-        {{data.spikes} ,'spikes'},...
-        {{data.tgt_id} ,'tgt_id'},...
-        {{data.tgt_pos},'tgt_pos'},...
-        {{data.emgs}   ,'emg_pred'},...
-        {{nan(1,params.n_forces)},'force_pred'})];%#ok<AGROW>
+        {{data.spikes}   ,'spikes'},...
+        {{data.tgt_id}   ,'tgt_id'},...
+        {{data.tgt_pos}  ,'tgt_pos'},...
+        {{data.emgs}     ,'emg_pred'},...
+        {{data.curs_pred},'curs_pred'},...
+        {{data.curs_act} ,'curs_act'})];%#ok<AGROW>
 end
 
 
@@ -110,6 +113,10 @@ if params.display_plots
 %     'FitBoxToText','off','String',sprintf('xpred: %.2f',cursor_pos(1)));
 %     ypred_disp = annotation(gcf,'textbox', [0.65 0.79 0.16 0.05],...
 %     'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
+end
+
+if ~params.online
+    prog_bar = waitbar(0, sprintf('Replaying Offline Data'));
 end
 
 %% Setup data files and directories for recording
@@ -221,17 +228,18 @@ try
                 %apply sigmoid and store new emg prediction
                 data.emgs = [sigmoid(pred,'direct'); data.emgs(1:end-1,:)];
 %                 data.emgs = [pred; data.emgs(1:end-1,:)];
-                cursor_pos_pred = rowvec(data.emgs(:))'*emg_decoder.H;
+                data.curs_pred = rowvec(data.emgs(:))'*emg_decoder.H;
             else
-                cursor_pos_pred = pred;
+                data.curs_pred = pred;
             end
             
             %% Output
             if params.cursor_assist
                 [cursor_pos,data] = cursor_assist(data,cursor_pos,cursor_traj);
+                data.curs_act = cursor_pos;
             else
                 %normal behavior, cursor mvt based on predictions
-                cursor_pos = cursor_pos_pred;
+                cursor_pos = data.curs_pred;
             end
             
             if exist('xpc','var')
@@ -247,7 +255,8 @@ try
             
             %% Neurons-to-EMG Adaptation
             if params.adapt
-                [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder,cursor_pos_pred);
+%                 [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder);
+                [data_buffer,data,neuron_decoder] = decoder_adaptation7(params,data,bin_count,data_buffer,neuron_decoder);
             end
                 
             %% Save and display progress
@@ -262,7 +271,8 @@ try
                     fprintf('Average Matlab Operation Time : %.2fms\n',ave_op_time*1000);
                 else
                     prog = bin_count/max_cycles;
-                    fprintf('Progress: %.0f %%\n',100*prog);
+                    waitbar(prog,prog_bar);
+%                     fprintf('Progress: %.0f %%\n',100*prog);
                 end
             end
                   
@@ -285,7 +295,7 @@ try
                 end
                 tmp_data = [bin_start_t double(cursor_pos)];
                 save(curs_pos_file,'tmp_data','-append','-ascii');
-                tmp_data = [bin_start_t double(cursor_pos_pred)];
+                tmp_data = [bin_start_t double(data.curs_pred)];
                 save(curs_pred_file,'tmp_data','-append','-ascii');
             end
             
@@ -301,7 +311,7 @@ try
             if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(curs_handle)
                 
 %                 set(curs_handle,'XData',cursor_pos(1),'YData',cursor_pos(2));
-                set(curs_handle,'XData',cursor_pos_pred(1),'YData',cursor_pos_pred(2));
+                set(curs_handle,'XData',data.curs_pred(1),'YData',data.curs_pred(2));
 %                 
 %                 set(xpred_disp,'String',sprintf('xpred: %.2f',predictions(1)))
 %                 set(ypred_disp,'String',sprintf('ypred: %.2f',predictions(2)))
@@ -348,6 +358,8 @@ try
             cbmex('fileconfig', cerebus_file, '', 0);
         end
         cbmex('close');
+    else
+        close(prog_bar);
     end
     echoudp('off');
     fclose('all');
@@ -362,6 +374,8 @@ catch e
             cbmex('fileconfig', cerebus_file, '', 0);
         end
         cbmex('close');
+    else
+        close(prog_bar);
     end
     echoudp('off');
     fclose('all');
@@ -386,18 +400,18 @@ if params.adapt
 %     assignin('base','new_decoder_str',filename);
 %     assignin('base','new_decoder',neuron_decoder);
 
-    %Save dialog
-        dec_dir = [params.save_dir];
-        filename = ['Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
-        [filename, filepath] = uiputfile(fullfile(dec_dir,filename),'Save your new decoder');
-    if filepath
-        save(fullfile(filepath,filename),'-struct','neuron_decoder');
-        fprintf('Saved Decoder File :\n%s\n',filename);
-        assignin('base','new_decoder_str',filename);
-        assignin('base','new_decoder',neuron_decoder);
-    else
-        disp('Decoder not saved');
-    end
+%     %Save dialog
+%         dec_dir = [params.save_dir];
+%         filename = ['Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
+%         [filename, filepath] = uiputfile(fullfile(dec_dir,filename),'Save your new decoder');
+%     if filepath
+%         save(fullfile(filepath,filename),'-struct','neuron_decoder');
+%         fprintf('Saved Decoder File :\n%s\n',filename);
+%         assignin('base','new_decoder_str',filename);
+%         assignin('base','new_decoder',neuron_decoder);
+%     else
+%         disp('Decoder not saved');
+%     end
 end
 
 varargout = {neuron_decoder};
@@ -458,24 +472,38 @@ function [neuron_decoder,emg_decoder,params] = load_decoders(params)
             end
             params.n_forces = size(emg_decoder.H,2);
         case 'direct'
-            if ~isstruct(params.neuron_decoder)
-                neuron_decoder = LoadDataStruct(params.neuron_decoder);
-                if ~isfield(neuron_decoder, 'H')
-                    error('Invalid Decoder');
+            if strncmp(params.neuron_decoder,'new',3)
+                % create new neuron decoder from scratch
+                neuron_decoder = struct(...
+                    'P'        , [] ,...
+                    'neuronIDs', params.neuronIDs,...
+                    'binsize'  , params.binsize,...
+                    'fillen'   , params.binsize*params.n_lag);
+                if strcmp(params.neuron_decoder,'new_rand')
+                    neuron_decoder.H = randn(1 + params.n_neurons*params.n_lag, params.n_forces)*0.00001;
+                elseif strcmp(params.neuron_decoder,'new_zeros')
+                    neuron_decoder.H = zeros(1 + params.n_neurons*params.n_lag, params.n_forces);
                 end
-            else
-                neuron_decoder = params.neuron_decoder;
+            else % load existing decoder
+                if ~isstruct(params.neuron_decoder)
+                    neuron_decoder = LoadDataStruct(params.neuron_decoder);
+                    if ~isfield(neuron_decoder, 'H')
+                        error('Invalid Decoder');
+                    end
+                else
+                    neuron_decoder = params.neuron_decoder;
+                end
+                % overwrite parameters according to loaded decoder
+                params.n_lag = round(neuron_decoder.fillen/neuron_decoder.binsize);
+                params.n_neurons = size(neuron_decoder.neuronIDs,1);
+                params.binsize   = neuron_decoder.binsize;
+                params.neuronIDs = neuron_decoder.neuronIDs;
             end
-            % overwrite parameters according to loaded decoder            
-            params.n_lag = round(neuron_decoder.fillen/neuron_decoder.binsize);
-            params.n_neurons = size(neuron_decoder.neuronIDs,1);
-            params.binsize   = neuron_decoder.binsize;
-            params.neuronIDs = neuron_decoder.neuronIDs;
-            emg_decoder = [];
-            params.n_emgs = 0;
-            params.n_lag_emg = 0;
+                emg_decoder = [];
+                params.n_emgs = 0;
+                params.n_lag_emg = 0;
         otherwise
-            error('Invalid decoding mode. Please specifiy params.mode = [''emgcascade'' | ''direct'' ]');
+            error('Invalid decoding mode. Please specifiy params.mode = [''emg_cascade'' | ''direct'' ]');
     end
 
 end
@@ -488,15 +516,17 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
     else
         data.sys_time = double(offline_data.timeframe(bin_count));
-        [~,spike_idx,~] = intersect(offline_data.neuronIDs,params.neuronIDs,'rows');
+        [~,spike_idx,~] = intersect(offline_data.neuronIDs,params.neuronIDs,'rows','stable');
         new_spikes = offline_data.spikeratedata(bin_count,spike_idx)';
         new_words  = offline_data.words(offline_data.words(:,1)>= data.sys_time & ...
             offline_data.words(:,1) < data.sys_time+params.binsize,:);
         new_target = offline_data.targets.corners(offline_data.targets.corners(:,1)>= data.sys_time & ...
             offline_data.targets.corners(:,1)< data.sys_time+params.binsize,2:end);
+        data.curs_act = offline_data.cursorposbin(bin_count,:);
     end
 
     data.spikes = [new_spikes'; data.spikes(1:end-1,:)];
+    data.ave_fr = data.ave_fr*(bin_count-1)/bin_count + mean(new_spikes)/bin_count;
     num_new_words = size(new_words,1);
     data.words  = [new_words;     data.words(1:end-num_new_words,:)];
 

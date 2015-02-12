@@ -9,6 +9,7 @@ function [cost_out, cost_grad] = Force2EMG_costfun_sig(EMG, F, E2F, lambda)
     % sometimes, fmincon call the function with with NaNs in EMGs.
     % this is a lousy attempt at solving that:
     if any(any(isnan(EMG)))
+        warning('NaN detected as initial optimization EMG values');
         cost_out = 99999;
         cost_grad= 0.0001*ones(size(EMG));
         return;

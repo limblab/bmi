@@ -1,10 +1,7 @@
-function [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder)
+function [data_buffer,data,neuron_decoder] = decoder_adaptation_supervised(params,data,bin_count,data_buffer,neuron_decoder)
 
 data.fix_decoder = params.adapt_params.adapt_freeze && mod(data.sys_time,params.adapt_params.adapt_time+params.adapt_params.fixed_time)>=params.adapt_params.adapt_time;
 
-% if params.cursor_assist
-%     data.adapt_trial = true; % adapt every trial during cursor assist
-% end
 
 % adapt trial and within adapt window?
 if data.adapt_trial && data.tgt_on && params.adapt && ~any(isnan(data.tgt_pos)) && ...
@@ -46,40 +43,17 @@ if data.adapt_flag
         
         for trial = 1:min(params.adapt_params.batch_length,data_buffer.trial_number{1})
             spikes   = data_buffer.spikes{trial};
-            emgs     = data_buffer.emg_pred{trial};
-            tgt_pos  = data_buffer.tgt_pos{trial};
-            n_bins   = size(emgs,1);
-            tgt_id   = data_buffer.tgt_id{trial};
-            
-            % The following cod finds optimal EMGs, for each target presented in the trial
-            % for each tgt, there should only be one time point
-            % there should be one center (id=0) and one outer tgt per trial
-            % Use average emg as initial estimate
-            unique_tgt_ids = unique(tgt_id,'stable');
-            num_tgts       = length(unique_tgt_ids);
-            unique_tgt_pos = zeros(num_tgts,size(tgt_pos,2));
-            expected_emgs  = zeros(num_tgts,size(emgs,2));
-            for t = 1:num_tgts
-                unique_tgt_pos(t,:) = tgt_pos(find(tgt_id==unique_tgt_ids(t),1,'last'),:);
-                expected_emgs(t,:)  = params.adapt_params.emg_patterns(unique_tgt_ids(t)+1,:);
-            end
-            
-            % based on unique_opt_emgs for each target, fill in for all time points
-            opt_emgs = nan(size(emgs));
-            for t= 1:num_tgts
-                tgt_idx = tgt_id==unique_tgt_ids(t);
-                opt_emgs(tgt_idx,:) = repmat(expected_emgs(t,:),sum(tgt_idx),1);
-            end
-            
-            % emg error:
-            de = opt_emgs-emgs;
-              
-%             de = flip(max(de,0));
+            curs_act = data_buffer.curs_act{trial};
+            curs_pred= data_buffer.curs_pred{trial};
+            n_bins   = size(curs_act,1);
+          
+            % force error:
+            df = curs_act - curs_pred;
             
             % look back at neurons
             g = zeros(size(neuron_decoder.H));
             for t = 1:n_bins
-                g = g + [1 rowvec(spikes(t:(t+params.n_lag-1),:))']'*de(t,:);
+                g = g + [1 rowvec(spikes(t:(t+params.n_lag-1),:))']'*df(t,:);
             end
             g = g/n_bins;
 
