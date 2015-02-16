@@ -25,7 +25,11 @@ if params.save_data
     end
 
     headers = ['t_bin_start',spike_chans,pred_labels,'cursor_x','cursor_y','sh_x','sh_y','el_x','el_y',...
-        emg_chans,'F_x','F_y','musc_force_1','musc_force_2','musc_force_3','musc_force_4','cocontraction'];
+        emg_chans,'F_x','F_y','musc_force_1','musc_force_2','musc_force_3',...
+        'musc_force_4','cocontraction'];
+    for iDecoder = 1:length(params.decoder_offsets)
+        headers{end+1} = ['decoder_offset_ ' num2str(iDecoder)'];
+    end
 
      %Setup files for recording parameters and neural and cursor data:    
     save(fullfile(handles.save_dir, [handles.filename '_params.mat']),'params','arm_params');

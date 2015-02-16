@@ -5,10 +5,10 @@ if params.save_data
 %         handles.date_str = datestr(now,'yyyy_mm_dd_HHMMSS');
         handles.date_str = datestr(now,'yyyy-mm-dd');
         if isempty(params.arm_model)
-            handles.save_dir = [params.save_dir filesep params.monkey_name '_' handles.date_str '_' params.task_name];
+            handles.save_dir = [params.save_dir filesep params.monkey_name '_' handles.date_str '_' params.task_name filesep 'CerebusData'];
             handles.filename = [params.monkey_name '_' handles.date_str '_' params.task_name '_'];
         else
-            handles.save_dir = [params.save_dir filesep params.monkey_name '_' handles.date_str '_' params.task_name '_' params.arm_model];
+            handles.save_dir = [params.save_dir filesep params.monkey_name '_' handles.date_str '_' params.task_name '_' params.arm_model filesep 'CerebusData'];
             handles.filename = [params.monkey_name '_' handles.date_str '_' params.task_name '_' params.arm_model '_'];
         end
         if ~isdir(handles.save_dir)

@@ -14,11 +14,11 @@ clear params
 params.monkey_name = 'Chewie';
 % params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
-params.mode = 'emg'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
+params.mode = 'n2e'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
 params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
 params.task_name = ['RP_' params.mode];
 % params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-musc_Binned_Decoder.mat';
-params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-01-22_RP_emg_hu\SavedFilters\Chewie_2015-01-22_RP_emg_hu_002_Decoder.mat';
+params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-02-13_DCO_emg_hu\SavedFilters\Chewie_2015-02-13_DCO_emg_hu_001_Decoder.mat';
 params.decoders(1).decoder_type = 'n2e';
 params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-cartesian_Binned_Decoder.mat';
 params.decoders(2).decoder_type = 'n2e_cartesian';
@@ -41,7 +41,7 @@ params.display_plots = 0;
 params.left_handed = 1;
 params.debug = 0;
 params.offset_time_constant = 60;
-params.vel_offsets = [0 0];
+params.decoder_offsets = [];
 params.artifact_removal = 0;
 params.artifact_removal_window = 0.001;
 params.artifact_removal_num_channels = 10;
@@ -178,7 +178,20 @@ old_handleforce = [0 0];
                 predictions = [];
             end
             if strcmpi(params.mode,'n2e') || strcmpi(params.mode,'n2e_cartesian')
-                predictions(predictions<0) = 0;
+                if numel(params.decoder_offsets)~=numel(predictions)
+                    params.decoder_offsets = zeros(size(predictions));
+                end
+                hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
+                    (predictions + params.decoder_offsets);
+                params.decoder_offsets = hpf_predictions - predictions;                
+                predictions = hpf_predictions;
+                if mod(iCycle,100)==0
+                    set(handles.textbox_offset_1,'String',num2str(params.decoder_offsets(1),4));
+                    set(handles.textbox_offset_2,'String',num2str(params.decoder_offsets(2),4));
+                    set(handles.textbox_offset_3,'String',num2str(params.decoder_offsets(3),4));
+                    set(handles.textbox_offset_4,'String',num2str(params.decoder_offsets(4),4))
+                end
+                predictions(predictions<0) = 0;                
             end
             if ~isempty(params.current_decoder.P)
                 for iP = 1:length(predictions)
@@ -186,17 +199,26 @@ old_handleforce = [0 0];
                 end
             end
             
-            if strcmpi(params.mode,'vel')
+            if strcmpi(params.mode,'vel')                
                 predictions = .01*predictions(1:2);
+                if numel(params.decoder_offsets)~=numel(predictions)
+                    params.decoder_offsets = zeros(size(predictions));
+                end
                 hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
-                    (predictions + params.vel_offsets);
-                params.vel_offsets = hpf_predictions - predictions;
+                    (predictions + params.decoder_offsets(1:2));
+                params.decoder_offsets(1:2) = hpf_predictions - predictions;
                 if mod(iCycle,100)==0
-                    set(handles.textbox_offset_x,'String',num2str(params.vel_offsets(1)));
-                    set(handles.textbox_offset_y,'String',num2str(params.vel_offsets(2)));
+                    set(handles.textbox_offset_1,'String',num2str(params.decoder_offsets(1),4));
+                    set(handles.textbox_offset_2,'String',num2str(params.decoder_offsets(2),4));
+                    set(handles.textbox_offset_3,'String',num2str(0));
+                    set(handles.textbox_offset_4,'String',num2str(0));
                 end
                 predictions = hpf_predictions;
                 m_data_1.Data.vel_predictions = predictions;
+            end
+            
+            if ~(strcmpi(params.mode,'vel') || strcmpi(params.mode,'n2e') || strcmpi(params.mode,'n2e_cartesian'))
+                params.decoder_offsets = [];
             end
             
             [EMG_data,~,EMG_labels] = process_emg(params,data,predictions);
@@ -219,7 +241,8 @@ old_handleforce = [0 0];
                 end
                 tmp_data = [bin_start_t spikes predictions cursor_pos ...
                     m_data_2.Data.shoulder_pos m_data_2.Data.elbow_pos ...
-                    EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force m_data_2.Data.cocontraction];
+                    EMG_data m_data_2.Data.F_end m_data_2.Data.musc_force ...
+                    m_data_2.Data.cocontraction params.decoder_offsets];
                 save(handles.data_file,'tmp_data','-append','-ascii');
             end
             

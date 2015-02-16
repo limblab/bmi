@@ -42,9 +42,9 @@ arm_params_default.emg_thres = .1;
 
 % Hu/Perreault arm
 arm_params_default.HU_MODEL_PARAMETERS = 0;
-arm_params_default.emg_to_torque_gain = [4 4];
+arm_params_default.emg_to_torque_gain = [2 2];
 arm_params_default.joint_stiffness_min = [0 0];
-arm_params_default.joint_stiffness_max = [10 10];
+arm_params_default.joint_stiffness_max = [50 50];
 arm_params_default.joint_damping_min = [.8 .8];
 arm_params_default.joint_damping_max = [.8 .8];
 arm_params_default.block_shoulder = 1;
