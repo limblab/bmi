@@ -255,8 +255,22 @@ try
             
             %% Neurons-to-EMG Adaptation
             if params.adapt
-%                 [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder);
-                [data_buffer,data,neuron_decoder] = decoder_adaptation7(params,data,bin_count,data_buffer,neuron_decoder);
+                switch params.adapt_params.type
+                    case 'normal'
+                        % fixed expected emg value for each muscle and each target
+                        [data_buffer,data,neuron_decoder] = decoder_adaptation5(params,data,bin_count,data_buffer,neuron_decoder);
+                    case 'N2F_target'
+                        % adaptation of neuron to force decoder using target force
+                        [data_buffer,data,neuron_decoder] = decoder_adaptation_N2F_target(params,data,bin_count,data_buffer,neuron_decoder);
+                    case 'tvp'
+                        % time-varying emg patterns for each target
+                        [data_buffer,data,neuron_decoder] = decoder_adaptation7(params,data,bin_count,data_buffer,neuron_decoder);
+                    case 'supervised'
+                        % adapt using actual force
+                        [data_buffer,data,neuron_decoder] = decoder_adaptation_supervised(params,data,bin_count,data_buffer,neuron_decoder);
+                    otherwise
+                        error('Unknown decoder adaptation type : %s',params.adapt_params.adapt_type);
+                end     
             end
                 
             %% Save and display progress

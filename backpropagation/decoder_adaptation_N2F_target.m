@@ -1,4 +1,4 @@
-function [data_buffer,data,neuron_decoder] = decoder_adaptation7(params,data,bin_count,data_buffer,neuron_decoder)
+function [data_buffer,data,neuron_decoder] = decoder_adaptation_N2F_target(params,data,bin_count,data_buffer,neuron_decoder)
 % This version is for adaptation using time-varying EMG patterns, based on
 % a predefined cursor trajectory
 
@@ -48,32 +48,18 @@ if data.adapt_flag
         accum_n = 0;
         
         for trial = 1:min(params.adapt_params.batch_length,data_buffer.trial_number{1})
-            spikes   = data_buffer.spikes{trial};
-            emgs     = data_buffer.emg_pred{trial};
-            [n_bins, n_emgs] = size(emgs);
-            tgt_id  = data_buffer.tgt_id{trial};
-            out_tgt_id= unique(nonzeros(tgt_id));
+            spikes      = data_buffer.spikes{trial};
+            curs_preds  = data_buffer.curs_pred{trial};
+            n_bins      = size(curs_preds,1);
+            tgt_pos     = data_buffer.tgt_pos{trial};
             
-            expected_emgs = nan(n_bins,n_emgs);
-            
-            % center: emg = 0
-            expected_emgs(tgt_id==0,:) = 0;
-            
-            %target: time scale of opt_emgs
-            n_tgt_bins = nnz(tgt_id);
-            n_pat_bins = size(params.adapt_params.emg_patterns,1);
-            expected_emgs(tgt_id==out_tgt_id,:)  = ...
-                        resample(params.adapt_params.emg_patterns(:,:,out_tgt_id+1), n_tgt_bins,n_pat_bins);
-            
-            % emg error:
-            de = expected_emgs-emgs;
+            % force prediction error:
+            df = tgt_pos-curs_preds;
               
-%             de = flip(max(de,0));
-            
             % look back at neurons
             g = zeros(size(neuron_decoder.H));
             for t = 1:n_bins
-                g = g + [1 rowvec(spikes(t:(t+params.n_lag-1),:))']'*de(t,:);
+                g = g + [1 rowvec(spikes(t:(t+params.n_lag-1),:))']'*df(t,:);
             end
             g = g/n_bins;
 
