@@ -7,6 +7,7 @@ cd(current_folder)
 add_these = strfind(current_folder,'\');
 add_these = current_folder(1:add_these(end)-1);
 addpath([add_these filesep 'lib'])
+addpath([add_these filesep 'default_parameters'])
 addpath(genpath([add_these filesep 'SDK for Windows']))
 % addpath(genpath(add_these))
 
@@ -113,7 +114,7 @@ drawnow;
 iCycle = 0;
 old_handleforce = [0 0];
 % Run cycle
-try
+% try
     recording = 0;
     current_mode = params.mode;
     
@@ -326,22 +327,22 @@ try
     end
     clear m_data_1 m_data_2
     
-catch e
-    if params.online
-        if params.save_data
-            cbmex('fileconfig', handles.cerebus_file, '', 0);
-        end
-        cbmex('close');
-    end
-    recorded_files = dir(handles.save_dir);
-    recorded_files = {recorded_files(:).name};
-    if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
-        rmdir(handles.save_dir);
-    end
-    m_data_1.Data.bmi_running = 0;
-    echoudp('off');
-    fclose('all');
-    close all;
-    clear m_data_1 m_data_2
-    rethrow(e);    
-end
+% catch e
+%     if params.online
+%         if params.save_data
+%             cbmex('fileconfig', handles.cerebus_file, '', 0);
+%         end
+%         cbmex('close');
+%     end
+%     recorded_files = dir(handles.save_dir);
+%     recorded_files = {recorded_files(:).name};
+%     if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
+%         rmdir(handles.save_dir);
+%     end
+%     m_data_1.Data.bmi_running = 0;
+%     echoudp('off');
+%     fclose('all');
+%     close all;
+%     clear m_data_1 m_data_2
+%     rethrow(e);    
+% end
