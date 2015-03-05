@@ -259,7 +259,7 @@ try
                     shoulder_pos = cursor_pos;
                     elbow_pos = cursor_pos;
                 end
-                fwrite(xpc.xpc_write, [1 1 cursor_pos shoulder_pos elbow_pos send_stop_trial m_data_2.Data.cocontraction 0 0],'float32');
+                fwrite(xpc, [1 1 cursor_pos shoulder_pos elbow_pos send_stop_trial m_data_2.Data.cocontraction 0 0],'float32');
                 %                     fprintf('%.2f\t%.2f\t%.2f\t%.2f\n',[cursor_pos predictions]);
             end
             params.stop_trial = 0;
