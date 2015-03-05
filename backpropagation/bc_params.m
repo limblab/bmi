@@ -18,15 +18,15 @@ end
 
 %Jango:
     params.save_name      = 'Jango_IsoBox_BC_';
-    params.save_dir       = 'F:\Data-lab1\12A1-Jango\CerebusData\Adaptation\';
+    params.save_dir       = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\';
     
 %     % optimal N2F decoder:
 %     params.mode           = 'direct';
-%     params.neuron_decoder = 'Z:\Jango_12a1\SavedFilters\Adaptation\20150127\Jango_20150127_WFHC_001_N2F_Decoder.mat';
-%     
+%     params.neuron_decoder = 'E:\Data-lab1\12A1-Jango\SavedFilters\20150212\Jango_2015212_WFHC_001_50neur_N2F_Decoder.mat';
+    
     % decoder trained with adapt_offline
-    params.mode           = 'emg_cascade';
-    params.neuron_decoder = 'Z:\Jango_12a1\SavedFilters\Adaptation\20150127\Adapt_offline_20150127_LR8e-7_N2E.mat';
+    params.mode           = 'direct';
+    params.neuron_decoder = 'Z:\Jango_12a1\SavedFilters\Adaptation\20150217\Jango_2015217_WFHC_002&003_N2F_Decoder.mat';
     
     
     % Neuron decoder
