@@ -17,16 +17,18 @@
 % 3 - Build N2F decoder:
 %       >> opts = BuildModelGUI;
 %       >> N2F = BuildModel(binnedData,opts);
-%       >> save('Z:\Jango_12a1\SavedFilters\Adaptation\20150212\Jango_2015212_WFHC_001_N2F_Decoder.mat';
+%       >> decoder_path = 'Z:\Jango_12a1\SavedFilters\Adaptation\20150217';
+%       >> mkdir(decoder_path);
+%       >> save([decoder_path '\Jango_2015217_WFHC_002&003_N2F_Decoder.mat'],'N2F');
 %
 % 4 - Train adaptive decoder:
-%       >> N2E = adapt_offline(traindata);
-%       >> save('Z:\Jango_12a1\SavedFilters\Adaptation\20150212\Jango_20150212_WFHC_001_N2E_adapt_Decoder.mat';
+%       >> N2E = adapt_offline(binnedData);
+%       >> save([decoder_path '\Jango_20150217_WFHC_002&003_N2E_adapt_Decoder.mat'],'N2E');
 %
 % 5a - Brain-control using optimal decoder:
-%       >> edit bc_params: mode and neuron decoder
+%       >> edit bc_params: mode == 'direct' and neuron decoder filename
 %       >> run_decoder(bc_params); % 5 min
 %
 % 5b - Brain-control using non-supervised decoder:
-%       >> edit bc_params: mode and neuron decoder
+%       >> edit bc_params: mode == 'emg_cascade' and neuron decoder filename
 %       >> run_decoder(bc_params); % 5 min
