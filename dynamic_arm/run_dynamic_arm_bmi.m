@@ -14,11 +14,11 @@ clear params
 params.monkey_name = 'Chewie';
 % params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
-params.mode = 'n2e'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
+params.mode = 'emg'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
 params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
 params.task_name = ['RP_' params.mode];
 % params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-musc_Binned_Decoder.mat';
-params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-02-13_DCO_emg_hu\SavedFilters\Chewie_2015-02-13_DCO_emg_hu_001_Decoder.mat';
+params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-02-26_DCO_emg_hu\SavedFilters\Chewie_2015-02-26_DCO_emg_hu_001_Decoder.mat';
 params.decoders(1).decoder_type = 'n2e';
 params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-cartesian_Binned_Decoder.mat';
 params.decoders(2).decoder_type = 'n2e_cartesian';
@@ -113,7 +113,7 @@ drawnow;
 iCycle = 0;
 old_handleforce = [0 0];
 % Run cycle
-% try
+try
     recording = 0;
     current_mode = params.mode;
     
@@ -326,22 +326,22 @@ old_handleforce = [0 0];
     end
     clear m_data_1 m_data_2
     
-% catch e
-%     if params.online
-%         if params.save_data
-%             cbmex('fileconfig', handles.cerebus_file, '', 0);
-%         end
-%         cbmex('close');
-%     end
-%     recorded_files = dir(handles.save_dir);
-%     recorded_files = {recorded_files(:).name};
-%     if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
-%         rmdir(handles.save_dir);
-%     end
-%     m_data_1.Data.bmi_running = 0;
-%     echoudp('off');
-%     fclose('all');
-%     close all;
-%     clear m_data_1 m_data_2
-%     rethrow(e);    
-% end
+catch e
+    if params.online
+        if params.save_data
+            cbmex('fileconfig', handles.cerebus_file, '', 0);
+        end
+        cbmex('close');
+    end
+    recorded_files = dir(handles.save_dir);
+    recorded_files = {recorded_files(:).name};
+    if numel(recorded_files)<3 && exist(handles.save_dir,'dir')
+        rmdir(handles.save_dir);
+    end
+    m_data_1.Data.bmi_running = 0;
+    echoudp('off');
+    fclose('all');
+    close all;
+    clear m_data_1 m_data_2
+    rethrow(e);    
+end

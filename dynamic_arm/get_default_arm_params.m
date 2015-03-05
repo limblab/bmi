@@ -18,7 +18,7 @@ arm_params_default.EMG_filter = 0;
 arm_params_default.T = 0*[2;-.2];
 arm_params_default.max_torque = 1000;
 arm_params_default.online = 1;
-arm_params_default.cocontraction_filter = 0.9;
+arm_params_default.cocontraction_filter = 0.7;
 arm_params_default.use_brd = 1;
 
 % Hill arm
@@ -42,7 +42,7 @@ arm_params_default.emg_thres = .1;
 
 % Hu/Perreault arm
 arm_params_default.HU_MODEL_PARAMETERS = 0;
-arm_params_default.emg_to_torque_gain = [2 2];
+arm_params_default.emg_to_torque_gain = [0.5 0.5];
 arm_params_default.joint_stiffness_min = [0 0];
 arm_params_default.joint_stiffness_max = [50 50];
 arm_params_default.joint_damping_min = [.8 .8];
