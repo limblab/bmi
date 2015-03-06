@@ -85,7 +85,7 @@ if data.adapt_flag
             g = g/n_bins;
 
             % apply L2 regularization
-             %g(2:end, :) = g(2:end, :) - lambda*S2EMG_w(2:end, :);
+            g(2:end, :) = g(2:end, :) - params.adapt_params.lambda*neuron_decoder.H(2:end, :);
             % accumulate gradient
             accum_g = accum_g + g;
             accum_n = accum_n + 1;
