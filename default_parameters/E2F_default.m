@@ -4,6 +4,8 @@ E2F.fillen      = 0.05;
 E2F.binsize     = 0.05;
 E2F.outnames    = ['x_pos';'y_pos'];
 E2F.input_type  = 'EMG';
+E2F.filename    = 'E2F_default';
+E2F.decoder_type= 'E2F';
 
 E2F.H = [...
     10      0;

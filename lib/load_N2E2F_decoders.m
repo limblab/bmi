@@ -46,6 +46,7 @@ function [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params)
                 emg_decoder = params.emg_decoder;
             end
             params.n_lag_emg = round(emg_decoder.fillen/emg_decoder.binsize);
+            params.n_emgs = size(emg_decoder.H,2);
 %             params.n_emgs = round((size(emg_decoder.H,1)-1)/params.n_lag_emg);
             if round(emg_decoder.binsize*1000) ~= round(neuron_decoder.binsize*1000) 
                 warning('Incompatible binsize between neurons and emg decoders');

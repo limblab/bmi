@@ -1,12 +1,12 @@
 function [data,data_buffer] = get_default_data(params)
 
 if ~strcmp(params.mode,'direct')
-    spike_buf_size = params.n_lag + params.n_lag_emg - 1; 
+    spike_buf_size = params.n_lag + params.n_lag_emg - 1;
 else
     spike_buf_size = params.n_lag;
 end
 
-data = struct('spikes'      , zeros(spike_buf_size,params.current_decoder.n_neurons),...
+data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
               'analog'      , [],...
               'ave_fr'      , 0.0,...
               'words'       , [],...
@@ -34,8 +34,10 @@ data = struct('spikes'      , zeros(spike_buf_size,params.current_decoder.n_neur
               'emg_binned'  , zeros( 10, 4),...
               'artifact_found', 0,...
               'trial_count', 0);
-          
-data.labels = cbmex('chanlabel',1:156);
+
+if params.online
+    data.labels = cbmex('chanlabel',1:156);
+end
 
 % dataset to store older data for batch adaptation
 data_buffer = dataset();                 

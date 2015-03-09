@@ -3,7 +3,7 @@ function bmi_params = bmi_params_defaults(varargin)
 %   'adapt'         : enable adaptation (emg_cascade mode only for now)
 %   'cursor_assist' : moves the cursor to a target and back according to 'cursor_traj'
 %   'cursor_traj'   : file path and name to a structure containing the fields 'mean_paths' and 'back_paths'
-%   'neuron_decoder': Initial Neuron-to-EMG decoder: 'new_zeros',
+%   'decoders'      : structure containing decoder structure to store with fields 'decoder_file' and decoder_typeInitial Neuron-to-EMG decoder: 'new_zeros',
 %                     'new_rand', or string with decoder file name.
 %   'emg_decoder'   : file name or structure containing emg-to-force model
 %   'output'        : either 'stimulator' or 'xpc' or 'none'
@@ -38,6 +38,7 @@ N2E = 'Jango_20141203_default_N2F_decoder.mat';
 E2F = E2F_default;
 
 bmi_params_defaults = struct( ...
+    'decoders'      ,default_bmi_decoders,...
     'mode'          ,'direct',...
     'adapt'         ,false,...
     'cursor_assist' ,false,...

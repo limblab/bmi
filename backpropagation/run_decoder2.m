@@ -24,6 +24,7 @@ xpc = open_xpc_udp(params);
 %% Read Decoders and other files
 
 [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params);
+% decoders = load_decoders(params);
 if isempty(neuron_decoder)
     clearxpc;return;
 end
@@ -52,16 +53,27 @@ w = Words;
 keep_running = msgbox('Click ''ok'' to stop the BMI','BMI Controller');
 set(keep_running,'Position',[200 700 125 52]);
 
-handles = setup_display_plots(params
+if params.display_plots
+    curs_handle = plot(0,0,'ko');
+    set(curs_handle,'MarkerSize',6,'MarkerFaceColor','k','MarkerEdgeColor','k');
+    xlim([-12 12]); ylim([-12 12]);
+    axis square; axis equal; axis manual;
+    hold on;
+    tgt_handle  = plot(0,0,'bo');
+    set(tgt_handle,'LineWidth',2,'MarkerSize',15);
+%     xpred_disp = annotation(gcf,'textbox', [0.65 0.85 0.16 0.05],...
+%     'FitBoxToText','off','String',sprintf('xpred: %.2f',cursor_pos(1)));
+%     ypred_disp = annotation(gcf,'textbox', [0.65 0.79 0.16 0.05],...
+%     'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
+end
 
 if ~params.online
     prog_bar = waitbar(0, sprintf('Replaying Offline Data'));
 end
-
 %% Setup data files and directories for recording
-
-filerec_params = setup_recordings(params);
-
+if params.save_data
+    filerec_params = setup_recordings(params);
+end
 %% Start data streaming
 if params.online
     handles = start_cerebus_stream(params,handles,xpc);

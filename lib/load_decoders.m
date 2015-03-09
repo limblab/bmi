@@ -1,5 +1,7 @@
 function params = load_decoders(params)
-    params.spike_chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);
+    if isfield(params,'spike_chan_names')
+        params.spike_chan_names = arrayfun(@(i) ['chan' num2str(params.elec_map{i,3})],1:size(params.elec_map,1),'UniformOutput',false);
+    end
     for iDecoder = 1:numel(params.decoders)
         if ~strcmp(params.decoders(iDecoder).decoder_type,'null')
             decoder = LoadDataStruct(params.decoders(iDecoder).decoder_file);
@@ -13,6 +15,7 @@ function params = load_decoders(params)
             params.decoders(iDecoder).n_lag = round(decoder.fillen/decoder.binsize);
             params.decoders(iDecoder).n_neurons = size(decoder.neuronIDs,1);
             params.decoders(iDecoder).binsize   = decoder.binsize;
+            
             params.decoders(iDecoder).emg_decoder = [];
             params.decoders(iDecoder).n_emgs = 0;
             params.decoders(iDecoder).n_lag_emg = 0;
