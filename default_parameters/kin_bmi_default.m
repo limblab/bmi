@@ -1,6 +1,5 @@
 function kin_params = kin_bmi_default(varargin)
 
-
 params.online       = true;
 params.save_data    = true;
 params.mode         = 'direct';

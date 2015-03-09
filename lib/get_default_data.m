@@ -36,7 +36,9 @@ data = struct('spikes'      , zeros(spike_buf_size,params.n_neurons),...
               'trial_count', 0);
 
 if params.online
-    data.labels = cbmex('chanlabel',1:156);
+  cbmex('open',1);
+  data.labels = cbmex('chanlabel',1:156);
+  cbmex('close')
 end
 
 % dataset to store older data for batch adaptation

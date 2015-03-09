@@ -1,13 +1,13 @@
 % Brain Control of Kinematic Experiment
 % 
-% 1.  Record 20(?) min of wrist movement data
+% 1.  Record 15 min of wrist movement data
 % 
-% 2.  >> train_data = convert2BDF2Binned
+% 2.  >> train_data = convert2BDF2Binned;
 % 
 % 3.  >> opts = BuildModelGUI;
 %     >> dec  = BuildModel(train_data,opts);
 %     
-% 4.  >> params  = kin_bmi_default;
+% 4.  >> params  = kin_bmi_params_steph;
 %     
 % 5.  >> params.neuron_decoder = dec;
 % 
