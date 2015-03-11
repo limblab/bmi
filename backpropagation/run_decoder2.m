@@ -72,7 +72,7 @@ if ~params.online
 end
 %% Setup data files and directories for recording
 if params.save_data
-    filerec_params = setup_recordings(params);
+    handles = setup_recordings(params);
 end
 %% Start data streaming
 if params.online
