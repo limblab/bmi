@@ -140,6 +140,7 @@ try
                     data.curs_pred = pred;
                 end
             end
+            
             data.curs_pred = sign(data.curs_pred).*min(sign(data.curs_pred).*data.curs_pred,params.pred_bounds);
                 
             %% Output
@@ -149,6 +150,7 @@ try
             else
                 %normal behavior, cursor mvt based on predictions
                 cursor_pos = data.curs_pred;
+                data.curs_act = cursor_pos;
             end
             
             if strcmpi(params.output,'xpc')
