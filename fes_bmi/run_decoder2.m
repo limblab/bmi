@@ -26,7 +26,8 @@ xpc = open_xpc_udp(params);
 [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params);
 % decoders = load_decoders(params);
 if isempty(neuron_decoder)
-    clearxpc;return;
+    if params.online clearxpc; end
+    return;
 end
 
 % load template trajectories

@@ -45,15 +45,38 @@ function [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params)
             else
                 emg_decoder = params.emg_decoder;
             end
-            params.n_lag_emg = round(emg_decoder.fillen/emg_decoder.binsize);
-            params.n_emgs = size(emg_decoder.H,1);
-%             params.n_emgs = round((size(emg_decoder.H,1)-1)/params.n_lag_emg);
+            
+            if emg_decoder.binsize ~= params.binsize
+                waring(['EMG decoder was calculated for a different bin size'...
+                        ' than the neuron decoder - abort']);
+                neuron_decoder = [];
+                emg_decoder = [];
+                return;
+            end
+            
+            params.n_emgs = round(size(emg_decoder.H,1)/params.n_lag_emg);
+            if ~isempty(params.emg_convolve)
+                % we want to modify the (1bin) decoder to include force dynamics
+                if emg_decoder.fillen > params.binsize
+                    warning(['Attempting to apply a filter to an emg decoder' ...
+                             ' which already includes temporal dynamics - abort']);
+                    neuron_decoder = [];
+                    emg_decoder = [];
+                    return;
+                end
+                emg_decoder.H = reshape((rowvec(emg_decoder.H)*params.emg_convolve)',...
+                                            length(params.emg_convolve)*params.n_emgs,params.n_forces);
+                params.n_lag_emg = length(params.emg_convolve);                        
+                emg_decoder.fillen = params.n_lag_emg * emg_decoder.binsize;
+            end
+            
             if round(emg_decoder.binsize*1000) ~= round(neuron_decoder.binsize*1000) 
                 warning('Incompatible binsize between neurons and emg decoders');
                 neuron_decoder = [];
                 emg_decoder = [];
                 return;
             end
+            
             if params.n_emgs ~= size(neuron_decoder.H,2)
                 warning(['The number of outputs from the neuron_decoder (%d) does not match\n' ...
                                'the number of inputs of the emg_decoder...(%d).'],...
@@ -62,7 +85,8 @@ function [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params)
                 emg_decoder = [];
                 return;
             end
-            params.n_forces = size(emg_decoder.H,2);
+
+            
         case 'direct'
             if strncmp(params.neuron_decoder,'new',3)
                 % create new neuron decoder from scratch
@@ -97,6 +121,7 @@ function [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params)
                 emg_decoder = [];
                 params.n_emgs = 0;
                 params.n_lag_emg = 0;
+                
         otherwise
             warning('Invalid decoding mode. Please specifiy params.mode = [''emg_cascade'' | ''direct'' ]');
             neuron_decoder = [];
