@@ -1,5 +1,9 @@
-function params = bc_params(varargin)
-% varargin = {ave_fr,neuronIDs}
+function params = bc_params(monkey,varargin)
+
+
+if nargin > 1
+    params = varargin{1};
+end
 
 % fixed:
 params.adapt         = false;
@@ -8,36 +12,15 @@ params.output        = 'xpc';
 params.save_data     = true;
 params.online        = true;
 
-for i = 1:nargin
-    if isscalar(varargin{i})
-        params.ave_fr = varargin{i};
-    else
-        params.neuronIDs = varargin{i};
-    end
+if strncmpi(monkey,'jango',3)
+    params.save_name = 'Jango_BC_';
+    params.save_dir  = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\';
+elseif strncmpi(monkey,'kevin',3)
+    params.save_name = 'Kevin_BC_';
+    params.save_dir  = 'E:\Data-lab1\12A2-Kevin\Adaptation\';
+else
+    warning('unknown monkey name, save_dir not set!');
 end
 
-%Jango:
-    params.save_name      = 'Jango_IsoBox_BC_';
-    params.save_dir       = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\';
-    
-%     % optimal N2F decoder:
-%     params.mode           = 'direct';
-%     params.neuron_decoder = 'E:\Data-lab1\12A1-Jango\SavedFilters\20150212\Jango_2015212_WFHC_001_50neur_N2F_Decoder.mat';
-    
-    % decoder trained with adapt_offline
-    params.mode           = 'direct';
-    params.neuron_decoder = 'Z:\Jango_12a1\SavedFilters\Adaptation\20150217\Jango_2015217_WFHC_002&003_N2F_Decoder.mat';
-    
-    
-    % Neuron decoder
-%     params.neuron_decoder = 'new_zeros';
-%     params.neuron_decoder = 'Z:\Jango_12a1\SavedFilters\BCcontrol\20150115\Jango_IsoBox_HC_20150115_001_N2F_Decoder.mat';
-%     params.neuron_decoder = 'Z:\Jango_12a1\SavedFilters\Adaptation\20150120\Jango_20150120_WFHC_003_N2E.mat';
+%  params.neuron_decoder = 'Z:\Jango_12a1\SavedFilters\Adaptation\20150217\Jango_2015217_WFHC_002&003_N2F_Decoder.mat';
 
-
-
-    % EMG decoder
-%     params.emg_decoder = 'Z:\Jango_12a1\SavedFilters\Jango_20150107_E2F_xcor_12EMGs.mat';
-%     params.emg_decoder = 'Z:\Jango_12a1\SavedFilters\E2F_8generic_iso_muslces.mat';
-%     params.n_emgs      = 8;
-%     params.n_lag_emg   = 1;

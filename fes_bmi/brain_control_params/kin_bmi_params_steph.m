@@ -2,9 +2,9 @@ function kin_params = kin_bmi_params_steph(varargin)
 
 params.online       = true;
 params.save_data    = true;
-params.mode         = 'emg_cascade';
+params.mode         = 'direct';
 params.save_dir     = 'E:\Data-lab1\12A2-Kevin\LearnAdapt';
-params.save_name    = 'Kevin_VelBC_03112015_SN';
+params.save_name    = 'Kevin_VelBC_03122015_SN';
 params.hp_rc        = 60;
 params.pred_bounds  = [11 11];
 

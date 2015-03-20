@@ -41,5 +41,5 @@ end
 
 %% Run decoder training
 %-------------------
-neuron_decoder = run_decoder(params);
+neuron_decoder = run_decoder2(params);
 %-------------------

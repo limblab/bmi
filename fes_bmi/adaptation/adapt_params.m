@@ -1,8 +1,6 @@
 function params = adapt_params(varargin)
 % varargin = {ave_fr,neuronIDs}
 
-params = bmi_params_defaults;
-
 % fixed:
 params.adapt = true;
 params.cursor_assist = true;
@@ -40,14 +38,8 @@ params.n_neurons      = 96;
 params.emg_decoder    = 'F:\Data-lab1\12A1-Jango\SavedFilters\Jango_WF_20141014_HC_001_E2F1bin_Decoder.mat';
 params.n_emgs         = 12;
 params.n_lag_emg      = 1;
-tmp_pat               = load('F:\Data-lab1\12A1-Jango\SavedFilters\Jango_WF_20141014_HC_001_emg_patterns.mat');
-params.emg_patterns   = tmp_pat.emg_patterns; clear tmp_pat;
 
-%Adaptation Parameters
-%lambda: [L0 L1 L2 L3]:= weights for Force error, L1reg, L2reg and EMG templates respectively
-params.lambda = [0 0 0 100];
-%         params.lambda = 10;
-params.LR = 1e-6;
+
 
 
 
