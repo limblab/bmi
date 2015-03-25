@@ -1,5 +1,5 @@
 % 0 - set global variables
-monkey = 'Jango';
+monkey = 'Kevin';
 if strcmpi(monkey,'Jango')
     decoder_path = ['Z:\Jango_12a1\SavedFilters\Adaptation\' datestr(now,'yyyymmdd')];
     mkdir(decoder_path);
@@ -39,4 +39,6 @@ run_decoder2(params); % 5 min
 % 5b - Brain-control using non-supervised decoder:
 params.mode = 'emg_cascade';
 params.neuron_decoder = N2E;
-run_decoder(params); % 5 min
+params.emg_convolve = [0.5 1 0.5];
+params.emg_convolve  = params.emg_convolve./sum(params.emg_convolve);
+run_decoder2(params); % 5 min
