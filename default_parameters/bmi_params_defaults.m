@@ -35,6 +35,7 @@ function bmi_params = bmi_params_defaults(varargin)
 %   'stop_trial'    :
 %   'stop_task_if_x_artifacts' : 
 %   'stop_task_if_x_force' :
+%   'offset_time_constant' :
 
 N2E = 'Jango_20141203_default_N2F_decoder.mat';
 E2F = E2F_default;
