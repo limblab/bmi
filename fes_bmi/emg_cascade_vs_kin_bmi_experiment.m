@@ -20,15 +20,21 @@
 
 
 % Brain Control through EMG cascade Experiment
+% IP address: 0:10 are the last two numbers
 % 
 % 1.  Record 15 min of isometric force data
 % 
 % 2.  >> train_data = convert2BDF2Binned; %DONT FORGET: Normalize Force and EMG!
 % 
 % 3.  >> opts = BuildModelGUI; %(in=spikes, out=EMG, length = 500ms, polyn order = 0)
-%     >> N2E  = BuildModel(train_data,opts);
-%     >> opts = BuildModelGUI; %(in=EMG, out=cursor position, ***PAY ATTENTION length = 50ms****, polyn order=0 )
-%     >> E2F  = BuildModel(train_data,opts);
+emg_vector = [1 2 7 8]; %or the muscles you want
+train_data_subset = train_data;
+train_data_subset.emgdatabin = train_data.emgdatabin(:,emg_vector);
+train_data_subset.emgguide = train_data.emgguide(emg_vector);
+
+%     >> N2E  = BuildModel(train_data_subset,opts);
+%     >> opts = BuildModelGUI; %(in=EMG, out=cursor position, ***PAY ATTENTION length = 250ms****, polyn order=0 )
+%     >> E2F  = BuildModel(train_data_subset,opts);
 %     
 % 4.  >> params  = bmi_params_steph('emg_cascade');
 %     
