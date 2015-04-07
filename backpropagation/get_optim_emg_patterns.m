@@ -9,7 +9,7 @@ else
     for tgt = 1:n_tgt
         targets(tgt+1,:) = round([r*cos(2*pi*(tgt-1)/n_tgt) r*sin(2*pi()*(tgt-1)/n_tgt)]*1000)/1000;
     end
-end        
+end
 
 %% Optimization options
 
@@ -21,12 +21,12 @@ TolX     = 1e-9; %function search tolerance for EMG
 TypicalX = 0.1*ones(size(init_emg_val));
 TolFun   = 1e-9; %tolerance on cost function? not exactly sure what this should be
 
-%  fmin_options = optimoptions('fmincon','GradObj','on','Display','notify-detailed',...
-%                                         'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX);
+ fmin_options = optimoptions('fmincon','GradObj','on','Display','notify-detailed',...
+                                        'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX,'MaxIter',10000);
 
-fmin_options = optimset('fmincon');
-fmin_options = optimset(fmin_options,'Algorithm','interior-point','GradObj','on','Display','notify-detailed',...
-    'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX,'FunValCheck','on');
+% fmin_options = optimset('fmincon');
+% fmin_options = optimset(fmin_options,'Algorithm','interior-point','GradObj','on','Display','notify-detailed',...
+%     'TolX',TolX,'TolFun',TolFun,'TypicalX',TypicalX,'FunValCheck','on');
 
 %emg bound:
 emg_min = zeros(size(init_emg_val));

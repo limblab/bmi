@@ -48,7 +48,7 @@ w = Words;
 handles = [];
 
 % data structure to store inputs
-[data,data_buffer] = get_default_data(params);
+[data,data_buffer,offline_data,params] = init_bmi_data(params);
           
 %% Setup figures
 
@@ -92,11 +92,6 @@ if params.online
     cbmex('trialconfig',1,'nocontinuous');
 else
     %Binned Data File
-    if ~isstruct(params.offline_data)
-        offline_data = LoadDataStruct(params.offline_data);
-    else
-        offline_data = params.offline_data;
-    end
     max_cycles = length(offline_data.timeframe);
     bin_start_t = double(offline_data.timeframe(1));
 end
@@ -130,11 +125,11 @@ try
             if ~strcmp(params.mode,'direct')
                 % emg cascade
                 %apply sigmoid and store new emg prediction
-                data.emgs = [sigmoid(pred,'direct'); data.emgs(1:end-1,:)];
+                data.emgs = [pred; data.emgs(1:end-1,:)];
 %                 data.emgs = [pred; data.emgs(1:end-1,:)];
-                data.curs_pred = rowvec(data.emgs(:))'*emg_decoder.H;
+                data.curs_pred = rowvec(sigmoid(data.emgs(:),'direct'))'*emg_decoder.H;
             else
-                if strcmpi(params.neuron_decoder.decoder_type,'N2V')
+                if strcmpi(neuron_decoder.decoder_type,'N2V')
                     if any( isnan(data.curs_pred)) data.curs_pred = [0 0]; end
                     data.curs_pred = data.curs_pred + pred(1:2)*params.binsize;
                 else
@@ -142,6 +137,7 @@ try
                 end
             end
             
+            % bound predictions to monitor screen?
             data.curs_pred = sign(data.curs_pred).*min(sign(data.curs_pred).*data.curs_pred,params.pred_bounds);
                 
             %% Output
@@ -151,7 +147,6 @@ try
             else
                 %normal behavior, cursor mvt based on predictions
                 cursor_pos = data.curs_pred;
-                data.curs_act = cursor_pos;
             end
             
             if strcmpi(params.output,'xpc')
@@ -292,7 +287,7 @@ try
     if ishandle(handles.keep_running)
         close(handles.keep_running);
     end
-    close all;
+%     close all;
     
 catch e
     if params.online
@@ -521,6 +516,7 @@ function [new_words, new_target, db_buf] = get_new_words(new_ts,new_words,db_buf
 end
 function [tgt_pos,tgt_size] = get_default_tgt_pos_size(tgt_id)
     tgt_size = [4 4];
+    %radius 10
     def_tgt_pos  = [ 0      0;...
                      10      0;... 
                      7.07   7.07;...
@@ -530,5 +526,15 @@ function [tgt_pos,tgt_size] = get_default_tgt_pos_size(tgt_id)
                      -7.07  -7.07;...
                      0      -10;...
                      7.07   -7.07];
+%     %radius 8
+%     def_tgt_pos  = [ 0      0;...
+%                      8      0;... 
+%                      5.66   5.66;...
+%                      0      8;...
+%                      -5.66  5.66;...
+%                      -8     0;...
+%                      -5.66  -5.66;...
+%                      0      -8;...
+%                      5.66   -5.66];
       tgt_pos = def_tgt_pos(tgt_id+1,:);
 end

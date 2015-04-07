@@ -18,7 +18,7 @@ vv = var(train_data.spikeratedata);
 [~,idx] = sort(vv,2,'descend');
 train_data.spikeratedata = train_data.spikeratedata(:,idx(1:N));
 train_data.neuronIDs = train_data.neuronIDs(idx(1:N),:);
-clear vv v_val idx N
+clear vv idx N
 
 % 3 - Build N2F decoder:
 opts = BuildModelGUI;
