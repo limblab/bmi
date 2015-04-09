@@ -7,6 +7,7 @@ if nargin>1 params = varargin{1}; end
 %% default params:
 def_params.adapt        = true;
 def_params.mode         = 'emg_cascade';
+def_params.sigmoid      = true;
 def_params.online       = false;
 def_params.realtime     = false;
 def_params.cursor_assist= true;

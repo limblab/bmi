@@ -10,9 +10,9 @@ E2F.decoder_type= 'E2F';
 if nargin factor=varargin{1};else factor=15;end
 
 E2F.H = factor*[...
-    cosd(52.3)  sind(52.3);
-    cosd(77.2)  sind(7.2);
-    cosd(165.5) sind(165.5);
-    cosd(233.1) sind(233.1);
-    cosd(304.5) sind(304.5)];
+    -cosd(52.3)  sind(52.3);
+    -cosd(77.2)  sind(77.2);
+    -cosd(165.5) sind(165.5);
+    -cosd(233.1) sind(233.1);
+    -cosd(304.5) sind(304.5)];
         

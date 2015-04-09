@@ -23,23 +23,21 @@ switch mode
     case 'inverse'         
         %'inverse' (find x from f(x))
         res = v50 - log(-1+(top-bottom)./(x-bottom))/slope;
-%         res = round(10000*res)/10000;
-%         idx_top = find(x>=top);
-%         res(idx_top) = ones(size(idx_top));
-%         idx_bot = find(x<=bottom);
-%         res(idx_bot) = zeros(size(idx_bot));
+        res = round(10000*res)/10000;
+        res = max(res,bottom);
+        res = min(res,top);
     case 'direct'
         % normal, find y = f(x)
         res = bottom + (top-bottom)./(1+exp((v50-x).*slope));
-%         res = round(10000*res)/10000;
-%         res = min(res,top);
-%         idx_top = find(x>=1);
-%         res(idx_top) = top*ones(size(idx_top));
-%         idx_bot = find(x<=bottom);
-%         res(idx_bot) = zeros(size(idx_bot));
+        res = round(10000*res)/10000;
+        res = min(res,top);
+        idx_top = find(x>=top);
+        res(idx_top) = top*ones(size(idx_top));
+        idx_bot = find(x<=bottom);
+        res(idx_bot) = zeros(size(idx_bot));
     case 'derivative'
         res = slope*(top-bottom).*exp(slope*(v50-x))./(exp(slope*(v50-x))+1).^2;
-%         idx_out = find(x<=bottom | x>=top);
-%         res(idx_out) = zeros(size(idx_out));
+        idx_out = find(x<=bottom | x>=top);
+        res(idx_out) = zeros(size(idx_out));
 end
 
