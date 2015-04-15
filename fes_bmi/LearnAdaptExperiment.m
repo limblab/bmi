@@ -44,8 +44,11 @@ E2F_reflected.H(FCRindices,:) = ECR2Fweights;
 
 % Make rotated EMG to Force decoder----------------------------------------
 train_data_rotated = convert2BDF2Binned;
+train_data_rotated_subset = train_data_rotated; %new
+train_data_rotated_subset.emgdatabin = train_data_rotated.emgdatabin(:,emg_vector); %new
+train_data_rotated_subset.emgguide = train_data_rotated.emgguide(emg_vector); %new
 rotatedOpts = BuildModelGUI; %(in=EMG, out=cursor position, ***PAY ATTENTION length = 250ms****, polyn order=0 )
-E2F_rotated  = BuildModel(train_data_subset,rotatedOpts);
+E2F_rotated  = BuildModel(train_data_rotated_subset,rotatedOpts);
 %--------------------------------------------------------------------------
 
 % 4.  
@@ -55,8 +58,8 @@ params  = bmi_params_steph('emg_cascade');
 params.neuron_decoder = N2E;
 params.emg_decoder = E2F;
 
-% params.emg_decoder = E2Frotated;
-% params.emg_decoder = E2Freflected;
+% params.emg_decoder = E2F_rotated;
+% params.emg_decoder = E2F_reflected;
 
 % 6.  Turn on the task using the R8T4_isometric_easyparameters behavioral file  
 

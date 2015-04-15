@@ -55,6 +55,7 @@ function [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params)
                 return;
             end
             
+            params.n_lag_emg = emg_decoder.fillen/emg_decoder.binsize;
             params.n_emgs = round(size(emg_decoder.H,1)/params.n_lag_emg);
             if ~isempty(params.emg_convolve)
                 % we want to modify the (1bin) decoder to include force dynamics
@@ -79,15 +80,15 @@ function [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params)
                 emg_decoder = [];
                 return;
             end
-            
-            if params.n_emgs ~= size(neuron_decoder.H,2)
-                warning(['The number of outputs from the neuron_decoder (%d) does not match\n' ...
-                               'the number of inputs of the emg_decoder...(%d).'],...
-                               size(neuron_decoder.H,2),params.n_emgs);
-                neuron_decoder = [];
-                emg_decoder = [];
-                return;
-            end
+%             
+%             if params.n_emgs ~= size(neuron_decoder.H,2)
+%                 warning(['The number of outputs from the neuron_decoder (%d) does not match\n' ...
+%                                'the number of inputs of the emg_decoder...(%d).'],...
+%                                size(neuron_decoder.H,2),params.n_emgs);
+%                 neuron_decoder = [];
+%                 emg_decoder = [];
+%                 return;
+%             end
 
             
         case 'direct'
