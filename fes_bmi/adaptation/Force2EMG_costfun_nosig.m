@@ -2,8 +2,7 @@ function [cost_out, cost_grad] = Force2EMG_costfun_nosig(EMG, F, E2F, lambda)
     % EMG is predicted EMG
     % F is expected force
     % w are the EMG-to-Force vectors (MxN), M = num_muscle, N = num_force
-    % lambda is the regularization factor to minimize predicted EMG.
-    % expected_emg correspond to the expected EMG pattern
+    % lambda is a 2 element vector with regularization factor to minimize predicted EMG [L1 L2].
     
     w = E2F.H;
     
