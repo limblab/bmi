@@ -6,12 +6,12 @@ if nargin stim_params = varargin{1}; end
 
 stim_params = stim_params_defaults(stim_params);
 
-stim_string = stim_params_to_string(stim_params);
+stim_string = stim_param_to_string(stim_params);
 
 xippmex('open');
 repeat = true;
 
-% 
+
 % while repeat
 %     tmr = tic;
 %     

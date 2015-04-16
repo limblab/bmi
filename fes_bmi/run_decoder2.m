@@ -435,8 +435,8 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
  
     %firing rate for new spikes
     for i = 1:params.n_neurons
-        [chan,unit] = params.neuronIDs(i,:);
-        new_spikes(i) = length(new_ts{chan,unit+2})/binsize;
+        unit = params.neuronIDs(i,2);
+        new_spikes(i) = length(new_ts{i,unit+2})/binsize;
     end
 
 %     %remove artifact (80% of neurons have spikes for this bin)
