@@ -16,6 +16,8 @@ if ~params.online
     params.neuronIDs = offline_data.neuronIDs;
     params.binsize   = offline_data.timeframe(2)-offline_data.timeframe(1);
     params.ave_fr    = mean(mean(offline_data.spikeratedata));
+else
+    offline_data = []; 
 end
 
 data = struct(  'spikes'      , zeros(spike_buf_size,params.n_neurons),...

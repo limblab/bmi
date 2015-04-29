@@ -1,37 +1,45 @@
 function ezstim(varargin)
 
-stim_params = [];
-if nargin stim_params = varargin{1}; end
-
+stim_params = struct; continuous = false;
+if nargin   stim_params = varargin{1}; end
+if nargin>1 continuous  = varargin{2}; end
 
 stim_params = stim_params_defaults(stim_params);
+stim_string = stim_params_to_stim_string(stim_params);
 
-stim_string = stim_param_to_string(stim_params);
+
 
 xippmex('open');
-repeat = true;
+drawnow;
+xippmex('stim',stim_string);
+drawnow;
+
+if continuous
+    global_tmr = tic;
+    tmr = tic;
+    stim_ctrl = msgbox('Click to Stop the Stimulation','Continuous Stimulation');
+    drawnow;
+    
+    while ishandle(stim_ctrl)
+        elapsed_t = toc(tmr);
+        global_t  = toc(global_tmr);
+        if elapsed_t > max(stim_params.tl)/1000
+            tmr = tic;
+            xippmex('stim',stim_string);
+        end
+        if mod(global_t,60)<0.001
+            fprintf('\n->stimulating');
+            pause(0.002);
+        elseif mod(global_t,5)<0.001
+            fprintf('.');
+            pause(0.002);
+        end
+        drawnow;
+    end
+    fprintf('\n');
+end
+
+xippmex('close');
 
 
-% while repeat
-%     tmr = tic;
-%     
-%     xippmex('stim',stim_string);
-%     drawnow;
-%     
-%     elapsed_t = toc(tmr);
-%     while elapsed_t < 1
-%         elapsed_t = toc(tmr);
-%     end
-%     disp('stimulating!');
-% end
-xippmex('stim',stim_string)
-%     
-% stim_string           = [   'Elect = ' num2str(2) ',' num2str(4) ',' num2str(6) ',;' ...
-%                             'TL = ' num2str(1000) ',' num2str(1000) ',' num2str(1000) ',; ' ...
-%                             'Freq = ' num2str(60) ',' num2str(60) ',' num2str(60) ',; ' ...
-%                             'Dur = ' num2str(0.2) ',' num2str(0.2) ',' num2str(0.2) ',; ' ...
-%                             'Amp = ' num2str(127) ',' num2str(127) ',' num2str(127) ',; ' ...     
-%                             'TD = ' num2str(0) ',' num2str(0) ',' num2str(0) ',; ' ...
-%                             'FS = 0,0,0,; ' ...
-%                             'PL = 0,0,0,;']; 
 
