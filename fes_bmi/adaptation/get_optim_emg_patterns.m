@@ -1,15 +1,19 @@
-function [emg_patterns] = get_optim_emg_patterns(E2F,lambda,varargin)
+function [emg_patterns] = get_optim_emg_patterns(E2F,varargin)
 
-if nargin >2
-    targets = varargin{1};
-else
-    r = 8; % radius
-    n_tgt = 8;
-    targets = zeros(n_tgt+1,2);
-    for tgt = 1:n_tgt
-        targets(tgt+1,:) = round([r*cos(2*pi*(tgt-1)/n_tgt) r*sin(2*pi()*(tgt-1)/n_tgt)]*1000)/1000;
-    end
+% varargin = {lambda, targets};
+
+% default params for lambda and targets:
+lambda = [0 1];
+r = 10; % radius
+n_tgt = 8;
+targets = zeros(n_tgt+1,2);
+for tgt = 1:n_tgt
+    targets(tgt+1,:) = [r*cos(2*pi*(tgt-1)/n_tgt) r*sin(2*pi()*(tgt-1)/n_tgt)];
 end
+
+% overwrite default with argin values:
+if nargin > 1 lambda  = varargin{1}; end
+if nargin > 2 targets = varargin{2}; end
 
 %% Optimization options
 
