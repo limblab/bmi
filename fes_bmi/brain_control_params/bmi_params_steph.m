@@ -7,7 +7,7 @@ params.mode         = 'emg_cascade';
 params.save_dir     = 'E:\Data-lab1\12A2-Kevin\LearnAdapt';
 
 
-params.pred_bounds  = [11 11];
+% params.pred_bounds  = [11 11];
 
 switch type
     case 'emg_cascade'
