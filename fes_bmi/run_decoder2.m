@@ -141,7 +141,7 @@ try
             end
             
             % bound predictions to monitor screen?
-            data.curs_pred = sign(data.curs_pred).*min(sign(data.curs_pred).*data.curs_pred,params.pred_bounds);
+            cursor_pos = sign(data.curs_pred).*min(sign(data.curs_pred).*data.curs_pred,params.pred_bounds);
                 
             %% Output
             if params.cursor_assist
