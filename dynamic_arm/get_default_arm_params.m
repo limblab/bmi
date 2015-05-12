@@ -18,7 +18,7 @@ arm_params_default.EMG_filter = 0;
 arm_params_default.T = 0*[2;-.2];
 arm_params_default.max_torque = 1000;
 arm_params_default.online = 1;
-arm_params_default.cocontraction_filter = 0.7;
+arm_params_default.cocontraction_filter = 0.6;
 arm_params_default.use_brd = 1;
 
 % Hill arm
@@ -66,6 +66,13 @@ arm_params_default.endpoint_stiffness_min_pm = 0;
 arm_params_default.endpoint_stiffness_max_pm = 0;
 arm_params_default.endpoint_damping_min_pm = 0;
 arm_params_default.endpoint_damping_max_pm = 0;
+
+% EMG cartesian
+arm_params_default.EMG_CARTESIAN_PARAMETERS = 0;
+arm_params_default.emg_to_cursor_gain = .1;
+arm_params_default.emg_x_positive = 3;
+arm_params_default.emg_y_positive = 4;
+arm_params_default.emg_filter = .6;
 
 arm_params_default.NON_PARAMETERS = 0;
 arm_params_default.cocontraction = 0;

@@ -18,13 +18,14 @@ params.save_dir = ['E:\' params.monkey_name];
 params.mode = 'emg'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
 params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
 params.task_name = ['RP_' params.mode];
-% params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-musc_Binned_Decoder.mat';
-params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-02-26_DCO_emg_hu\SavedFilters\Chewie_2015-02-26_DCO_emg_hu_001_Decoder.mat';
-params.decoders(1).decoder_type = 'n2e';
-params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-cartesian_Binned_Decoder.mat';
-params.decoders(2).decoder_type = 'n2e_cartesian';
-params.decoders(3).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-05_RW\Chewie_2014-09-05_RW_001_Binned_Decoder.mat';
-params.decoders(3).decoder_type = 'vel';
+params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-05-05_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-05-05_DCO_emg_emg_cartesian_filter_all.mat';
+params.decoders(1).decoder_type = 'n2e1';
+params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-05-05_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-05-05_DCO_emg_emg_cartesian_filter_reciprocal.mat';
+params.decoders(2).decoder_type = 'n2e2';
+params.decoders(3).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-cartesian_Binned_Decoder.mat';
+params.decoders(3).decoder_type = 'n2e_cartesian';
+params.decoders(4).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-05_RW\Chewie_2014-09-05_RW_001_Binned_Decoder.mat';
+params.decoders(4).decoder_type = 'vel';
 % params.decoders(4).decoder_file = '\\citadel\data\TestData\Ricardo_2014-09-11_DCO_iso_ruiz\Output_Data\muscle_force_filter.mat';
 % params.decoders(4).decoder_type = 'emg2muscle_force';
 % params.decoders(5).decoder_file = '\\citadel\data\TestData\Ricardo_2014-09-11_DCO_iso_ruiz\Output_Data\muscle_torque_filter.mat';
@@ -128,19 +129,6 @@ old_handleforce = [0 0];
                 recording = 1;            
                 [params,handles] = setup_datafiles(params,handles,data,offline_data,w,xpc,m_data_2);
                 cbmex('fileconfig', handles.cerebus_file, '', 1);
-%                 i = 0;  
-%                 old_time = -inf;
-%                 while (true)
-%                     i = i+1;                    
-%                     [ts_cell_array, data.sys_time, continuous_cell_array] = cbmex('trialdata', 1);
-% %                     [i old_time data.sys_time]
-%                     if (data.sys_time<old_time)
-%                         break;
-%                     end
-%                     old_time = data.sys_time;
-%                     pause(0.001)
-%                 end
-%                 data.sys_time = cbmex('time');
             end
             if ~get(handles.record,'Value') && recording
                 recording = 0;
@@ -153,14 +141,19 @@ old_handleforce = [0 0];
             bin_count = bin_count +1;
             
             if ~strcmpi(current_mode,params.mode)
-                if strcmpi(params.mode,'n2e')
-                    params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'n2e'));
+                if strcmpi(params.mode,'n2e1')
+                    temp = find(strcmpi({params.decoders.decoder_type},'n2e'));
+                    params.current_decoder = params.decoders(temp(1));
+                elseif strcmpi(params.mode,'n2e2')
+                    temp = find(strcmpi({params.decoders.decoder_type},'n2e'));
+                    params.current_decoder = params.decoders(temp(2));
                 elseif strcmpi(params.mode,'n2e_cartesian')
                     params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'n2e_cartesian'));
                 elseif strcmpi(params.mode,'vel')
                     params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'vel'));
                 else
-                    params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'null'));
+                    params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'n2e1'));
+%                     params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'null'));
                 end
                 data = get_default_data(params);
                 current_mode = params.mode;
@@ -178,14 +171,19 @@ old_handleforce = [0 0];
             catch
                 predictions = [];
             end
-            if strcmpi(params.mode,'n2e') || strcmpi(params.mode,'n2e_cartesian')
+            if strcmpi(params.mode,'n2e1') || strcmpi(params.mode,'n2e2') || strcmpi(params.mode,'n2e_cartesian')
                 if numel(params.decoder_offsets)~=numel(predictions)
                     params.decoder_offsets = zeros(size(predictions));
                 end
-                hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
-                    (predictions + params.decoder_offsets);
-                params.decoder_offsets = hpf_predictions - predictions;                
-                predictions = hpf_predictions;
+                
+%                 hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
+%                     (predictions + params.decoder_offsets);                
+%                 params.decoder_offsets = hpf_predictions - predictions;
+%                 if any(isnan(params.decoder_offsets(2:3)))
+%                     params.decoder_offsets
+%                 end
+%                 predictions = hpf_predictions;
+                
                 if mod(iCycle,100)==0
                     set(handles.textbox_offset_1,'String',num2str(params.decoder_offsets(1),4));
                     set(handles.textbox_offset_2,'String',num2str(params.decoder_offsets(2),4));
@@ -218,7 +216,7 @@ old_handleforce = [0 0];
                 m_data_1.Data.vel_predictions = predictions;
             end
             
-            if ~(strcmpi(params.mode,'vel') || strcmpi(params.mode,'n2e') || strcmpi(params.mode,'n2e_cartesian'))
+            if ~(strcmpi(params.mode,'vel') || strcmpi(params.mode,'n2e1') || strcmpi(params.mode,'n2e2') || strcmpi(params.mode,'n2e_cartesian'))
                 params.decoder_offsets = [];
             end
             

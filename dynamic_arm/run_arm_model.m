@@ -5,6 +5,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
     F_y = 0;
     encoder_theta = [0 0];
     forces = [F_x F_y];
+    filtered_emg = [0 0 0 0];
     
     x0_default = [pi/4 3*pi/4 0 0]; 
     x0 = x0_default;   
@@ -31,7 +32,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         
         arm_params.cocontraction = temp_cocontraction;
         
-        if ~strcmp(arm_params.control_mode,'point_mass')
+        if ~(strcmp(arm_params.control_mode,'point_mass') || strcmp(arm_params.control_mode,'emg_cartesian'))
             arm_params.x_gain = -2*arm_params.left_handed+1;
         else
             arm_params.x_gain = 1;
@@ -39,7 +40,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         
         arm_params.theta = x0(1:2);  
         
-        if ~strcmp(arm_params.control_mode,'point_mass')
+        if ~(strcmp(arm_params.control_mode,'point_mass') || strcmp(arm_params.control_mode,'emg_cartesian'))
             arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x0(1)) arm_params.l(1)*sin(x0(1))];
             arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x0(2)) arm_params.l(2)*sin(x0(2))];   
         else
@@ -56,13 +57,14 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             
             EMG_idx = zeros(1,4);
             EMG_order = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'}; 
+            EMG_order = {'AD','PD','BI','TRI'}; 
             for iEMG = 1:length(EMG_order)
                 temp = find(~cellfun(@isempty,strfind(EMG_labels,EMG_order{iEMG})));
                 if ~isempty(temp)
                     EMG_idx(iEMG) = temp;
                 end
             end            
-            BRD_idx = find(~cellfun(@isempty,strfind(EMG_labels,'EMG_BRD')));
+            BRD_idx = find(~cellfun(@isempty,strfind(EMG_labels,'BRD')));
             if ~isempty(BRD_idx) && arm_params.use_brd
                 EMG_idx(3) = BRD_idx;
             end
@@ -153,7 +155,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         old_X_h = arm_params.X_h;
         
         arm_params.F_end(1) = arm_params.x_gain*arm_params.F_end(1);
-        arm_params.T = arm_params.x_gain*arm_params.T;        
+        arm_params.T = arm_params.x_gain*arm_params.T;
         
         switch(arm_params.control_mode)
             case 'hill'
@@ -201,8 +203,16 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 [~,out_var] = bmi_model(t,x(end,:),arm_params);
             case 'point_mass'
                 [t,x] = ode15s(@(t,x0_b) point_mass_model(t,x0_b,arm_params),t_temp,x0_b,options);
-                [~,out_var] = point_mass_model(t,x(end,:),arm_params);
+                [~,out_var] = point_mass_model(t,x(end,:),arm_params);                
                 x0 = x0_b(1:4); 
+            case 'emg_cartesian'                                                
+                filtered_emg_new = arm_params.musc_act;
+                filtered_emg = (1-arm_params.emg_filter)*filtered_emg_new +...
+                    arm_params.emg_filter*filtered_emg;         
+                x = arm_params.emg_to_cursor_gain*[filtered_emg(arm_params.emg_x_positive) filtered_emg(arm_params.emg_y_positive) 0 0];
+                x0 = x0_b(1:4);
+                out_var(1:4) = filtered_emg;
+                out_var(5:6) = arm_params.F_end;
         end
         musc_force = out_var(1:4);
         F_end = out_var(5:6);
@@ -214,23 +224,23 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         m_data_2.Data.cocontraction = arm_params.cocontraction;
         
         arm_params.theta = x(end,1:2);
-        if ~strcmp(arm_params.control_mode,'point_mass')
-            arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x(end,1)) arm_params.l(1)*sin(x(end,1))];
-            arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x(end,2)) arm_params.l(2)*sin(x(end,2))];   
-        else
+        if (strcmp(arm_params.control_mode,'point_mass') || strcmp(arm_params.control_mode,'emg_cartesian'))
             arm_params.X_e = x(end,1:2);
-            arm_params.X_h = x(end,1:2);   
+            arm_params.X_h = x(end,1:2);               
+        else
+            arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x(end,1)) arm_params.l(1)*sin(x(end,1))];
+            arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x(end,2)) arm_params.l(2)*sin(x(end,2))];
         end
                         
         % If model becomes unstable, restart
-        if ~strcmp(arm_params.control_mode,'point_mass') & (abs(arm_params.X_h(1:2)-old_X_h(1:2))>.1 | (abs(arm_params.X_h) > 0.2)) | any(isnan(arm_params.X_h))
+        if ~(strcmp(arm_params.control_mode,'point_mass') || strcmp(arm_params.control_mode,'emg_cartesian')) & (abs(arm_params.X_h(1:2)-old_X_h(1:2))>.1 | (abs(arm_params.X_h) > 0.2)) | any(isnan(arm_params.X_h))
             x0 = x0_default;
             [~,x] = ode45(@(t,x0) sandercock_model(t,x0,arm_params),t_temp,x0);
             arm_params.theta = x(end,1:2);
             arm_params.X_e = arm_params.X_sh + [arm_params.l(1)*cos(x(end,1)) arm_params.l(1)*sin(x(end,1))];
             arm_params.X_h = arm_params.X_e + [arm_params.l(2)*cos(x(end,2)) arm_params.l(2)*sin(x(end,2))];   
             flag_reset = 1;
-        elseif strcmp(arm_params.control_mode,'point_mass') & (abs(arm_params.X_h(1:2)-old_X_h(1:2))>.1) | any(isnan(arm_params.X_h))
+        elseif (strcmp(arm_params.control_mode,'point_mass') || strcmp(arm_params.control_mode,'emg_cartesian')) & (abs(arm_params.X_h(1:2)-old_X_h(1:2))>.1) | any(isnan(arm_params.X_h))
             x = zeros(size(x));
             arm_params.X_e = [0 0];
             arm_params.X_h = [0 0];   
@@ -256,10 +266,16 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         xS = 100*arm_params.X_sh;
         xS(1) = arm_params.x_gain * xS(1);
         
-        if strcmp(arm_params.control_mode,'point_mass')            
+        if strcmp(arm_params.control_mode,'point_mass')
             xS = xH;
             xE = xH;
             xH2 = 100*x(end,5:6);
+            xE2 = xH2;
+            xS2 = xH2;
+        elseif strcmp(arm_params.control_mode,'emg_cartesian')
+            xS = xH;
+            xE = xH;
+            xH2 = xH;
             xE2 = xH2;
             xS2 = xH2;
         elseif numel(x0) > numel(x0_default)

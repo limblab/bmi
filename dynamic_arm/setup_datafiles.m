@@ -19,9 +19,9 @@ if params.save_data
     for i = 1:params.current_decoder.n_neurons
        spike_chans{i} = ['chan_' num2str(params.current_decoder.neuronIDs(i,1)) '-' num2str(params.current_decoder.neuronIDs(i,2))];
     end
-    pred_labels = cell(1,size(params.current_decoder.outnames,1));
-    for i = 1:size(params.current_decoder.outnames,1)
-        pred_labels{i} = ['pred_' deblank(params.current_decoder.outnames(i,:))];
+    pred_labels = cell(1,numel(params.current_decoder.outnames));
+    for i = 1:numel(params.current_decoder.outnames)
+        pred_labels{i} = ['pred_' params.current_decoder.outnames{i}];
     end
 
     headers = ['t_bin_start',spike_chans,pred_labels,'cursor_x','cursor_y','sh_x','sh_y','el_x','el_y',...
