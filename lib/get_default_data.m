@@ -1,4 +1,4 @@
-function [data,data_buffer,offline_data,params] = init_bmi_data(params)
+function [data,data_buffer,offline_data,params] = get_default_data(params)
 
 if ~strcmp(params.mode,'direct')
     spike_buf_size = params.n_lag + params.n_lag_emg - 1;
@@ -48,9 +48,7 @@ data = struct(  'spikes'      , zeros(spike_buf_size,params.n_neurons),...
                 'trial_count', 0);
 
 if params.online
-    cbmex('open',1);
     data.labels = cbmex('chanlabel',1:156);
-    cbmex('close')
 else
     
     
