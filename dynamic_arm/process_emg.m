@@ -19,7 +19,7 @@ if strcmpi(params.mode,'emg')
         EMG_data = zeros(1,max(idx));
         EMG_raw = zeros(10,max(idx));
     end
-elseif strcmpi(params.mode,'n2e') || strcmpi(params.mode,'n2e_cartesian')
+elseif strcmpi(params.mode,'n2e1') || strcmpi(params.mode,'n2e2') || strcmpi(params.mode,'n2e_cartesian')
     temp = params.current_decoder.outnames;  
     for iLabel = 1:size(temp,1)
         emg_labels{iLabel} = ['EMG_' deblank(temp(iLabel,:))];        

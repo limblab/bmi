@@ -18,9 +18,9 @@ params.save_dir = ['E:\' params.monkey_name];
 params.mode = 'emg'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
 params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
 params.task_name = ['RP_' params.mode];
-params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-05-05_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-05-05_DCO_emg_emg_cartesian_filter_all.mat';
+params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-06-05_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-06-05_DCO_emg_emg_cartesian_filter_all.mat';
 params.decoders(1).decoder_type = 'n2e1';
-params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-05-05_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-05-05_DCO_emg_emg_cartesian_filter_reciprocal.mat';
+params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-06-05_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-06-05_DCO_emg_emg_cartesian_filter_reciprocal.mat';
 params.decoders(2).decoder_type = 'n2e2';
 params.decoders(3).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-cartesian_Binned_Decoder.mat';
 params.decoders(3).decoder_type = 'n2e_cartesian';
@@ -152,7 +152,8 @@ old_handleforce = [0 0];
                 elseif strcmpi(params.mode,'vel')
                     params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'vel'));
                 else
-                    params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'n2e1'));
+                    temp = find(strcmpi({params.decoders.decoder_type},'n2e'));
+                    params.current_decoder = params.decoders(temp(1));
 %                     params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'null'));
                 end
                 data = get_default_data(params);
@@ -190,13 +191,14 @@ old_handleforce = [0 0];
                     set(handles.textbox_offset_3,'String',num2str(params.decoder_offsets(3),4));
                     set(handles.textbox_offset_4,'String',num2str(params.decoder_offsets(4),4))
                 end
-                predictions(predictions<0) = 0;                
+%                 predictions(predictions<0) = 0;
             end
             if ~isempty(params.current_decoder.P)
                 for iP = 1:length(predictions)
                     predictions(iP) = polyval(params.current_decoder.P(:,iP),predictions(iP));
                 end
             end
+            predictions(predictions<0) = 0;
             
             if strcmpi(params.mode,'vel')                
                 predictions = .01*predictions(1:2);

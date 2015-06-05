@@ -29,6 +29,9 @@ if strcmpi(params.mode,'emg')
 elseif strcmpi(params.mode,'n2e1') || strcmpi(params.mode,'n2e2') || strcmpi(params.mode,'n2e_cartesian')
     if iscell(params.current_decoder.outnames)
         EMG_labels = params.current_decoder.outnames;
+        for iLabel = 1:numel(EMG_labels)
+            EMG_labels{iLabel} = ['EMG_' EMG_labels{iLabel}];
+        end
     else
         temp = params.current_decoder.outnames;  
         for iLabel = 1:size(temp,1)
