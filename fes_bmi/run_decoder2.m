@@ -56,13 +56,19 @@ handles.keep_running = msgbox('Click ''ok'' to stop the BMI','BMI Controller');
 set(handles.keep_running,'Position',[200 700 125 52]);
 
 if params.display_plots
-    curs_handle = plot(0,0,'ko');
-    set(curs_handle,'MarkerSize',6,'MarkerFaceColor','k','MarkerEdgeColor','k');
+    fh = figure;
+    set(fh,'Color','k','MenuBar','none','name','BMI cursor output');
+
+    hold on;
+    tgt_handle  = plot(0,0,'rs');
+    set(tgt_handle,'LineWidth',2,'MarkerSize',30,'MarkerFaceColor','r');
+    set(gca,'color','k');    
+    curs_handle = plot(0,0,'yo');
+    
+    set(curs_handle,'MarkerSize',10,'MarkerFaceColor','y','MarkerEdgeColor','y');
     xlim([-12 12]); ylim([-12 12]);
     axis square; axis equal; axis manual;
-    hold on;
-    tgt_handle  = plot(0,0,'bo');
-    set(tgt_handle,'LineWidth',2,'MarkerSize',15);
+
 %     xpred_disp = annotation(gcf,'textbox', [0.65 0.85 0.16 0.05],...
 %     'FitBoxToText','off','String',sprintf('xpred: %.2f',cursor_pos(1)));
 %     ypred_disp = annotation(gcf,'textbox', [0.65 0.79 0.16 0.05],...
@@ -247,9 +253,9 @@ try
                 end
                 
                 if  data.adapt_trial && ~data.fix_decoder
-                    display_color = 'r';
+                    display_color = 'b';
                 else
-                    display_color = 'k';
+                    display_color = 'y';
                 end
                 set(curs_handle,'MarkerEdgeColor',display_color,'MarkerFaceColor',display_color);
             end
