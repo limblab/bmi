@@ -23,32 +23,34 @@ train_data_subset.emgguide = train_data.emgguide(emg_vector);
 % Build neuron to EMG model
 N2E  = BuildModel(train_data_subset,opts);
 
+% Load EMG to Force decoders [new as of 4/29/2015]
+load('E:\Data-lab1\12A2-Kevin\LearnAdapt\E2F_Decoders\E2F_decoders_from04282015.mat')
 
 % Build EMG to Force model
-opts = BuildModelGUI; %(in=EMG, out=cursor position, ***PAY ATTENTION length = 250ms****, polyn order=0 )
-E2F  = BuildModel(train_data_subset,opts);
+%opts = BuildModelGUI; %(in=EMG, out=cursor position, ***PAY ATTENTION length = 250ms****, polyn order=0 )
+%E2F  = BuildModel(train_data_subset,opts);
 
 
 % Make reflected EMG to Force decoder--------------------------------------
-FCRweightsInd = strmatch('FCR',N2E.outnames(1,:));
-ECRweightsInd = strmatch('ECR',N2E.outnames(1,:));
-noOfWeights = opts.fillen/.05;
-FCRindices = fliplr((noOfWeights*FCRweightsInd:-1:noOfWeights*FCRweightsInd-noOfWeights+1));
-FCR2Fweights = E2F.H(FCRindices,:);
-ECRindices = fliplr((noOfWeights*ECRweightsInd:-1:noOfWeights*ECRweightsInd-noOfWeights+1));
-ECR2Fweights = E2F.H(ECRindices,:);
-E2F_reflected = E2F;
-E2F_reflected.H(ECRindices,:) = FCR2Fweights;
-E2F_reflected.H(FCRindices,:) = ECR2Fweights;
+% FCRweightsInd = strmatch('FCR',N2E.outnames(1,:));
+% ECRweightsInd = strmatch('ECR',N2E.outnames(1,:));
+% noOfWeights = opts.fillen/.05;
+% FCRindices = fliplr((noOfWeights*FCRweightsInd:-1:noOfWeights*FCRweightsInd-noOfWeights+1));
+% FCR2Fweights = E2F.H(FCRindices,:);
+% ECRindices = fliplr((noOfWeights*ECRweightsInd:-1:noOfWeights*ECRweightsInd-noOfWeights+1));
+% ECR2Fweights = E2F.H(ECRindices,:);
+% E2F_reflected = E2F;
+% E2F_reflected.H(ECRindices,:) = FCR2Fweights;
+% E2F_reflected.H(FCRindices,:) = ECR2Fweights;
 %--------------------------------------------------------------------------
 
 % Make rotated EMG to Force decoder----------------------------------------
-train_data_rotated = convert2BDF2Binned;
-train_data_rotated_subset = train_data_rotated; %new
-train_data_rotated_subset.emgdatabin = train_data_rotated.emgdatabin(:,emg_vector); %new
-train_data_rotated_subset.emgguide = train_data_rotated.emgguide(emg_vector); %new
-rotatedOpts = BuildModelGUI; %(in=EMG, out=cursor position, ***PAY ATTENTION length = 250ms****, polyn order=0 )
-E2F_rotated  = BuildModel(train_data_rotated_subset,rotatedOpts);
+% train_data_rotated = convert2BDF2Binned;
+% train_data_rotated_subset = train_data_rotated; %new
+% train_data_rotated_subset.emgdatabin = train_data_rotated.emgdatabin(:,emg_vector); %new
+% train_data_rotated_subset.emgguide = train_data_rotated.emgguide(emg_vector); %new
+% rotatedOpts = BuildModelGUI; %(in=EMG, out=cursor position, ***PAY ATTENTION length = 250ms****, polyn order=0 )
+% E2F_rotated  = BuildModel(train_data_rotated_subset,rotatedOpts);
 %--------------------------------------------------------------------------
 
 % 4.  
@@ -56,10 +58,10 @@ params  = bmi_params_steph('emg_cascade');
 
 % 5. 
 params.neuron_decoder = N2E;
-params.emg_decoder = E2F;
+params.emg_decoder = E2F_normal_from04282015;
 
-% params.emg_decoder = E2F_rotated;
-% params.emg_decoder = E2F_reflected;
+% params.emg_decoder = E2F_rotated_from04282015;
+% params.emg_decoder = E2F_reflected_from04282015;
 
 % 6.  Turn on the task using the R8T4_isometric_easyparameters behavioral file  
 
