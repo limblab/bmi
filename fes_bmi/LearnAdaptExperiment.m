@@ -3,7 +3,7 @@
 % IP address: 0:10 are the last two numbers
 
 % Steps
-% 1.  Record 15 min of isometric force data
+%1. Record 15 min of isometric force data
 % 2.  
 train_data = convert2BDF2Binned; %DONT FORGET: Normalize Force and EMG!
 
@@ -24,7 +24,8 @@ train_data_subset.emgguide = train_data.emgguide(emg_vector);
 N2E  = BuildModel(train_data_subset,opts);
 
 % Load EMG to Force decoders [new as of 4/29/2015]
-load('E:\Data-lab1\12A2-Kevin\LearnAdapt\E2F_Decoders\E2F_decoders_from04282015.mat')
+%load('E:\Data-lab1\12A2-Kevin\LearnAdapt\E2F_Decoders\E2F_decoders_from04282015.mat')
+load('E:\Data-lab1\12A2-Kevin\LearnAdapt\E2F_Decoders\E2F_decoders_from06092015.mat')
 
 % Build EMG to Force model
 %opts = BuildModelGUI; %(in=EMG, out=cursor position, ***PAY ATTENTION length = 250ms****, polyn order=0 )
@@ -58,10 +59,10 @@ params  = bmi_params_steph('emg_cascade');
 
 % 5. 
 params.neuron_decoder = N2E;
-params.emg_decoder = E2F_normal_from04282015;
+params.emg_decoder = E2F_normal_from06092015;
 
-% params.emg_decoder = E2F_rotated_from04282015;
-% params.emg_decoder = E2F_reflected_from04282015;
+% params.emg_decoder = E2F_rotated_from06092015;
+% params.emg_decoder = E2F_reflected_from06092015;
 
 % 6.  Turn on the task using the R8T4_isometric_easyparameters behavioral file  
 
