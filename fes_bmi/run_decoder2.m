@@ -390,6 +390,9 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
                 if ~params.online && params.adapt
                     data.adapt_trial = true;
                 end
+                if strcmp(params.adapt_params.type,'supervised_full')
+                    data.adapt_flag = true;
+                end
             end
             
             % new word Ot_On?
@@ -428,7 +431,9 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
             if w.IsEndWord(new_words(i,2))
                 % offline, only on successful trials, but all trials online
                 if data.adapt_trial && (params.online || new_words(i,2)==w.Reward)
-                    data.adapt_flag = true;
+                    if ~strcmp(params.adapt_params.type,'supervised_full')
+                        data.adapt_flag = true;
+                    end
                 end
                 data.adapt_trial = false;
                 data.tgt_on      = false;
