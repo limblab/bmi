@@ -2,7 +2,8 @@ function E2F = E2F_deRugy_PD(varargin)
 
 E2F.fillen      = 0.05;
 E2F.binsize     = 0.05;
-E2F.outnames    = ['x_pos';'y_pos'];
+E2F.emglabels   = {'ECRb','ECRl','FCR','FCU','ECU'};
+E2F.outnames    = {'x_pos','y_pos'};
 E2F.input_type  = 'EMG';
 E2F.filename    = 'E2F_deRugy_PD';
 E2F.decoder_type= 'E2F';

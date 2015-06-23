@@ -21,7 +21,7 @@ def_params.save_dir     = [];
 %Data files
 def_params.offline_data   = train_data;
 %Neuron Decoder
-def_params.neuron_decoder = 'new_zeros';
+def_params.neuron_decoder = 'new_rand';
 
 %% params specific to this particular data set
 params.neuronIDs = train_data.neuronIDs;

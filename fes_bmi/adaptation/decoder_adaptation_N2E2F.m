@@ -81,15 +81,18 @@ if data.adapt_flag
             % emg error:
             de = opt_emgs-emgs;
             
+            % add 5% noise
+            de = de + 0.05.*(rand(size(de))-0.5);
+            
             % look back at neurons
             g = zeros(size(neuron_decoder.H));
             for t = 1:n_bins
                 g = g + [1 rowvec(spikes(t:(t+params.n_lag-1),:))']'*de(t,:);
             end
             g = g/n_bins;
-
+            
             % apply L2 regularization
-            g(2:end, :) = g(2:end, :) - params.adapt_params.lambda*neuron_decoder.H(2:end, :);
+%             g(2:end, :) = g(2:end, :) - params.adapt_params.lambda*neuron_decoder.H(2:end, :);
             % accumulate gradient
             accum_g = accum_g + g;
             accum_n = accum_n + 1;
