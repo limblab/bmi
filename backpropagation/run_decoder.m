@@ -46,6 +46,17 @@ if params.cursor_assist
     cursor_traj = load(params.cursor_traj);
 end
 
+% check if stimulation settings are ok - for FES
+if strcmp(params.output,'stimulator')
+    if size(neuron_decoder.H,2) ~= length(params.bmi_fes_stim_params.EMG_min)
+        disp(['Warning: there are ' num2str(size(neuron_decoder.H,2)) ...
+            ' decoded EMGs and ' num2str(length(params.bmi_fes_stim_params.EMG_min)) ...
+            ' muscles defined in bmi_fes_stim_params'])
+        pause
+    end
+end
+
+
 %% Initialization
 
 %globals
@@ -253,8 +264,8 @@ try
             end
             
             if strcmp(params.output,'stimulator')
-                [data.stimPW,data.stimPA] = EMG_to_stim(data.emgs,params.stim_params);
-                stim_cmd = stim_elect_mapping(data.stimPW,data.stimPA,params.stim_params);
+                [data.stimPW,data.stimPA] = EMG_to_stim(data.emgs,params.bmi_fes_stim_params);
+                stim_cmd = stim_elect_mapping(data.stimPW,data.stimPA,params.bmi_fes_stim_params);
                 xippmex('stimseq',stim_cmd);
             end
             
