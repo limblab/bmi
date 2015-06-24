@@ -40,7 +40,7 @@ else
     bmi_fes_stim_params = [];
 end
 
-all_param_names = fieldnames(stim_params_defaults);
+all_param_names = fieldnames(bmi_fes_stim_params_defaults);
 for i=1:numel(all_param_names)
     if ~isfield(bmi_fes_stim_params,all_param_names(i))
         bmi_fes_stim_params.(all_param_names{i}) = bmi_fes_stim_params_defaults.(all_param_names{i});
