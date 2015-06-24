@@ -164,7 +164,7 @@ try
             end
             
             if strcmp(params.output,'stimulator')
-                [data.stimPW,data.stimPA] = EMG_to_stim(data.emgs,params.stim_params);
+                [data.stim_PW,data.stim_amp] = EMG_to_stim(data.emgs(1,:),params.bmi_fes_stim_params);
                 stim_cmd = stim_elect_mapping(data.stimPW,data.stimPA,params.stim_params);
                 xippmex('stimseq',stim_cmd);
             end
