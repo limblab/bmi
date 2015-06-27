@@ -75,6 +75,10 @@ if params.display_plots
 %     'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
 end
 
+if strcmpi(params.output,'stimulator')
+    ffes = figure;
+end
+
 if ~params.online
     prog_bar = waitbar(0, sprintf('Replaying Offline Data'));
 end
@@ -128,7 +132,7 @@ try
                 pred = pred*(params.hp_rc/(params.hp_rc+params.binsize));
             end
             
-            if ~strcmp(params.mode,'direct') %emg cascade
+            if strcmp(params.mode,'emg_cascade') %emg cascade
                 % apply sigmoid?
                 if params.sigmoid pred = sigmoid(pred,'direct'); end
 %                 % remove negative emg preds
@@ -137,6 +141,8 @@ try
                 data.emgs = [pred; data.emgs(1:end-1,:)];
                 % force predictions:
                 data.curs_pred = rowvec(data.emgs(:))'*emg_decoder.H;
+            elseif strcmp(params.mode,'emg_only') 
+                data.emgs = pred;
             else
                 if strcmpi(neuron_decoder.decoder_type,'N2V')
                     if any( isnan(data.curs_pred)) data.curs_pred = [0 0]; end
@@ -163,10 +169,11 @@ try
                 fwrite(xpc, [1 1 cursor_pos],'float32');
             end
             
-            if strcmp(params.output,'stimulator')
-                [data.stim_PW,data.stim_amp] = EMG_to_stim(data.emgs(1,:),params.bmi_fes_stim_params);
-                stim_cmd = stim_elect_mapping(data.stimPW,data.stimPA,params.stim_params);
-                xippmex('stimseq',stim_cmd);
+            if strcmpi(params.output,'stimulator')
+                [data.stim_PW,data.stim_amp] = EMG_to_stim(data.emgs,params.bmi_fes_stim_params);
+                stim_cmd = stim_elect_mapping(data.stim_PW,data.stim_amp,params.bmi_fes_stim_params);
+                stim_fig(ffes,data.stim_PW,data.stim_amp,params.bmi_fes_stim_params); 
+                if params.online, xippmex('stimseq',stim_cmd), end;
             end
             
             %% Neurons-to-EMG Adaptation

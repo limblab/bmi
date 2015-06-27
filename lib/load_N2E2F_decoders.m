@@ -130,6 +130,33 @@ function [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params)
                 params.n_emgs = 0;
                 params.n_lag_emg = 0;
                 
+                
+        case 'emg_only'
+            if strncmp(params.neuron_decoder,'new',3)
+                warning('Option not yet available');
+                return;
+            else
+                % load existing neuron-to-emg decoder
+                if ~isstruct(params.neuron_decoder)
+                    neuron_decoder = LoadDataStruct(params.neuron_decoder);
+                    if ~isfield(neuron_decoder, 'H')
+                        warning('Invalid neuron-to-emg decoder');
+                        neuron_decoder = [];
+                        emg_decoder = [];
+                        return;
+                    end
+                else
+                    neuron_decoder = params.neuron_decoder;
+                end
+                % overwrite parameters according to loaded decoder
+                params.n_lag = round(neuron_decoder.fillen/neuron_decoder.binsize);
+                params.n_neurons = size(neuron_decoder.neuronIDs,1);
+                params.binsize   = neuron_decoder.binsize;
+                params.neuronIDs = neuron_decoder.neuronIDs;
+            end            
+            
+            emg_decoder = [];
+
         otherwise
             warning('Invalid decoding mode. Please specifiy params.mode = [''emg_cascade'' | ''direct'' ]');
             neuron_decoder = [];

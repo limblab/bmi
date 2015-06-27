@@ -1,5 +1,5 @@
 function bmi_params = bmi_params_defaults(varargin)
-%   'mode'          : either 'direct' or 'emg_cascade'
+%   'mode'          : either 'direct', 'emg_cascade' or 'emg_only'
 %   'adapt'         : enable adaptation (emg_cascade mode only for now)
 %   'cursor_assist' : moves the cursor to a target and back according to 'cursor_traj'
 %   'cursor_traj'   : file path and name to a structure containing the fields 'mean_paths' and 'back_paths'
