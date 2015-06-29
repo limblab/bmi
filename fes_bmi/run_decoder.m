@@ -26,7 +26,7 @@ xpc = open_xpc_udp(params);
 [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params);
 % decoders = load_decoders(params);
 if isempty(neuron_decoder)
-    if params.online clearxpc; end
+    if params.online, clearxpc; end
     return;
 end
 
@@ -35,6 +35,11 @@ if params.cursor_assist
     % cursor_traj is a file name to a structure containing the fields
     % 'mean_paths' and 'back_paths', each of size < 101 x 2 x n_tgt >
     cursor_traj = load(params.cursor_traj);
+end
+
+% check that there's no error in the stimulation parameters 
+if strcmpi(params.output,'stimulator')
+    check_bmi_fes_settings( neuron_decoder, params );
 end
 
 %% Initialization
