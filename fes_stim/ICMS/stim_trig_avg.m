@@ -8,10 +8,14 @@
 % Syntax:
 %       EMG                                     = STIM_TRIG_AVG( VARAGIN )
 %       [EMG, STA_PARAMS]                       = STIM_TRIG_AVG( VARAGIN )
+%       FORCE                                   = STIM_TRIG_AVG( VARAGIN )
+%       [FORCE, STA_PARAMS]                     = STIM_TRIG_AVG( VARAGIN )
 %       [EMG, FORCE, STA_PARAMS]                = STIM_TRIG_AVG( VARAGIN ),
 %               if sta_params.record_force_yn = true
 %       [EMG, STA_PARAMS, STA_METRICS]          = STIM_TRIG_AVG( VARAGIN ),
-%               if sta_params.record_force_yn = false
+%               if sta_params.record_force_yn = false and sta_params.plot_yn = true
+%       [FORCE, STA_PARAMS, STA_METRICS]        = STIM_TRIG_AVG( VARAGIN ),
+%               if sta_params.record_emg_yn = false and sta_params.plot_yn = true
 %       [EMG, FORCE, STA_PARAMS, STA_METRICS]   = STIM_TRIG_AVG( VARAGIN )
 %
 %
@@ -470,7 +474,7 @@ for i = 1:hw.cb.nbr_epochs
         
         if sta_params.record_force_yn
             
-            for ii = 1:min(length(ts_sync_pulses),length(emg.evoked_emg))
+            for ii = 1:min(length(ts_sync_pulses),length(force.evoked_force))
                 
                 trig_time_in_force_sample_nbr   = floor( double(ts_sync_pulses(ii))/30000*force.fs - sta_params.t_before/1000*force.fs );
                 
@@ -561,24 +565,36 @@ end
 %-------------------------------------------------------------------------- 
 % Return variables
 if nargout == 1
-    varargout{1}            = emg;
+    if sta_params.record_emg_yn
+        varargout{1}        = emg;
+    else
+        varargout{1}        = force;
+    end
 elseif nargout == 2
-    varargout{1}            = emg;
+    if sta_params.record_emg_yn
+        varargout{1}        = emg;
+    else
+        varargout{1}        = force;
+    end
     varargout{2}            = sta_params;
 elseif nargout == 3
-    if sta_params.record_force_yn     
+    if sta_params.record_force_yn && sta_params.record_emg_yn
         varargout{1}        = emg;
         varargout{2}        = force;
         varargout{3}        = sta_params;
-    else
+    elseif sta_params.record_emg_yn
         varargout{1}        = emg;
         varargout{2}        = sta_params;
         varargout{3}        = sta_metrics;        
+    elseif sta_params.record_force_yn     
+        varargout{1}        = force;
+        varargout{2}        = sta_params;
+        varargout{3}        = sta_metrics;
     end
 elseif nargout == 4
     varargout{1}            = emg;
-    varargout{2}            = sta_params;
-    varargout{3}            = emg;
+    varargout{2}            = force;
+    varargout{3}            = sta_params;
     varargout{4}            = sta_metrics;
 end
 
