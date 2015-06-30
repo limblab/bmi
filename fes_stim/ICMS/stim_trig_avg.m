@@ -98,7 +98,7 @@ if sta_params.save_data_yn
     hw.start_t                  = datestr(now,'yyyymmdd_HHMMSS');
     hw.cb.full_file_name        = fullfile( hw.data_dir, [sta_params.monkey '_' sta_params.bank '_' num2str(sta_params.stim_elec) '_' hw.start_t '_' sta_params.task '_STA' ]);
 
-    sta_params.file_name        = hw.cb.full_file_name;
+    sta_params.file_name        = [sta_params.monkey '_' sta_params.bank '_' num2str(sta_params.stim_elec) '_' hw.start_t '_' sta_params.task '_STA' ];
     
     % start 'file storage' app, or stop ongoing recordings
     cbmex('fileconfig', fullfile( hw.data_dir, hw.cb.full_file_name ), '', 0 );  
