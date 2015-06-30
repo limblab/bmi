@@ -128,7 +128,7 @@ drawnow;
 pause(1);                           % ToDo: see if it's necessary
 
 [ts_cell_array, ~, analog_data] = cbmex('trialdata',1);
-analog_data(:,1)                = ts_cell_array([analog_data{:,1}]',1); % ToDo: replace channel numbers with names
+analog_data(:,1)                = ts_cell_array([analog_data{:,1}]',1);
 
 
 % look for the 'sync out' signal ('Stim_trig')
@@ -138,7 +138,6 @@ if isempty(hw.cb.sync_signal_ch_nbr)
 else
     disp('Sync signal found');
     
-    % ToDo: store the channel of the sync signal
     hw.cb.sync_signal_fs        = cell2mat(analog_data(find(strncmp(analog_data(:,1), 'Stim', 4),1),2));
     hw.cb.sync_out_resistor     = 100;  % define resistor to record sync pulse
 end
@@ -311,8 +310,7 @@ for i = 1:hw.cb.nbr_epochs
         % extra time. To avoid loosing the last epoch ?it may happen
         % some times  
         if ii == hw.cb.nbr_stims_this_epoch
-            % ToDo: try increasing this number to avoid loosing sync pulses
-            % at the end 
+            % try increasing this number to avoid loosing sync pulses at the end 
             pause(0.01);
         end
     end
@@ -354,7 +352,7 @@ for i = 1:hw.cb.nbr_epochs
     end
     
     if sta_params.record_force_yn
-        aux2                        = analog_data( strncmp(analog_data(:,1), 'Force', 5), 3 ); % ToDo: double check this line
+        aux2                        = analog_data( strncmp(analog_data(:,1), 'Force', 5), 3 );
         for ii = 1:force.nbr_forces
             force.data(:,ii)        = double(aux2{ii,1});
         end
@@ -367,9 +365,7 @@ for i = 1:hw.cb.nbr_epochs
     % ANALOG SIGNALS WHEN READING FROM CENTRAL. THIS HAS BEEN FIXED IN
     % CBMEX v6.3, ALTHOUGH IT SOMETIMES MISSES THE FIRST THRESHOLD CROSSING 
     % IN THE TRIAL     
-    
-    % ToDo: check if these changes broke the code
-    
+        
     ts_sync_pulses_analog_freq  = ts_sync_pulses / 30000 * hw.cb.sync_signal_fs;    
     analog_sync_signal          = double( analog_data{ strncmp(analog_data(:,1), 'Stim', 4), 3 } );
     
