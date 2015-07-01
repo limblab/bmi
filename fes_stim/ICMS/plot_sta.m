@@ -102,14 +102,21 @@ if exist('emg','var')
                xlabel('time (ms)') 
             end
 
-            if  sta_metrics.emg.MPSF(i) > 0 && sta_metrics.emg.P_Ztest(i) < 0.05
-                title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3) ', P = ' num2str(sta_metrics.emg.P_Ztest(i),3)],'color','r');
-            elseif sta_metrics.emg.MPSF(i) > 0 && sta_metrics.emg.P_Ztest(i) > 0.05
-                title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3) ', P = ' num2str(sta_metrics.emg.P_Ztest(i),3)],'color','g');
-            elseif  sta_metrics.emg.MPSF(i) == 0 && sta_metrics.emg.P_Ztest(i) < 0.05
-                title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3) ', P = ' num2str(sta_metrics.emg.P_Ztest(i),3)],'color','b');
+            
+            if isfield(sta_params,'stim_mode') && ~strncmp(sta_params.stim_mode,'trains',5)
+                if  sta_metrics.emg.MPSF(i) > 0 && sta_metrics.emg.P_Ztest(i) < 0.05
+                    title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3) ', P = ' num2str(sta_metrics.emg.P_Ztest(i),3)],'color','r');
+                elseif sta_metrics.emg.MPSF(i) > 0 && sta_metrics.emg.P_Ztest(i) > 0.05
+                    title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3) ', P = ' num2str(sta_metrics.emg.P_Ztest(i),3)],'color','g');
+                elseif  sta_metrics.emg.MPSF(i) == 0 && sta_metrics.emg.P_Ztest(i) < 0.05
+                    title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3) ', P = ' num2str(sta_metrics.emg.P_Ztest(i),3)],'color','b');
+                else
+                    title(['P = ' num2str(sta_metrics.emg.P_Ztest(i),3)]);
+                end
             else
-                title(['P = ' num2str(sta_metrics.emg.P_Ztest(i),3)]);
+                if  sta_metrics.emg.MPSF(i) > 0 
+                    title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3)],'color','r');
+                end
             end
         end
     end
