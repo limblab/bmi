@@ -60,10 +60,16 @@ switch nargin
         error('the function needs at least two parameters');
     case 2,
         sta_params              = varargin{2};
-        if sta_params.record_emg_yn
+        if ~isfield(varargin{1},'record_emg_yn')
             emg                 = varargin{1};
+            sta_params.record_emg_yn    = true;     % to fix inconsistencies among versions
+            sta_params.record_force_yn  = false;     % to fix inconsistencies among versions
         else
-            force               = varargin{1};
+            if sta_params.record_emg_yn
+                emg             = varargin{1};
+            else
+                force           = varargin{1};
+            end
         end
         sta_metrics_params      = calculate_sta_metrics_defaults();
     case 3,
@@ -202,7 +208,7 @@ end
 %-------------------------------------------------------------------------- 
 % EMG Metrics
 
-if sta_params.record_emg_yn
+if ~isfield(varargin{1},'record_emg_yn') 
 
     %-------------------------------------------------------------------------- 
     % Calculate the "Mean percent facilitation" (Cheney & Fetz, 1985) - height
