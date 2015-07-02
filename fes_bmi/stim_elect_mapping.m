@@ -59,7 +59,7 @@ if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
                 % Retrieve stim amplitude for this channel
                 ampl            = round( bmi_fes_stim_params.amplitude_max(muscles_to_stimulate(i)) * ...
                                     perc_ampl_this_muscle(ii) / bmi_fes_stim_params.stim_resolut ); 
-                cmd             = struct('elect', elecs_this_muscle(ii), 'period', 1000, 'repeats', bmi_fes_stim_params.freq, 'action', 'curcyc' );
+                cmd             = struct('elec', elecs_this_muscle(ii), 'period', 1000, 'repeats', bmi_fes_stim_params.freq, 'action', 'curcyc' );
            
                 
                 % ------------------------------------------------------------
