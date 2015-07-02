@@ -1,40 +1,70 @@
 % Figure to plot the stimulation command (predicted EMG) for each muscle
+% 
+% function fig_handle = stim_fig( fig_handle , stim_PW, stim_amp, bmi_fes_stim_params, mode )
+%
+%   fig_handle          : handle structure (with figure and plot fields)
+%   stim_PW             : desired stimulation PW vector
+%   stim_amp            : desired stimulation amplitude vector
+%   bmi_fes_stim_params : bmi_fes_stim_params structure in params structure
+%   state               : 'init' / 'exec' to initialize the figure or during
+%                           execution
 
-function stim_fig( fig_handle , stim_PW, stim_amp, bmi_fes_stim_params )
+function fig_handle = stim_fig( fig_handle , stim_PW, stim_amp, bmi_fes_stim_params, mode )
 
 
-if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
-
-    figure(fig_handle)
+if strcmp(mode,'init')
+    
+    figure(fig_handle.fh);
     
     % label the muscles to use different colors
-    ext_muscles             = strncmp(bmi_fes_stim_params.muscles,'E',1);
-    flex_muscles            = strncmp(bmi_fes_stim_params.muscles,'F',1);
+    fig_handle.ext_muscles  = strncmp(bmi_fes_stim_params.muscles,'E',1);
+    fig_handle.flex_muscles = strncmp(bmi_fes_stim_params.muscles,'F',1);
     
-    hand_muscles            = strncmp(bmi_fes_stim_params.muscles,'ADL',3);
-    hand_muscles            = hand_muscles | strncmp(bmi_fes_stim_params.muscles,'APB',3);
-    hand_muscles            = hand_muscles | strncmp(bmi_fes_stim_params.muscles,'APL',3);
+    fig_handle.hand_muscles = strncmp(bmi_fes_stim_params.muscles,'ADL',3);
+    fig_handle.hand_muscles = fig_handle.hand_muscles | strncmp(bmi_fes_stim_params.muscles,'APB',3);
+    fig_handle.hand_muscles = fig_handle.hand_muscles | strncmp(bmi_fes_stim_params.muscles,'APL',3);
     
-    other_muscles           = strncmp(bmi_fes_stim_params.muscles,'Brad',4);
-    other_muscles           = other_muscles | strncmp(bmi_fes_stim_params.muscles,'Sup',3);
-    other_muscles           = other_muscles | strncmp(bmi_fes_stim_params.muscles,'PT',2);
+    fig_handle.other_muscles = strncmp(bmi_fes_stim_params.muscles,'Brad',4);
+    fig_handle.other_muscles = fig_handle.other_muscles | strncmp(bmi_fes_stim_params.muscles,'Sup',3);
+    fig_handle.other_muscles = fig_handle.other_muscles | strncmp(bmi_fes_stim_params.muscles,'PT',2);
 
     
-    bar(stim_PW)
-    set(gca,'XTickLabel',bmi_fes_stim_params.muscles)
-    hold on    
-    bar(find(ext_muscles),stim_PW(ext_muscles),'b')
-    bar(find(flex_muscles),stim_PW(flex_muscles),'r')
-	bar(find(hand_muscles),stim_PW(hand_muscles),'k')
-    bar(find(other_muscles),stim_PW(other_muscles),'g')
-    xlim([.5 length(stim_PW)+.5]), ylim([0 max(bmi_fes_stim_params.PW_max)])
+    % create plot
+    fig_handle.ah           = axes('Parent',fig_handle.fh);
+    hold on
+    
+    fig_handle.ph_ext       = plot( fig_handle.ah, find( fig_handle.ext_muscles ), ...
+                                zeros( 1,sum(fig_handle.ext_muscles) ), ...
+                                'b^', 'markersize', 18, 'linestyle', 'none' ); 
+    fig_handle.ph_flex      = plot( fig_handle.ah, find( fig_handle.flex_muscles), ...
+                                zeros( 1,sum(fig_handle.flex_muscles) ), ...
+                                'r^', 'markersize', 18, 'linestyle', 'none' ); 
+    fig_handle.ph_hand      = plot( fig_handle.ah, find( fig_handle.hand_muscles), ...
+                                zeros( 1,sum(fig_handle.hand_muscles) ), ...
+                                'k^', 'markersize', 18, 'linestyle', 'none' ); 
+    fig_handle.ph_other     = plot( fig_handle.ah, find( fig_handle.other_muscles), ...
+                                zeros( 1,sum(fig_handle.other_muscles) ), ...
+                                'g^', 'markersize', 18, 'linestyle', 'none' ); 
+
+    xlim([.5, numel(bmi_fes_stim_params.muscles)+.5]);
+    ylim([0, max(bmi_fes_stim_params.PW_max)]);
+    
+    fig_handle.ah.XTick     = 1:numel(bmi_fes_stim_params.muscles);
+    fig_handle.ah.XTickLabel = bmi_fes_stim_params.muscles;
+    fig_handle.ah.TickDir   = 'out';
+    
     xlabel('muscle')
     ylabel('PW (us)')
-    hold off
-else
     
-end
+elseif strcmp(mode,'exec')
 
-%   set(gca,'XTickLabel',{'Group A','Group B','Group C'})
-%   legend('Parameter 1','Parameter 2','Parameter 3','Parameter 4')
-%   ylabel('Y Value')
+    if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
+
+        fig_handle.ph_ext.YData     = stim_PW(fig_handle.ext_muscles);
+        fig_handle.ph_flex.YData    = stim_PW(fig_handle.flex_muscles);
+        fig_handle.ph_hand.YData    = stim_PW(fig_handle.hand_muscles);
+        fig_handle.ph_other.YData   = stim_PW(fig_handle.other_muscles);
+    else
+        
+    end
+end
