@@ -286,7 +286,7 @@ if ~isfield(varargin{1},'record_emg_yn')
     
     % This function will only be applied for stimulation with single pulses
     % not trains
-    if isfield(sta_params,'stim_mode') && ~strncmp(sta_params.stim_mode,'trains',5)
+    if isfield(sta_params,'stim_mode') && ~strncmp(sta_params.stim_mode,'trains',5) || ~isfield(sta_params,'stim_mode' )
 
         % Definitions for the intervals in which we will divide the data
         % for clarity, the values are first specified in ms and then transformed to
@@ -369,7 +369,7 @@ if ~isfield(varargin{1},'record_emg_yn')
     sta_metrics.emg.t_after_stim_start_PSF  = t_after_stim_start_PSF;
     sta_metrics.emg.duration_MPSF   = duration_PSF;
 
-    if isfield(sta_params,'stim_mode') && ~strncmp(sta_params.stim_mode,'trains',5)
+    if ( isfield(sta_params,'stim_mode') && ~strncmp(sta_params.stim_mode,'trains',5) ) || ~isfield(sta_params,'stim_mode' )
         sta_metrics.emg.P_Ztest     = P_Z_test;
         sta_metrics.emg.Xj_Ztest    = Xj_MFSA;
     end
