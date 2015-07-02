@@ -76,7 +76,10 @@ switch nargin
         if isfield(varargin{2},'record_force_yn')
             sta_params          = varargin{2};
             sta_metrics_params  = varargin{3};
-            if sta_params.record_emg_yn
+            if ~isfield(sta_params,'record_emg_yn')
+                emg             = varargin{1};
+                sta_params.record_emg_yn    = true;     % to fix inconsistencies among versions
+            elseif sta_params.record_emg_yn
                 emg             = varargin{1};
             else
                 force           = varargin{1};
