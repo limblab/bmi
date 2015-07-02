@@ -253,9 +253,9 @@ hw.cb.ind_ev_resp            = 0;    % ptr to know where to store the evoked EMG
 drawnow;
 
 
-% Message box to stop the stimulation and exit, saving the data
-hw.keep_running             = msgbox('Click ''ok'' to stop the stimulation','ICMS');
-set(hw.keep_running,'Position',[200 700 125 52]);
+% % Message box to stop the stimulation and exit, saving the data
+% hw.keep_running             = msgbox('Click ''ok'' to stop the stimulation','ICMS');
+% set(hw.keep_running,'Position',[200 700 125 52]);
 
 % Progress bar
 hw.prog_bar                 = waitbar(0, sprintf('Stimulation '));
@@ -562,6 +562,9 @@ if sta_params.save_data_yn
 end
 
 cbmex('close')
+
+
+delete(hw.prog_bar);
 
 
 % Calculate the STA metrics and plot, if specified in sta_params
