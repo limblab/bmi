@@ -233,7 +233,7 @@ try
                     save(handles.emg_file,'tmp_data','-append','-ascii');
                 end
                 if strcmp(params.output,'stimulator')
-                    tmp_data   = [bin_start_t double(data.stimPW) double(data.stimPA)];
+                    tmp_data   = [bin_start_t double(data.stim_PW) double(data.stim_amp)];
                     save(handles.stim_out_file,'tmp_data','-append','-ascii');
                 end
                 tmp_data = [bin_start_t double(cursor_pos)];
@@ -327,8 +327,10 @@ catch e
     if ishandle(handles.keep_running)
         close(handles.keep_running);
     end
-    if ishandle(handles.fh)
-        close(handles.fh);
+    if isfield(handles,'fh')
+        if ishandle(handles.fh)
+            close(handles.fh);
+        end
     end
     rethrow(e);
 end
