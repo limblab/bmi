@@ -98,7 +98,8 @@ if sta_params.save_data_yn
     hw.start_t                  = datestr(now,'yyyymmdd_HHMMSS');
     hw.cb.full_file_name        = fullfile( hw.data_dir, [sta_params.monkey '_' sta_params.bank '_' num2str(sta_params.stim_elec) '_' hw.start_t '_' sta_params.task '_STA' ]);
 
-    sta_params.file_name        = [sta_params.monkey '_' sta_params.bank '_' num2str(sta_params.stim_elec) '_' hw.start_t '_' sta_params.task '_STA' ];
+    sta_params.meta.file_name   = [sta_params.monkey '_' sta_params.bank '_' num2str(sta_params.stim_elec) '_' hw.start_t '_' sta_params.task '_STA' ];
+    sta_params.meta.date_time   = [hw.start_t(5:6) '/' hw.start_t(7:8) '/' hw.start_t(1:4) ' ' hw.start_t(10:11) ':' hw.start_t(12:13) ':' hw.start_t(14:15)];
     
     % start 'file storage' app, or stop ongoing recordings
     cbmex('fileconfig', fullfile( hw.data_dir, hw.cb.full_file_name ), '', 0 );  
@@ -250,6 +251,15 @@ hw.cb.ind_ev_resp            = 0;    % ptr to know where to store the evoked EMG
 
 
 drawnow;
+
+
+% Message box to stop the stimulation and exit, saving the data
+hw.keep_running             = msgbox('Click ''ok'' to stop the stimulation','ICMS');
+set(hw.keep_running,'Position',[200 700 125 52]);
+
+% Progress bar
+hw.prog_bar                 = waitbar(0, sprintf('Stimulation '));
+
 
 
 %--------------------------------------------------------------------------
@@ -504,6 +514,14 @@ for i = 1:hw.cb.nbr_epochs
     if sta_params.record_force_yn
         force                   = rmfield(force,'data');
     end
+    
+    
+    % update the prgoress bar
+    waitbar(i/hw.cb.nbr_epochs);
+    
+    
+    % check if the user wants to stop ICMS
+    
 end
 
 
