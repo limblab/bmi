@@ -61,8 +61,8 @@ handles.keep_running = msgbox('Click ''ok'' to stop the BMI','BMI Controller');
 set(handles.keep_running,'Position',[200 700 125 52]);
 
 if params.display_plots
-    fh = figure;
-    set(fh,'Color','k','MenuBar','none','name','BMI cursor output');
+    handles.fh = figure;
+    set(handles.fh,'Color','k','MenuBar','none','name','BMI cursor output');
 
     hold on;
     tgt_handle  = plot(0,0,'rs');
@@ -81,7 +81,8 @@ if params.display_plots
 end
 
 if strcmpi(params.output,'stimulator')
-    ffes = figure;
+    ffes.fh = figure('Name','FES commands');
+    ffes = stim_fig( ffes, [], [],  params.bmi_fes_stim_params, 'init' );
 end
 
 if ~params.online
@@ -175,10 +176,10 @@ try
             end
             
             if strcmpi(params.output,'stimulator')
-                [data.stim_PW,data.stim_amp] = EMG_to_stim(data.emgs,params.bmi_fes_stim_params);
-                stim_cmd = stim_elect_mapping(data.stim_PW,data.stim_amp,params.bmi_fes_stim_params);
-                stim_fig(ffes,data.stim_PW,data.stim_amp,params.bmi_fes_stim_params); 
-                if params.online, xippmex('stimseq',stim_cmd), end;
+                [data.stim_PW,data.stim_amp] = EMG_to_stim( data.emgs, params.bmi_fes_stim_params );
+                stim_cmd = stim_elect_mapping( data.stim_PW, data.stim_amp,params.bmi_fes_stim_params );
+                ffes = stim_fig( ffes, data.stim_PW,data.stim_amp, params.bmi_fes_stim_params, 'exec' ); 
+                if params.online, xippmex( 'stimseq', stim_cmd ), end;
             end
             
             %% Neurons-to-EMG Adaptation
@@ -308,7 +309,9 @@ try
     if ishandle(handles.keep_running)
         close(handles.keep_running);
     end
-%     close all;
+    if ishandle(handles.fh)
+        close(handles.fh);
+    end
     
 catch e
     if params.online
@@ -324,7 +327,9 @@ catch e
     if ishandle(handles.keep_running)
         close(handles.keep_running);
     end
-    close all;
+    if ishandle(handles.fh)
+        close(handles.fh);
+    end
     rethrow(e);
 end
 
