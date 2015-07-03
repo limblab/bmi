@@ -253,12 +253,12 @@ hw.cb.ind_ev_resp            = 0;    % ptr to know where to store the evoked EMG
 drawnow;
 
 
-% % Message box to stop the stimulation and exit, saving the data
-% hw.keep_running             = msgbox('Click ''ok'' to stop the stimulation','ICMS');
-% set(hw.keep_running,'Position',[200 700 125 52]);
+% Message box to stop the stimulation and exit, saving the data
+hw.keep_running             = msgbox('Click ''ok'' to stop the stimulation','ICMS');
+set(hw.keep_running,'Position',[200 700 125 52]);
 
 % Progress bar
-hw.prog_bar                 = waitbar(0, sprintf('Stimulation '));
+hw.prog_bar                 = waitbar(0, sprintf('Stimulation progress'));
 
 
 
@@ -521,7 +521,9 @@ for i = 1:hw.cb.nbr_epochs
     
     
     % check if the user wants to stop ICMS
-    
+     if ~ishandle(hw.keep_running)
+        break; 
+     end
 end
 
 
@@ -530,9 +532,15 @@ end
 %--------------------------------------------------------------------------
 % Save data and stop cerebus recordings
 
-
-disp(['Finished stimulating electrode ' num2str(sta_params.stim_elec)]);
 disp(' ');
+
+if ishandle(hw.keep_running)
+    disp(['Finished stimulating electrode ' num2str(sta_params.stim_elec)]);
+    disp(' ');
+else
+    disp(['Stimulation of electrode ' num2str(sta_params.stim_elec) ' stopped by the user']);
+    disp(' ');
+end
 
 
 % Save the data, if specified in sta_params
