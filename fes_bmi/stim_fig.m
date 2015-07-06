@@ -19,6 +19,7 @@ if strcmp(mode,'init')
     % label the muscles to use different colors
     fig_handle.ext_muscles  = strncmp(bmi_fes_stim_params.muscles,'E',1);
     fig_handle.flex_muscles = strncmp(bmi_fes_stim_params.muscles,'F',1);
+    fig_handle.flex_muscles = fig_handle.flex_muscles | strncmp(bmi_fes_stim_params.muscles,'PL',2);
     
     fig_handle.hand_muscles = strncmp(bmi_fes_stim_params.muscles,'ADL',3);
     fig_handle.hand_muscles = fig_handle.hand_muscles | strncmp(bmi_fes_stim_params.muscles,'APB',3);
@@ -62,8 +63,8 @@ elseif strcmp(mode,'exec')
 
         fig_handle.ph_ext.YData     = stim_PW(fig_handle.ext_muscles);
         fig_handle.ph_flex.YData    = stim_PW(fig_handle.flex_muscles);
-        fig_handle.ph_hand.YData    = stim_PW(fig_handle.hand_muscles);
-        fig_handle.ph_other.YData   = stim_PW(fig_handle.other_muscles);
+%         fig_handle.ph_hand.YData    = stim_PW(fig_handle.hand_muscles);
+%         fig_handle.ph_other.YData   = stim_PW(fig_handle.other_muscles);
     else
         
     end
