@@ -7,7 +7,7 @@ function check_bmi_fes_settings( neuron_decoder, params )
 % check that everything in params.bmi_fes_stim_params is consistent
 % size-wise
 
-params_to_check             = [1:3 6:11];
+params_to_check             = [1:3 6:10];
 nbr_muscles_bmi_fes         = zeros(1,length(params_to_check));
 
 all_param_names             = fieldnames(params.bmi_fes_stim_params);
