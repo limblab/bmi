@@ -529,7 +529,7 @@ if tta_params.save_data_yn
 %    xippmex('close');
 
     % save matlab data. Note: the time in the faile name will be the same as in the cb file
-    hw.matlab_full_file_name    = fullfile( hw.data_dir, [tta_params.monkey '_' tta_params.bank '_' num2str(tta_params.stim_elec) '_' hw.start_t '_' tta_params.task '_STA' ]);
+    hw.matlab_full_file_name    = fullfile( hw.data_dir, [tta_params.monkey '_' tta_params.bank '_' num2str(tta_params.stim_elec) '_' hw.start_t '_' tta_params.task '_TTA' ]);
     
     disp(' ');
     
