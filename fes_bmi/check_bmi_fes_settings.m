@@ -22,7 +22,6 @@ end
 
 if numel(unique(nbr_muscles_bmi_fes)) > 1
     error('Some of the parameters in bmi_fes_stim_params do not have the right dimension')
-    return;
 end
 
 
