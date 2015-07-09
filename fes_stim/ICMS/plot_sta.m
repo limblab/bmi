@@ -63,63 +63,11 @@ if exist('emg','var')
     t_emg                       = -sta_params.t_before:1/emg.fs*1000:sta_params.t_after;       % in ms
 
 
-    figure('units','normalized','outerposition',[0 0 1 1],'Name',['Electrode #' sta_params.bank num2str(sta_params.stim_elec) ' - n = ' num2str(sta_metrics.emg.nbr_stims)]);
+    figure('units','normalized','outerposition',[0 0 1 1],'Name',['Electrode #' sta_params.bank num2str(sta_params.stim_elec) ...
+                                    ' - n = ' num2str(sta_metrics.emg.nbr_stims)]);
 
     for i = 1:emg.nbr_emgs
 
-%         if emg.nbr_emgs <= 4
-% 
-%             subplot(1,emg.nbr_emgs,i), hold on,
-%             disp('ToDo')
-%             pause;
-% 
-%         elseif emg.nbr_emgs == 6
-% 
-%             subplot(2,3,ii), hold on,
-%             disp('ToDo')
-%             pause;
-% 
-%         elseif emg.nbr_emgs <= 8
-% 
-%             subplot(2,4,i), hold on, plot(t_emg, sta_metrics.emg.mean_emg(:,i)), xlim([0 1]), title(['EMG ch #' num2str(i)], 'FontSize', 14);
-%             disp('ToDo')
-%             pause;
-
-%         elseif emg.nbr_emgs <= 12
-% 
-%             subplot(3,4,i), hold on,
-%             if sta_metrics.emg.MPSF(i) > 0 
-%                 plot(t_emg, sta_metrics.emg.mean_emg(:,i),'r','linewidth',2)
-%             else
-%                 plot(t_emg, sta_metrics.emg.mean_emg(:,i),'k','linewidth',2)
-%             end
-%             set(gca,'FontSize',16), xlim([t_emg(1) t_emg(end)]), ylabel(emg.labels{i}(5:end),'FontSize',16);
-%             set(gca,'TickDir','out')
-%             plot(t_emg,(sta_metrics.emg.mean_baseline_emg(i) + 2*sta_metrics.emg.std_baseline_emg(i))*ones(emg.length_evoked_emg,1),'-.k')
-%             %plot(t_emg,(mean_mean_baseline_emg(i) - 2*std_mean_baseline_emg(i))*ones(length_evoked_emg,1),'k')
-% 
-%             if i > 8 
-%                xlabel('time (ms)') 
-%             end
-% 
-%             
-%             if isfield(sta_params,'stim_mode') && ~strncmp(sta_params.stim_mode,'trains',5)
-%                 if  sta_metrics.emg.MPSF(i) > 0 && sta_metrics.emg.P_Ztest(i) < 0.05
-%                     title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3) ', P = ' num2str(sta_metrics.emg.P_Ztest(i),3)],'color','r');
-%                 elseif sta_metrics.emg.MPSF(i) > 0 && sta_metrics.emg.P_Ztest(i) > 0.05
-%                     title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3) ', P = ' num2str(sta_metrics.emg.P_Ztest(i),3)],'color','g');
-%                 elseif  sta_metrics.emg.MPSF(i) == 0 && sta_metrics.emg.P_Ztest(i) < 0.05
-%                     title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3) ', P = ' num2str(sta_metrics.emg.P_Ztest(i),3)],'color','b');
-%                 else
-%                     title(['P = ' num2str(sta_metrics.emg.P_Ztest(i),3)]);
-%                 end
-%             else
-%                 if  sta_metrics.emg.MPSF(i) > 0 
-%                     title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3)],'color','r');
-%                 end
-%             end
-%         elseif emg.nbr_emgs <= 16
-            
             if emg.nbr_emgs <= 4
                 subplot(1,4,i)
             elseif emg.nbr_emgs <= 8
@@ -167,7 +115,6 @@ if exist('emg','var')
                     title(['MPSF = ' num2str(sta_metrics.emg.MPSF(i),3)],'color','r');
                 end
             end
-%         end
     end
 end
 
@@ -182,11 +129,25 @@ if exist('force','var')
     
     figure('units','normalized','outerposition',[0 0 1 1],'Name',['Electrode #' sta_params.bank num2str(sta_params.stim_elec) ' - n = ' num2str(sta_metrics.force.nbr_stims)]);
     
-    % ToDo: code for plotting the forces
-    if force.nbr_forces == 2
-        subplot(221),plot(t_force, sta_metrics.force.mean_detrended_force(:,1),'b','linewidth',2), ylabel('detrended force X')
-        subplot(222),plot(t_force, sta_metrics.force.mean_detrended_force(:,2),'k','linewidth',2), ylabel('detrended force Y')
-        subplot(223),plot(t_force, sta_metrics.force.mean_force(:,1),'c','linewidth',2), ylabel('force X'), xlabel('times (ms)')
-        subplot(224),plot(t_force, sta_metrics.force.mean_force(:,1),'color',[0.5 0.5 0.5],'linewidth',2), ylabel('force Y'), xlabel('times (ms)')
+    % For lab 1
+    if force.nbr_forces == 2 
+        subplot(221),plot(t_force, sta_metrics.force.mean_detrended_force(:,1),'b','linewidth',2), 
+        set(gca,'FontSize',16), ylabel('detrended force X','FontSize',16), set(gca,'TickDir','out')
+        subplot(222),plot(t_force, sta_metrics.force.mean_detrended_force(:,2),'k','linewidth',2), 
+        set(gca,'FontSize',16), ylabel('detrended force Y','FontSize',16), set(gca,'TickDir','out')
+        subplot(223),plot(t_force, sta_metrics.force.mean_force(:,1),'c','linewidth',2), 
+        set(gca,'FontSize',16), ylabel('force X','FontSize',16), xlabel('times (ms)'), set(gca,'TickDir','out')
+        subplot(224),plot(t_force, sta_metrics.force.mean_force(:,1),'color',[0.5 0.5 0.5],'linewidth',2), 
+        set(gca,'FontSize',16), ylabel('force Y','FontSize',16), xlabel('times (ms)'), set(gca,'TickDir','out')
+    
+    % For lab 3
+    elseif force.nbr_forces == 6    
+
+        for i = 1:force.nbr_forces
+            subplot(2,3,i),plot(t_force, sta_metrics.force.mean_force(:,1),'b','linewidth',2), ylabel(force.labels{i}(6:end),'FontSize',16)
+            set(gca,'TickDir','out')
+            
+            if i > 4, xlabel('time (ms)'), end
+        end
     end
 end
