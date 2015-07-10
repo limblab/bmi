@@ -86,12 +86,50 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             EMG_data(EMG_data<0) = 0;
             vel_data = m_data_1.Data.vel_predictions;
         else
-            temp_t = [.05*cycle_counter .05*cycle_counter .05*cycle_counter .05*cycle_counter];
-            EMG_data = 500+500*[cos(temp_t(1)) cos(temp_t(2)+pi/2) cos(temp_t(3)+pi/4) cos(temp_t(4)+3*pi/4)];
-            EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
-            EMG_data = EMG_data.^2;
-            EMG_labels = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'};            
-            vel_data = 1*[cos(.1*temp_t(1)) cos(.3*temp_t(2)+pi/2)];
+            EMG_data = m_data_1.Data.EMG_data;
+            EMG_labels = m_data_1.Data.EMG_labels;
+            EMG_labels = EMG_label_conversion(EMG_labels);
+            
+            EMG_idx = zeros(1,4);
+            EMG_order = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'}; 
+            EMG_order = {'AD','PD','BI','TRI'}; 
+            for iEMG = 1:length(EMG_order)
+                temp = find(~cellfun(@isempty,strfind(EMG_labels,EMG_order{iEMG})));
+                if ~isempty(temp)
+                    EMG_idx(iEMG) = temp;
+                end
+            end            
+            BRD_idx = find(~cellfun(@isempty,strfind(EMG_labels,'BRD')));
+            if ~isempty(BRD_idx) && arm_params.use_brd
+                EMG_idx(3) = BRD_idx;
+            end
+            temp_emg = zeros(1,4);
+            for iEMG = 1:4
+                if EMG_idx(iEMG)>0
+                    temp_emg(iEMG) = EMG_data(EMG_idx(iEMG));
+                end
+            end
+            EMG_data = temp_emg;  
+%             if arm_params.emg_adaptation_rate>0
+%                 arm_params.emg_max = max(arm_params.emg_max,EMG_data);
+%                 arm_params.emg_max = arm_params.emg_max*exp(-dt_hist(1)/arm_params.emg_adaptation_rate);
+%                 arm_params.emg_min = min(arm_params.emg_min,EMG_data);
+%                 arm_params.emg_min = (arm_params.emg_min-arm_params.emg_max)*exp(-dt_hist(1)/arm_params.emg_adaptation_rate)+arm_params.emg_max;
+%             end
+
+            EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);            
+            EMG_data(EMG_data<0) = 0;
+            vel_data = m_data_1.Data.vel_predictions;
+                        
+            forces = m_data_1.Data.forces;            
+            F_x = 5*forces(1);
+            F_y = 5*forces(2);
+%             temp_t = [.05*cycle_counter .05*cycle_counter .05*cycle_counter .05*cycle_counter];
+%             EMG_data = 500+500*[cos(temp_t(1)) cos(temp_t(2)+pi/2) cos(temp_t(3)+pi/4) cos(temp_t(4)+3*pi/4)];
+%             EMG_data = (EMG_data-arm_params.emg_min)./(arm_params.emg_max-arm_params.emg_min);        
+%             EMG_data = EMG_data.^2;
+%             EMG_labels = {'EMG_AD','EMG_PD','EMG_BI','EMG_TRI'};            
+%             vel_data = 1*[cos(.1*temp_t(1)) cos(.3*temp_t(2)+pi/2)];
         end        
                
         EMG_data(isnan(EMG_data)) = 0;
@@ -120,11 +158,6 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
             else
                 disp('No udp data read')
             end
-        else   
-            forces = min(forces,1);
-            forces = max(forces,-1);
-            F_x = 5*forces(1);
-            F_y = 5*forces(2);
         end
         
         arm_params.F_end = [F_x F_y];
