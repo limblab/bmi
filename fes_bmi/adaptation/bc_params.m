@@ -13,10 +13,10 @@ params.save_data     = true;
 params.online        = true;
 
 if strncmpi(monkey,'jango',3)
-    params.save_name = 'Jango_BC_';
+    params.save_name = 'Jango_';
     params.save_dir  = 'E:\Data-lab1\12A1-Jango\CerebusData\Adaptation\';
 elseif strncmpi(monkey,'kevin',3)
-    params.save_name = 'Kevin_BC_';
+    params.save_name = 'Kevin_';
     params.save_dir  = 'E:\Data-lab1\12A2-Kevin\Adaptation\';
 else
     warning('unknown monkey name, save_dir not set!');
