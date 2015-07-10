@@ -309,8 +309,10 @@ try
     if ishandle(handles.keep_running)
         close(handles.keep_running);
     end
-    if ishandle(handles.fh)
-        close(handles.fh);
+    if isfield(handles,'fh')
+        if ishandle(handles.fh)
+            close(handles.fh);
+        end
     end
     
 catch e
