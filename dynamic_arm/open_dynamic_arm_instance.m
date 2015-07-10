@@ -8,11 +8,13 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance(params)
     EMG_labels = 32*ones(10,10);
     bmi_running = 1;
     vel_predictions = zeros(1,2);
+    forces = zeros(1,2);
     fid = fopen('data_1.dat','w');
     fwrite(fid, EMG_data, 'double');
     fwrite(fid, EMG_labels, 'uint8');
     fwrite(fid, bmi_running, 'double');
     fwrite(fid, vel_predictions, 'double');    
+    fwrite(fid, forces, 'double');
     fclose(fid);
 
     model_running = 0;
@@ -38,7 +40,8 @@ function [m_data_1,m_data_2] = open_dynamic_arm_instance(params)
     'Format',{'double',[1 4],'EMG_data';...
     'uint8',[10 10],'EMG_labels';...
     'double',[1 1],'bmi_running';...
-    'double',[1 2],'vel_predictions'},'Writable',true);
+    'double',[1 2],'vel_predictions';...
+    'double',[1 2],'forces'},'Writable',true);
 
     m_data_2 = memmapfile('data_2.dat',...
     'Format',{'double',[1 1],'model_running';...
