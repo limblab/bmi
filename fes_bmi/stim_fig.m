@@ -18,8 +18,7 @@ if strcmp(mode,'init')
     
     % label the muscles to use different colors
     fig_handle.ext_muscles  = strncmp(bmi_fes_stim_params.muscles,'E',1);
-    fig_handle.flex_muscles = strncmp(bmi_fes_stim_params.muscles,'F',1);
-    fig_handle.flex_muscles = fig_handle.flex_muscles | strncmp(bmi_fes_stim_params.muscles,'PL',2);
+    fig_handle.flex_muscles = strncmp(bmi_fes_stim_params.muscles,'F',1) | strncmp(bmi_fes_stim_params.muscles,'PL',2);
     
     fig_handle.hand_muscles = strncmp(bmi_fes_stim_params.muscles,'ADL',3);
     fig_handle.hand_muscles = fig_handle.hand_muscles | strncmp(bmi_fes_stim_params.muscles,'APB',3);
@@ -34,18 +33,30 @@ if strcmp(mode,'init')
     fig_handle.ah           = axes('Parent',fig_handle.fh);
     hold on
     
-    fig_handle.ph_ext       = plot( fig_handle.ah, find( fig_handle.ext_muscles ), ...
+    if ~isempty(fig_handle.ext_muscles)
+        
+        fig_handle.ph_ext   = plot( fig_handle.ah, find( fig_handle.ext_muscles ), ...
                                 zeros( 1,sum(fig_handle.ext_muscles) ), ...
                                 'b^', 'markersize', 18, 'linestyle', 'none' ); 
-    fig_handle.ph_flex      = plot( fig_handle.ah, find( fig_handle.flex_muscles), ...
+    end
+    
+    if ~isempty(fig_handle.flex_muscles)
+        fig_handle.ph_flex  = plot( fig_handle.ah, find( fig_handle.flex_muscles), ...
                                 zeros( 1,sum(fig_handle.flex_muscles) ), ...
                                 'r^', 'markersize', 18, 'linestyle', 'none' ); 
-    fig_handle.ph_hand      = plot( fig_handle.ah, find( fig_handle.hand_muscles), ...
+    end
+    
+    if ~isempty(fig_handle.hand_muscles)
+        fig_handle.ph_hand  = plot( fig_handle.ah, find( fig_handle.hand_muscles), ...
                                 zeros( 1,sum(fig_handle.hand_muscles) ), ...
                                 'k^', 'markersize', 18, 'linestyle', 'none' ); 
-    fig_handle.ph_other     = plot( fig_handle.ah, find( fig_handle.other_muscles), ...
+    end
+    
+    if ~isempty(fig_handle.other_muscles)
+        fig_handle.ph_other = plot( fig_handle.ah, find( fig_handle.other_muscles), ...
                                 zeros( 1,sum(fig_handle.other_muscles) ), ...
                                 'g^', 'markersize', 18, 'linestyle', 'none' ); 
+    end
 
     xlim([.5, numel(bmi_fes_stim_params.muscles)+.5]);
     ylim([0, max(bmi_fes_stim_params.PW_max)]);
@@ -61,10 +72,21 @@ elseif strcmp(mode,'exec')
 
     if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
 
-        fig_handle.ph_ext.YData     = stim_PW(fig_handle.ext_muscles);
-        fig_handle.ph_flex.YData    = stim_PW(fig_handle.flex_muscles);
-%         fig_handle.ph_hand.YData    = stim_PW(fig_handle.hand_muscles);
-%         fig_handle.ph_other.YData   = stim_PW(fig_handle.other_muscles);
+        if ~isempty(fig_handle.ext_muscles)
+            fig_handle.ph_ext.YData     = stim_PW(fig_handle.ext_muscles);
+        end
+        
+        if ~isempty(fig_handle.flex_muscles)
+            fig_handle.ph_flex.YData    = stim_PW(fig_handle.flex_muscles);
+        end
+        
+        if ~isempty(fig_handle.hand_muscles)
+            fig_handle.ph_hand.YData    = stim_PW(fig_handle.hand_muscles);
+        end
+        
+        if ~isempty(fig_handle.other_muscles)
+            fig_handle.ph_other.YData   = stim_PW(fig_handle.other_muscles);
+        end
     else
         
     end
