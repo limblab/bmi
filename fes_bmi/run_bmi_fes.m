@@ -7,7 +7,12 @@ clear all; close all; clc;
 monkey                  = 'Jango'; % 'Kevin'
 
 % List of muscles for the decoder
-emg_list                = {'FCU', 'ECU'}; % {'FCU', 'PL', 'FCR'};
+emg_list_4_dec          = {'FCU', 'ECU'}; % {'FCU', 'PL', 'FCR'};
+
+% Mapping of EMGs in the decoder to Electrodes in the Monkey
+sp.EMG_to_stim_map      = [{'FCU', 'ECU'}; ...
+                            {'FCU', 'ECU'}];
+
 
 % This flag allows you to run the code without the stimulator
 stimulator_plugged_in   = false;
@@ -33,14 +38,14 @@ params.save_data        = false;
 % dec_opts.PredEMGs       = 1;
 % 
 % 
-% % Look for the muscles specified in 'emg_list'
-% emg_pos_in_binnedData   = zeros(1,numel(emg_list));
+% % Look for the muscles specified in 'emg_list_4_dec'
+% emg_pos_in_binnedData   = zeros(1,numel(emg_list_4_dec));
 % for i = 1:length(emg_pos_in_binnedData)
-%     emg_pos_in_binnedData(i) = find( strncmp(binnedData.emgguide,emg_list(i),length(emg_list{i})) );
+%     emg_pos_in_binnedData(i) = find( strncmp(binnedData.emgguide,emg_list_4_dec(i),length(emg_list_4_dec{i})) );
 % end
 % 
 % train_data              = binnedData;
-% train_data.emgguide     = emg_list;
+% train_data.emgguide     = emg_list_4_dec;
 % train_data.emgdatabin   = binnedData.emgdatabin(:,emg_pos_in_binnedData);
 % 
 % % Build the neuron-to-EMG decoder
@@ -57,15 +62,15 @@ dec_file                        = '/Users/juangallego/Documents/NeuroPlast/Data/
 if ~isstruct(dec_file)
     N2E                         = LoadDataStruct(dec_file);
     
-    % Get rid of the muscles we don't care about (i.e. not included in emg_list)
+    % Get rid of the muscles we don't care about (i.e. not included in emg_list_4_dec)
     if isfield(N2E, 'H')
-        emg_pos_in_dec          = zeros(1,numel(emg_list));
+        emg_pos_in_dec          = zeros(1,numel(emg_list_4_dec));
         for i = 1:length(emg_pos_in_dec)
-            emg_pos_in_dec(i)   = find( strncmp(N2E.outnames,emg_list(i),length(emg_list{i})) );
+            emg_pos_in_dec(i)   = find( strncmp(N2E.outnames,emg_list_4_dec(i),length(emg_list_4_dec{i})) );
         end
         
         N2E.H                   = N2E.H(:,emg_pos_in_dec);
-        N2E.outnames            = emg_list;
+        N2E.outnames            = emg_list_4_dec;
     else
         error('Invalid neuron-to-emg decoder');
     end
@@ -91,7 +96,7 @@ params.output           = 'stimulator';
 params.mode             = 'emg_only';
 
 
-params.n_emgs           = numel(emg_list);  % this is the number of EMGs in the decoder
+params.n_emgs           = numel(emg_list_4_dec);  % this is the number of EMGs in the decoder
 
 
 params.display_plots    = false; % these plots are for other BMI stuff
