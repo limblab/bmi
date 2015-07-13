@@ -98,6 +98,14 @@ else
     bmi_params = [];
 end
 
+% fill default BMI-FES params missing from input argument
+if nargin
+    if isfield(bmi_params,'bmi_fes_stim_params')
+       bmi_params.bmi_fes_stim_params = bmi_fes_stim_params_defaults(bmi_params.bmi_fes_stim_params);
+    end
+end
+
+
 all_param_names = fieldnames(bmi_params_defaults);
 for i=1:numel(all_param_names)
     if ~isfield(bmi_params,all_param_names(i))
