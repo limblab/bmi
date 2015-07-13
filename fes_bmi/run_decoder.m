@@ -39,7 +39,7 @@ end
 
 % check that there's no error in the stimulation parameters 
 if strcmpi(params.output,'stimulator')
-    check_bmi_fes_settings( neuron_decoder, params );
+    params = check_bmi_fes_settings( neuron_decoder, params );
 end
 
 %% Initialization
