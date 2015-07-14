@@ -7,11 +7,11 @@ clear all; close all; clc;
 monkey                  = 'Jango'; % 'Kevin'
 
 % List of muscles for the decoder
-emg_list_4_dec          = {'FCU', 'ECU'}; % {'FCU', 'PL', 'FCR'};
+emg_list_4_dec          = {'FCU', 'ECU', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
 
 % Mapping of EMGs in the decoder to Electrodes in the Monkey
-sp.EMG_to_stim_map      = [{'FCU', 'ECU'}; ...
-                            {'FCU', 'ECU'}];
+sp.EMG_to_stim_map      = [{'FCU', 'ECU', 'EDC2'}; ...
+                            {'FCU', 'ECU', 'EDCu'}];
 
 
 % This flag allows you to run the code without the stimulator
@@ -118,8 +118,8 @@ switch monkey
         sp.muscles      = {'EDCu','FCU','EDCr','ECU','ECRb','PL','ECRl','FDP','FCR'};
 %         sp.anode_map    = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
 %                             { [], [1/3 1/3 1/3], [], [], [], [], [], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
-        sp.anode_map    = [{ [], [2 4 6], [], [8 10 12], [], [], [], [], [] }; ...
-                            { [], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
+        sp.anode_map    = [{ [14 16 18], [2 4 6], [], [8 10 12], [], [], [], [], [] }; ...
+                            { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
     case 'Kevin'
         sp.muscles      = {'FCR1','FCR2','FCU1','FDPr','FDPu','FDS1','FDS2','PT','FCU2','ECU1','ECU2','ECR1','ECR2','EDCu'};        
         % sp.anode_map    
