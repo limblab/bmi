@@ -11,7 +11,7 @@ function params = check_bmi_fes_settings( neuron_decoder, params )
 params_to_check             = {'muscles','anode_map','EMG_min','EMG_max','PW_min',...
                                 'PW_max','amplitude_min','amplitude_max'};
 
-nbr_muscles_bmi_fes         = zeros(1,length(params_to_check));
+nbr_muscles_bmi_fes_params  = zeros(1,length(params_to_check));
 
 nbr_emgs_decoder            = size(neuron_decoder.H,2);
 stim_anodes                 = find(~cellfun(@isempty,params.bmi_fes_stim_params.anode_map(1,:)));
@@ -22,15 +22,15 @@ nbr_perc_stim_per_anode     = length(find(~cellfun(@isempty,params.bmi_fes_stim_
 % check that all the parameters listed in 'params_to_check' have the same
 % number of muscles 
 for i = 1:length(params_to_check)
-    nbr_muscles_bmi_fes(i)  = length( params.bmi_fes_stim_params.(params_to_check{i}) );
+    nbr_muscles_bmi_fes_params(i)  = length( params.bmi_fes_stim_params.(params_to_check{i}) );
 end
 
 % the cathode can be empty (if we're using a common return)
 if ~isempty(params.bmi_fes_stim_params.cathode_map{1})
-    nbr_muscles_bmi_fes     = [nbr_muscles_bmi_fes, size(params.bmi_fes_stim_params.cathode_map,2)];
+    nbr_muscles_bmi_fes_params     = [nbr_muscles_bmi_fes_params, size(params.bmi_fes_stim_params.cathode_map,2)];
 end
 
-if numel(unique(nbr_muscles_bmi_fes)) > 1
+if numel(unique(nbr_muscles_bmi_fes_params)) > 1
     error('Some of the parameters in bmi_fes_stim_params do not have the right dimension')
 end
 
