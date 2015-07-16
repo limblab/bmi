@@ -3,7 +3,7 @@
 %
 
 % Who is in the lab?
-monkey                  = 'Kevin';  % 'Jango'
+monkey                  ='Jango';
 
 
 % Set up the stimulation parameters
@@ -11,7 +11,7 @@ monkey                  = 'Kevin';  % 'Jango'
 stap                    = stim_trig_avg_defaults;
 
 stap.nbr_stims_ch       = 15000;
-
+stap.stim_ampl          = 0.036;
 
 switch monkey
     case 'Kevin'
@@ -31,6 +31,6 @@ end
 %% -----------------------------------------------------------------------
 % Call the ICMS function
 
-stim_trig_avg(stap);
+% stim_trig_avg(stap);
 
 
