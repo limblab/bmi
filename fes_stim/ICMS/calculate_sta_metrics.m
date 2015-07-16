@@ -317,7 +317,7 @@ if ~isfield(varargin{1},'record_emg_yn')
         % 1. Divide the dataset into sqrt(nbr of stimuli) non-overlapping windows
         % (of size sqrt(nbr of spikes)) 
 
-        nbr_non_overlap_wdws            = floor(sqrt(length(emg.evoked_emg)));
+        nbr_non_overlap_wdws            = floor(sqrt(size(emg.evoked_emg,3)));
         Xj_MFSA                         = zeros( nbr_non_overlap_wdws, emg.nbr_emgs );
         r_T                             = zeros( nbr_non_overlap_wdws, emg.nbr_emgs );
         r_c1                            = zeros( nbr_non_overlap_wdws, emg.nbr_emgs );
