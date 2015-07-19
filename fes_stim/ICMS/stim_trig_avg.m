@@ -537,6 +537,7 @@ disp(' ');
 if ishandle(hw.keep_running)
     disp(['Finished stimulating electrode ' num2str(sta_params.stim_elec)]);
     disp(' ');
+    delete( hw.keep_running );
 else
     disp(['Stimulation of electrode ' num2str(sta_params.stim_elec) ' stopped by the user']);
     disp(' ');
