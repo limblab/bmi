@@ -12,6 +12,9 @@ emg_list_4_dec          = {'FCU', 'ECU', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
 % Mapping of EMGs in the decoder to Electrodes in the Monkey
 sp.EMG_to_stim_map      = [{'FCU', 'ECU', 'EDC2'}; ...
                             {'FCU', 'ECU', 'EDCu'}];
+                        
+% Monopolar or bipolar stimulation
+stim_mode               = 'bipolar'; % 'bipolar'; 'monopolar'
 
 
 % This flag allows you to run the code without the stimulator
@@ -118,14 +121,22 @@ switch monkey
         sp.muscles      = {'EDCu','FCU','EDCr','ECU','ECRb','PL','ECRl','FDP','FCR'};
 %         sp.anode_map    = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
 %                             { [], [1/3 1/3 1/3], [], [], [], [], [], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
+        
         sp.anode_map    = [{ [14 16 18], [2 4 6], [], [8 10 12], [], [], [], [], [] }; ...
                             { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
+                        
+        if strcmp(stim_mode,'bipolar')
+            sp.cathode_map  = [{ [1 3 5], [7 9 11], [], [13 15 17], [], [], [], [], [] }; ...
+                                { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
+        elseif strcmp(stim_mode,'monopolar')
+            sp.cathode_map          = {{ }};
+        end
+        
     case 'Kevin'
         sp.muscles      = {'FCR1','FCR2','FCU1','FDPr','FDPu','FDS1','FDS2','PT','FCU2','ECU1','ECU2','ECR1','ECR2','EDCu'};        
         % sp.anode_map    
 end
 
-sp.cathode_map          = {{ }};
 
 sp.EMG_min              = repmat( 0.15, 1,numel(sp.muscles));
 sp.EMG_max              = repmat( 1, 1,numel(sp.muscles));
