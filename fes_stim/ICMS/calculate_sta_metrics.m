@@ -376,6 +376,8 @@ if ~isfield(varargin{1},'record_emg_yn')
         sta_metrics.emg.P_Ztest     = P_Z_test;
         sta_metrics.emg.Xj_Ztest    = Xj_MFSA;
     end
+    
+    sta_metrics.emg.labels          = emg.labels;
 end
 
 
