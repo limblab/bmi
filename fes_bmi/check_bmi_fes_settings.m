@@ -5,29 +5,37 @@
 function params = check_bmi_fes_settings( neuron_decoder, params )
 
 
-% check that everything in params.bmi_fes_stim_params is consistent
-% size-wise
-
 params_to_check             = {'muscles','anode_map','EMG_min','EMG_max','PW_min',...
                                 'PW_max','amplitude_min','amplitude_max'};
-
-nbr_muscles_bmi_fes_params  = zeros(1,length(params_to_check));
-
+                            
 nbr_emgs_decoder            = size(neuron_decoder.H,2);
 stim_anodes                 = find(~cellfun(@isempty,params.bmi_fes_stim_params.anode_map(1,:)));
-nbr_stim_anodes             = length(stim_anodes);
+nbr_stim_anodes             = size(stim_anodes,2);
 nbr_perc_stim_per_anode     = length(find(~cellfun(@isempty,params.bmi_fes_stim_params.anode_map(2,:))));
 
 
+% variable to store the number of muscles included in each of the
+% "params_to_check"
+nbr_muscles_bmi_fes_params  = zeros(1,length(params_to_check));
+
+
+% -------------------------------------------------------------------------
 % check that all the parameters listed in 'params_to_check' have the same
 % number of muscles 
 for i = 1:length(params_to_check)
-    nbr_muscles_bmi_fes_params(i)  = length( params.bmi_fes_stim_params.(params_to_check{i}) );
+    nbr_muscles_bmi_fes_params(i)   = length( params.bmi_fes_stim_params.(params_to_check{i}) );
 end
 
-% the cathode can be empty (if we're using a common return)
+% the cathode can be empty (if we're using a common return). If we are
+% doing bipolar stimulation (cathode not empty), check that cathodes have
+% the right number of muscles
 if ~isempty(params.bmi_fes_stim_params.cathode_map{1})
-    nbr_muscles_bmi_fes_params     = [nbr_muscles_bmi_fes_params, size(params.bmi_fes_stim_params.cathode_map,2)];
+    nbr_stim_cathodes               = size(params.bmi_fes_stim_params.cathode_map,2);
+    nbr_muscles_bmi_fes_params      = [nbr_muscles_bmi_fes_params, nbr_stim_cathodes];
+
+    % some stuff that will be used later
+    nbr_perc_stim_per_cathode       = length(find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(2,:))));
+    stim_cathodes                   = find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(1,:)));
 end
 
 if numel(unique(nbr_muscles_bmi_fes_params)) > 1
@@ -35,6 +43,7 @@ if numel(unique(nbr_muscles_bmi_fes_params)) > 1
 end
 
 
+% -------------------------------------------------------------------------
 % check that the nbr of decoded EMGs we have specified matches the number
 % of muscles that we want to stimulate (non-empty muscles in the first row
 % of 'anode_map') 
@@ -42,6 +51,8 @@ if nbr_emgs_decoder ~= nbr_stim_anodes
     error('The number of decoded EMGs does not match the number of stimulation anodes')
 end
 
+
+% -------------------------------------------------------------------------
 % check if we have specified for each anode the percentage of the current
 % amplitude that will be delivered to each muscle (this is the second row
 % of 'anode_map')
@@ -58,6 +69,38 @@ for i = 1:nbr_stim_anodes
 end
 
 
+% -------------------------------------------------------------------------
+% check a number of things for the cathodes, if doing bipolar stimulation
+if ~isempty(params.bmi_fes_stim_params.cathode_map{1})
+    
+    % check if we have specified the return for each electrode
+    if stim_anodes ~= stim_cathodes
+        error('The stimulation cathodes do not match the anodes');
+    end
+    
+    % check that the number of cathodes matches the number of anodes
+    if nbr_stim_cathodes ~= nbr_stim_anodes
+        error('The number of stimulation cathodes does not match the anodes');
+    end
+    
+    % check if we have specified for each anode the percentage of the
+    % current amplitude that will be delivered to each muscle (this is the
+    % second row of 'cathode_map')  
+    if nbr_stim_cathodes ~= nbr_perc_stim_per_cathode
+        error('You have to specify how much current goes to each cathode you are stimulating')
+    end
+    
+    % check if the sum of the percetange of the current for each muscle's
+    % cathode = 1  
+    for i = 1:nbr_stim_cathodes
+        if sum(params.bmi_fes_stim_params.cathode_map{2,stim_cathodes(i)}) ~= 1
+           error('The sum of the percentages of current to each anode cannot be > 1');
+        end
+    end
+end
+
+
+% -------------------------------------------------------------------------
 % check that the decoded muscles are in the EMG_to_stim_map
 pos_dec_muscle_in_EMG_stim_map          = zeros(1,nbr_emgs_decoder);
 for i = 1:nbr_emgs_decoder
@@ -71,6 +114,7 @@ for i = 1:nbr_emgs_decoder
     end
 end
 
+% -------------------------------------------------------------------------
 % redimension all of the parameters in 'bmi_fes_stim_params', so they are
 % only specified for those stimulation muscles in 'EMG_to_stim_map'
 muscles_to_stim                         = params.bmi_fes_stim_params.EMG_to_stim_map(2,pos_dec_muscle_in_EMG_stim_map);
