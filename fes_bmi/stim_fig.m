@@ -33,26 +33,26 @@ if strcmp(mode,'init')
     fig_handle.ah           = axes('Parent',fig_handle.fh);
     hold on
     
-    if ~isempty(fig_handle.ext_muscles)
+    if ~isempty(find(fig_handle.ext_muscles,1))
         
         fig_handle.ph_ext   = plot( fig_handle.ah, find( fig_handle.ext_muscles ), ...
                                 zeros( 1,sum(fig_handle.ext_muscles) ), ...
                                 'b^', 'markersize', 18, 'linestyle', 'none' ); 
     end
     
-    if ~isempty(fig_handle.flex_muscles)
+    if ~isempty(find(fig_handle.flex_muscles,1))
         fig_handle.ph_flex  = plot( fig_handle.ah, find( fig_handle.flex_muscles), ...
                                 zeros( 1,sum(fig_handle.flex_muscles) ), ...
                                 'r^', 'markersize', 18, 'linestyle', 'none' ); 
     end
     
-    if ~isempty(fig_handle.hand_muscles)
+    if ~isempty(find(fig_handle.hand_muscles,1))
         fig_handle.ph_hand  = plot( fig_handle.ah, find( fig_handle.hand_muscles), ...
                                 zeros( 1,sum(fig_handle.hand_muscles) ), ...
                                 'k^', 'markersize', 18, 'linestyle', 'none' ); 
     end
     
-    if ~isempty(fig_handle.other_muscles)
+    if ~isempty(find(fig_handle.other_muscles,1))
         fig_handle.ph_other = plot( fig_handle.ah, find( fig_handle.other_muscles), ...
                                 zeros( 1,sum(fig_handle.other_muscles) ), ...
                                 'g^', 'markersize', 18, 'linestyle', 'none' ); 
