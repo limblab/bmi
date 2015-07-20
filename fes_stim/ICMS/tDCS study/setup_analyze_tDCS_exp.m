@@ -34,7 +34,7 @@ switch exp_type
         % Get the post-tDCS files
         atp.post_tDCS_files =  uigetfile([atp.exp_folder '/*.mat'], 'Pick the post-tDCS files', 'Multiselect', 'on' );
     otherwise
-        error('exp_type has to be ''ICMS_only'' or ''tDCS_exp''');
+        error('''exp_type'' has to be ''ICMS_only'' or ''tDCS_exp''');
 end
 
 % Get current folder, to come back
