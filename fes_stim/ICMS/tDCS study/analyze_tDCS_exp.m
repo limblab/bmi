@@ -230,12 +230,38 @@ end
 
 % -------------------------------------------------------------------------
 % 2. Plot the Evoked responses
-% for i = 1:nbr_muscles  
-% f_r                         = figure;
-% hold on
-%     
-%     
-% end
+
+t_axis_evoked_resp          = -sta_metrics_bsln(1).emg.t_before : 1/sta_metrics_bsln(1).emg.fs*1000 ...
+                                : sta_metrics_bsln(1).emg.t_after;
+
+for i = 1:nbr_muscles  
+
+f_r                         = figure;   % Fig with mean responses
+hold on;
+h_r1 = arrayfun( @(x) plot( t_axis_evoked_resp, x.emg.mean_emg(:,pos_muscles(i)), 'LineWidth', 1, 'color', 'k' ), sta_metrics_bsln );
+if isfield(tDCS_exp,'tDCS_files')
+    h_r2 = arrayfun( @(x) plot( t_axis_evoked_resp, x.emg.mean_emg(:,pos_muscles(i)), 'LineWidth', 1, 'color', 'r' ), sta_metrics_tDCS );
+    h_r3 = arrayfun( @(x) plot( t_axis_evoked_resp, x.emg.mean_emg(:,pos_muscles(i)), 'LineWidth', 1, 'color', 'b' ), sta_metrics_post );
+    legend([h_r1(1) h_r2(1) h_r3(1)],'baseline','tDCS on','tDCS off','Location','northeast')
+end
+xlim([-sta_metrics_bsln(1).emg.t_before  sta_metrics_bsln(1).emg.t_after])
+xlabel('time (ms)','Fontsize',14), ylabel('evoked response (mV)','Fontsize',14)
+set(gca,'FontSize',14), set(gca,'TickDir','out')
+title([fig_title ' - n = ' num2str(tDCS_exp.resp_per_win) ' resp/epoch'],'Interpreter', 'none')
+
+f_rd                        = figure;   % Fig with detrended mean responses
+hold on;
+h_rd1 = arrayfun( @(x) plot( t_axis_evoked_resp, detrend( x.emg.mean_emg(:,pos_muscles(i)) ), 'LineWidth', 1, 'color', 'k' ), sta_metrics_bsln );
+if isfield(tDCS_exp,'tDCS_files')
+    h_rd2 = arrayfun( @(x) plot( t_axis_evoked_resp, detrend( x.emg.mean_emg(:,pos_muscles(i)) ), 'LineWidth', 1, 'color', 'r' ), sta_metrics_tDCS );
+    h_rd3 = arrayfun( @(x) plot( t_axis_evoked_resp, detrend( x.emg.mean_emg(:,pos_muscles(i)) ), 'LineWidth', 1, 'color', 'b' ), sta_metrics_post );
+    legend([h_rd1(1) h_rd2(1) h_rd3(1)], 'baseline','tDCS on','tDCS off','Location','northeast')
+end
+xlim([-sta_metrics_bsln(1).emg.t_before  sta_metrics_bsln(1).emg.t_after])
+xlabel('time (ms)','Fontsize',14), ylabel('detrended evoked response (mV)','Fontsize',14)
+set(gca,'FontSize',14), set(gca,'TickDir','out') 
+title([fig_title ' - n = ' num2str(tDCS_exp.resp_per_win) ' resp/epoch'],'Interpreter', 'none')
+end
 
 
 
