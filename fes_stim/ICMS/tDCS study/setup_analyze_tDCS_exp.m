@@ -5,14 +5,14 @@
 clear all; close all; clc
 
 % 'ICMS_only' or 'tDCS_exp'
-exp_type                = 'ICMS_only';
+exp_type                = 'tDCS_exp';
 
 % Choose the muscles to look at. If empty, the code will look at all of
 % them
-atp.muscles             = {'EMG_ECRl'}; % 'EMG_ECR1' 'EMG_ECRl'
+atp.muscles             = {'EMG_ECR1'}; % 'EMG_ECR1' 'EMG_ECRl'
 
 % Folder with the data
-atp.exp_folder          = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/tDCS/STA_data_2015_07_18';
+atp.exp_folder          = '/Users/juangallego/Documents/NeuroPlast/Data/Kevin/CerebusData/tDCS/STA_data_2015_07_10';
 
 % The data in each of the files will be split in windows of size
 % 'atp.resp_per_win' 
