@@ -64,7 +64,9 @@ for i = 1:nbr_files
         sta_metrics_array(bsln_epoch_ctr)   = calculate_sta_metrics( emg, sta_params, stamp );
         
         % Add the sampling frequency
-        sta_metrics_array(bsln_epoch_ctr).emg.fs = emg.fs;
+        sta_metrics_array(bsln_epoch_ctr).emg.fs            = emg.fs;
+        sta_metrics_array(bsln_epoch_ctr).emg.t_before   = sta_params.t_before;
+        sta_metrics_array(bsln_epoch_ctr).emg.t_after    = sta_params.t_after;
         
         bsln_epoch_ctr              = bsln_epoch_ctr + 1;
     end    
