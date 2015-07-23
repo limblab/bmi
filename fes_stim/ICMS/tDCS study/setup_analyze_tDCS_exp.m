@@ -12,7 +12,7 @@ exp_type                = 'tDCS_exp';
 atp.muscles             = {'EMG_ECR1'}; % 'EMG_ECR1' 'EMG_ECRl'
 
 % Folder with the data
-atp.exp_folder          = '/Users/juangallego/Documents/NeuroPlast/Data/Kevin/CerebusData/tDCS/STA_data_2015_07_10';
+atp.exp_folder          = '/Users/juangallego/Documents/NeuroPlast/Data/Kevin/CerebusData/tDCS/STA_data_2015_07_22';
 
 % The data in each of the files will be split in windows of size
 % 'atp.resp_per_win' 

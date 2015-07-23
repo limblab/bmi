@@ -15,20 +15,26 @@ if ~isempty( tDCS_exp.baseline_files )
     % trial_type variable, that will be used for the analysis and the plots
     if iscell(tDCS_exp.baseline_files)
         nbr_bsln_trials     = numel(tDCS_exp.baseline_files);
-    else
+    elseif tDCS_exp.baseline_files ~= 0
         nbr_bsln_trials     = 1;
+    else
+        nbr_bsln_trials     = 0;
     end
     
     if iscell(tDCS_exp.tDCS_files)
         nbr_tDCS_trials     = numel(tDCS_exp.tDCS_files);
-    else
+    elseif tDCS_exp.tDCS_files ~= 0
         nbr_tDCS_trials     = 1;
+    else
+        nbr_tDCS_trials     = 0;
     end
     
     if iscell(tDCS_exp.post_tDCS_files)
         nbr_post_trials     = numel(tDCS_exp.post_tDCS_files);
-    else
+    elseif tDCS_exp.post_tDCS_files ~= 0
         nbr_post_trials     = 1;
+    else
+        nbr_post_trials     = 0;
     end
     
     nbr_trials              = nbr_bsln_trials + nbr_tDCS_trials + nbr_post_trials;
@@ -42,7 +48,7 @@ if ~isempty( tDCS_exp.baseline_files )
     for i = 1:nbr_tDCS_trials
         trial_type{i+nbr_bsln_trials}                   = 'tDCS';
     end
-    for i = 1:nbr_tDCS_trials
+    for i = 1:nbr_post_trials
         trial_type{i+nbr_bsln_trials+nbr_tDCS_trials}   = 'post';
     end    
     
@@ -56,6 +62,7 @@ else
     
     nbr_trials              = numel(tDCS_exp.baseline_files);
     nbr_bsln_trials         = nbr_trials; % For consistency
+    [nbr_tDCS_trials nbr_post_trials]   = deal(0); % For consistency
     trial_type              = cell(1,nbr_trials);
     for i = 1:nbr_trials
         trial_type{i}       = 'bsln';
@@ -71,17 +78,22 @@ time_axis                   = [];
 
 
 % For the baseline trials
-sta_metrics_bsln            = split_and_calc_sta_metrics( tDCS_exp.baseline_files, tDCS_exp.resp_per_win, nbr_bsln_trials );
+if nbr_bsln_trials > 0
+    sta_metrics_bsln        = split_and_calc_sta_metrics( tDCS_exp.baseline_files, ...
+                                tDCS_exp.resp_per_win, nbr_bsln_trials );
+end
 
 
 % For the tDCS trials
-if isfield( tDCS_exp, 'tDCS_files' )
-    sta_metrics_tDCS        = split_and_calc_sta_metrics( tDCS_exp.tDCS_files, tDCS_exp.resp_per_win, nbr_tDCS_trials );
+if nbr_tDCS_trials > 0
+    sta_metrics_tDCS        = split_and_calc_sta_metrics( tDCS_exp.tDCS_files, ...
+                                tDCS_exp.resp_per_win, nbr_tDCS_trials );
 end
 
 % For the post-tDCS trials
-if isfield( tDCS_exp, 'post_tDCS_files' )
-    sta_metrics_post        = split_and_calc_sta_metrics( tDCS_exp.post_tDCS_files, tDCS_exp.resp_per_win, nbr_post_trials );
+if nbr_post_trials > 0
+    sta_metrics_post        = split_and_calc_sta_metrics( tDCS_exp.post_tDCS_files, ...
+                                tDCS_exp.resp_per_win, nbr_post_trials );
 end
 
 
@@ -97,8 +109,10 @@ if ~isempty(tDCS_exp.muscles)
     nbr_muscles             = numel(tDCS_exp.muscles);
     pos_muscles             = zeros(1,nbr_muscles);
     for i = 1:numel(pos_muscles)
-        pos_muscles(i)      = find( strncmp( sta_metrics_bsln(i).emg.labels, tDCS_exp.muscles{i}, ...
-                                length(tDCS_exp.muscles{i}) ) );
+        sta_vars            = whos('sta_metrics*');
+        pos_muscles(i)      = find( strncmp( eval([sta_vars(1).name '(1).emg.labels']), ...
+                                tDCS_exp.muscles{i}, length(tDCS_exp.muscles{i}) ) );
+        clear sta_vars;
     end
 else
     pos_muscles             = 1:numel(sta_metrics_bsln(1).emg.labels);
@@ -110,165 +124,147 @@ end
 % 1. Plot the MPSF for the specified muscles (or all of them)
 
 % See how many MPSF 'points' (epochs) we have
-nbr_points_bsln             = numel(sta_metrics_bsln);
 
-if isfield(tDCS_exp,'tDCS_files')
-    nbr_points_tDCS         = numel(sta_metrics_tDCS);
-    nbr_points_post         = numel(sta_metrics_post);
-    nbr_MPSF_points         = nbr_points_bsln + nbr_points_tDCS + nbr_points_post;
+if nbr_bsln_trials > 0
+    nbr_points_bsln         = numel(sta_metrics_bsln);
 else
-    nbr_MPSF_points         = nbr_points_bsln;
+    nbr_points_bsln         = 0;
 end
+if nbr_tDCS_trials > 0
+    nbr_points_tDCS         = numel(sta_metrics_tDCS);
+else
+    nbr_points_tDCS         = 0;
+end
+if nbr_post_trials > 0
+    nbr_points_post         = numel(sta_metrics_post);
+else
+    nbr_points_post         = 0;
+end
+
+nbr_MPSF_points             = nbr_points_bsln + nbr_points_tDCS + nbr_points_post;
+
 
 % Fill the MPSF array
 MPSF_array                  = zeros(nbr_MPSF_points,nbr_muscles);
-for i = 1:numel(pos_muscles)
-    MPSF_array(1:nbr_points_bsln,i)     = arrayfun( @(x) x.emg.MPSF(pos_muscles(i)), sta_metrics_bsln )';
+if nbr_points_bsln > 0
+    for i = 1:numel(pos_muscles)
+        MPSF_array(1:nbr_points_bsln,i)     = arrayfun( @(x) x.emg.MPSF(pos_muscles(i)), sta_metrics_bsln )';
+    end
 end
 
-if isfield(tDCS_exp,'tDCS_files')
-    for i = 1:numel(pos_muscles)
+if nbr_points_tDCS > 0
+     for i = 1:numel(pos_muscles)
         MPSF_array(nbr_points_bsln+1:nbr_points_bsln+nbr_points_tDCS,i)     = arrayfun( @(x) ...
                                             x.emg.MPSF(pos_muscles(i)), sta_metrics_tDCS )';
+     end
+end
+
+if nbr_points_post > 0
+    for i = 1:numel(pos_muscles)
         MPSF_array(nbr_points_bsln+nbr_points_tDCS+1:end,i)                 = arrayfun( @(x) ...
                                             x.emg.MPSF(pos_muscles(i)), sta_metrics_post )';
     end
 end
 
 % Normalize the MPSF to the mean during the baseline, and compute SD
-mean_MPSF_bsln              = mean(MPSF_array(1:nbr_points_bsln,:),1);
-std_MPSF_bsln               = std(MPSF_array(1:nbr_points_bsln,:),1);
+if nbr_points_bsln > 0
 
-norm_MPSF_array             = MPSF_array / mean_MPSF_bsln;
-norm_std_MPSF_bsln          = std_MPSF_bsln / mean_MPSF_bsln;
+    mean_MPSF_bsln          = mean(MPSF_array(1:nbr_points_bsln,:),1);
+    std_MPSF_bsln           = std(MPSF_array(1:nbr_points_bsln,:),1);
+
+    norm_MPSF_array         = MPSF_array / mean_MPSF_bsln;
+    norm_std_MPSF_bsln      = std_MPSF_bsln / mean_MPSF_bsln;
+end
 
 
-% -> Plot the MPSF
+% -> To Plot the MPSF
 
 % Retrieve monkey, electrode and date information for figure title
-if ~iscell(tDCS_exp.baseline_files)
-    last_pos_title          = find( tDCS_exp.baseline_files =='_', 4 );
-    fig_title               = tDCS_exp(1).baseline_files(1:last_pos_title(end)-1);
+if nbr_points_bsln > 0
+    if iscell(tDCS_exp.baseline_files)
+        file_name_4_metadata    = tDCS_exp.baseline_files{1};
+    else
+        file_name_4_metadata    = tDCS_exp.baseline_files;
+    end
+    muscle_labels               = sta_metrics_bsln(1).emg.labels(pos_muscles);
+elseif nbr_points_tDCS > 0
+    if iscell(tDCS_exp.tDCS_files)
+        file_name_4_metadata    = tDCS_exp.tDCS_files{1};
+        muscle_labels           = sta_metrics_tDCS(1).emg.labels(pos_muscles);
+    else
+        file_name_4_metadata    = tDCS_exp.tDCS_files;
+        muscle_labels           = sta_metrics_post(1).emg.labels(pos_muscles);
+    end
+end
+
+last_pos_title              = find( file_name_4_metadata =='_', 4 );
+fig_title                   = file_name_4_metadata(1:last_pos_title(end)-1);
+clear last_pos_title;
+
+
+% Here come the plots !!!
+% Plot the MPSF 
+if nbr_points_bsln == 0
+    fig_MPSF_analyze_tDCS_exp( MPSF_array, nbr_muscles, muscle_labels, tDCS_exp.resp_per_win, ...
+                                nbr_points_bsln, nbr_points_tDCS, nbr_points_post, ...
+                                fig_title );
 else
-    last_pos_title          = find( tDCS_exp.baseline_files{1} =='_', 4 );
-    fig_title               = tDCS_exp(1).baseline_files{1}(1:last_pos_title(end)-1);
-end
-
-% Plot the raw MPSF 
-for i = 1:nbr_muscles  
-f_M                         = figure;
-hold on;
-
-if isfield(tDCS_exp,'tDCS_files')
-    plot( MPSF_array(1:nbr_points_bsln+1,i),'k','linewidth',2,'markersize',12)
-else
-    plot( MPSF_array(1:nbr_points_bsln,i),'k','linewidth',2,'markersize',12)
-end
-
-if isfield(tDCS_exp,'tDCS_files')
-    plot( nbr_points_bsln+1:nbr_points_bsln+nbr_points_tDCS+1, MPSF_array(nbr_points_bsln+1:nbr_points_bsln+nbr_points_tDCS+1,i), 'r','linewidth',2 )
-    plot( nbr_points_bsln+nbr_points_tDCS+1:size(MPSF_array,1), MPSF_array(nbr_points_bsln+nbr_points_tDCS+1:end,i),'b','linewidth',2 )
-
-    plot( nbr_points_bsln+1:nbr_points_bsln+nbr_points_tDCS, MPSF_array(nbr_points_bsln+1:nbr_points_bsln+nbr_points_tDCS,i), ...
-                                    'or','linewidth',2,'markersize',12)
-    plot( nbr_points_bsln+nbr_points_tDCS+1:size(MPSF_array,1), MPSF_array(nbr_points_bsln+nbr_points_tDCS+1:end,i),...
-                                    'ob','linewidth',2,'markersize',12)
-end
-
-plot( MPSF_array(1:nbr_points_bsln,i),'ok','linewidth',2,'markersize',12)
-
-plot( [0 size(MPSF_array,1)+1], ones(1,2).*mean_MPSF_bsln(i), '.-', 'color', [.5 .5 .5], 'linewidth', 2 )
-plot( [0 size(MPSF_array,1)+1], ones(1,2).*(std_MPSF_bsln(i)+mean_MPSF_bsln(i)),':', 'color', [.5 .5 .5], 'linewidth', 2 )
-plot( [0 size(MPSF_array,1)+1], ones(1,2).*(-std_MPSF_bsln(i)+mean_MPSF_bsln(i)),':', 'color', [.5 .5 .5], 'linewidth', 2 )
-
-set(gca,'FontSize',14), ylabel(['MPSF ' sta_metrics_bsln(1).emg.labels{pos_muscles(i)}(5:end)],'FontSize',14), xlabel('epoch nbr.'), set(gca,'TickDir','out')
-xlim([0 nbr_MPSF_points+1]), ylim([0 ceil(max(MPSF_array(:,i)))+1])
-title([fig_title ' - n = ' num2str(tDCS_exp.resp_per_win) ' resp/epoch'],'Interpreter', 'none')
-if isfield(tDCS_exp,'tDCS_files')
-    legend('baseline','tDCS on','tDCS off','Location','northwest')
-end
+    fig_MPSF_analyze_tDCS_exp( MPSF_array, nbr_muscles, muscle_labels, tDCS_exp.resp_per_win, ...
+                                nbr_points_bsln, nbr_points_tDCS, nbr_points_post, ...
+                                fig_title, mean_MPSF_bsln, std_MPSF_bsln );
 end
 
 % Plot the normalized MPSF
-for i = 1:size(norm_MPSF_array,2)  
-f_nM                        = figure;
-hold on;
-
-if isfield(tDCS_exp,'tDCS_files')
-    plot( norm_MPSF_array(1:nbr_points_bsln+1,i),'k','linewidth',2,'markersize',12 )
-else
-    plot( norm_MPSF_array(1:nbr_points_bsln,i),'k','linewidth',2,'markersize',12 )    
+if nbr_points_bsln > 0
+    fig_MPSF_analyze_tDCS_exp( norm_MPSF_array, nbr_muscles, muscle_labels, tDCS_exp.resp_per_win, ...
+                                nbr_points_bsln, nbr_points_tDCS, nbr_points_post, ...
+                                fig_title, ones(1,nbr_MPSF_points), norm_std_MPSF_bsln );
 end
-
-if isfield(tDCS_exp,'tDCS_files')
-    plot( nbr_points_bsln+1:nbr_points_bsln+nbr_points_tDCS+1, norm_MPSF_array(nbr_points_bsln+1:nbr_points_bsln+nbr_points_tDCS+1,i), 'r','linewidth',2 )
-    plot( nbr_points_bsln+nbr_points_tDCS+1:size(norm_MPSF_array,1), norm_MPSF_array(nbr_points_bsln+nbr_points_tDCS+1:end,i),'b','linewidth',2 )
-
-    plot( nbr_points_bsln+1:nbr_points_bsln+nbr_points_tDCS, norm_MPSF_array(nbr_points_bsln+1:nbr_points_bsln+nbr_points_tDCS,i), ...
-                                    'or','linewidth',2,'markersize',12)
-    plot( nbr_points_bsln+nbr_points_tDCS+1:size(norm_MPSF_array,1), norm_MPSF_array(nbr_points_bsln+nbr_points_tDCS+1:end,i),...
-                                    'ob','linewidth',2,'markersize',12)
-end
-
-plot( norm_MPSF_array(1:nbr_points_bsln,i),'ok','linewidth',2,'markersize',12)
-
-plot( [0 size(norm_MPSF_array,1)+1], ones(1,2), '.-', 'color', [.5 .5 .5], 'linewidth', 2 )
-plot( [0 size(norm_MPSF_array,1)+1], ones(1,2).*(norm_std_MPSF_bsln(i)+1),':', 'color', [.5 .5 .5], 'linewidth', 2 )
-plot( [0 size(norm_MPSF_array,1)+1], ones(1,2).*(-norm_std_MPSF_bsln(i)+1),':', 'color', [.5 .5 .5], 'linewidth', 2 )
-
-set(gca,'FontSize',14), ylabel(['Normalized MPSF ' sta_metrics_bsln(1).emg.labels{pos_muscles(i)}(5:end)],'FontSize',14), xlabel('epoch nbr.'), set(gca,'TickDir','out')
-xlim([0 nbr_MPSF_points+1]), ylim([0 ceil(max(norm_MPSF_array(:,i)))])
-title([fig_title ' - n = ' num2str(tDCS_exp.resp_per_win) ' resp/epoch'],'Interpreter', 'none')
-
-if isfield(tDCS_exp,'tDCS_files')
-    legend('baseline','tDCS on','tDCS off','Location','northwest')
-end
-end
-
-
 
 
 % -------------------------------------------------------------------------
 % 2. Plot the Evoked responses
 
-t_axis_evoked_resp          = -sta_metrics_bsln(1).emg.t_before : 1/sta_metrics_bsln(1).emg.fs*1000 ...
+% create the time axis for the plot
+if nbr_points_bsln > 0
+    t_axis_evoked_resp      = -sta_metrics_bsln(1).emg.t_before : 1/sta_metrics_bsln(1).emg.fs*1000 ...
                                 : sta_metrics_bsln(1).emg.t_after;
-
-for i = 1:nbr_muscles  
-
-f_r                         = figure;   % Fig with mean responses
-hold on;
-h_r1 = arrayfun( @(x) plot( t_axis_evoked_resp, x.emg.mean_emg(:,pos_muscles(i)), 'LineWidth', 1, 'color', 'k' ), sta_metrics_bsln );
-if isfield(tDCS_exp,'tDCS_files')
-    h_r2 = arrayfun( @(x) plot( t_axis_evoked_resp, x.emg.mean_emg(:,pos_muscles(i)), 'LineWidth', 1, 'color', 'r' ), sta_metrics_tDCS );
-    h_r3 = arrayfun( @(x) plot( t_axis_evoked_resp, x.emg.mean_emg(:,pos_muscles(i)), 'LineWidth', 1, 'color', 'b' ), sta_metrics_post );
-    legend([h_r1(1) h_r2(1) h_r3(1)],'baseline','tDCS on','tDCS off','Location','northeast')
-end
-xlim([-sta_metrics_bsln(1).emg.t_before  sta_metrics_bsln(1).emg.t_after])
-xlabel('time (ms)','Fontsize',14), ylabel('evoked response (mV)','Fontsize',14)
-set(gca,'FontSize',14), set(gca,'TickDir','out')
-title([fig_title ' - n = ' num2str(tDCS_exp.resp_per_win) ' resp/epoch'],'Interpreter', 'none')
-
-f_rd                        = figure;   % Fig with detrended mean responses
-hold on;
-h_rd1 = arrayfun( @(x) plot( t_axis_evoked_resp, detrend( x.emg.mean_emg(:,pos_muscles(i)) ), 'LineWidth', 1, 'color', 'k' ), sta_metrics_bsln );
-if isfield(tDCS_exp,'tDCS_files')
-    h_rd2 = arrayfun( @(x) plot( t_axis_evoked_resp, detrend( x.emg.mean_emg(:,pos_muscles(i)) ), 'LineWidth', 1, 'color', 'r' ), sta_metrics_tDCS );
-    h_rd3 = arrayfun( @(x) plot( t_axis_evoked_resp, detrend( x.emg.mean_emg(:,pos_muscles(i)) ), 'LineWidth', 1, 'color', 'b' ), sta_metrics_post );
-    legend([h_rd1(1) h_rd2(1) h_rd3(1)], 'baseline','tDCS on','tDCS off','Location','northeast')
-end
-xlim([-sta_metrics_bsln(1).emg.t_before  sta_metrics_bsln(1).emg.t_after])
-xlabel('time (ms)','Fontsize',14), ylabel('detrended evoked response (mV)','Fontsize',14)
-set(gca,'FontSize',14), set(gca,'TickDir','out') 
-title([fig_title ' - n = ' num2str(tDCS_exp.resp_per_win) ' resp/epoch'],'Interpreter', 'none')
+elseif nbr_points_tDCS > 0
+    t_axis_evoked_resp      = -sta_metrics_tDCS(1).emg.t_before : 1/sta_metrics_tDCS(1).emg.fs*1000 ...
+                                : sta_metrics_tDCS(1).emg.t_after;
+else
+    t_axis_evoked_resp      = -sta_metrics_post(1).emg.t_before : 1/sta_metrics_post(1).emg.fs*1000 ...
+                                : sta_metrics_post(1).emg.t_after;
 end
 
+% this trick makes the code handle cases in which one or two of the
+% sta_metrics is not present
+[smb, smt, smp]             = deal([]);
+if nbr_points_bsln > 0
+    smb                     = sta_metrics_bsln;
+end
+if nbr_points_tDCS > 0
+    smt                     = sta_metrics_tDCS;
+end
+if nbr_points_post > 0
+    smp                     = sta_metrics_post;
+end
+
+% plot the 'raw' and detrended evoked EMG responses
+fig_resp_analyze_tDCS_exp( smb, smt, smp, t_axis_evoked_resp, pos_muscles,  ...
+                            tDCS_exp.resp_per_win, fig_title );
 
 
+% -------------------------------------------------------------------------
 % Return variables
-tDCS_results.baseline       = sta_metrics_bsln;
-if isfield(tDCS_exp,'tDCS_files')
+
+if nbr_points_bsln > 0
+    tDCS_results.baseline   = sta_metrics_bsln;
+end
+if nbr_points_tDCS > 0
     tDCS_results.tDCS       = sta_metrics_tDCS;
+end
+if nbr_points_post > 0
     tDCS_results.post       = sta_metrics_post;
 end
 
