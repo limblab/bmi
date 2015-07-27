@@ -11,13 +11,13 @@ monkey                  ='Jango';
 stap                    = stim_trig_avg_defaults;
 
 stap.nbr_stims_ch       = 15000;
-stap.stim_ampl          = 0.036;
+stap.stim_ampl          = 0.054;
 
 switch monkey
     case 'Kevin'
         stap.monkey     = 'Kevin';
         stap.data_dir   = 'E:\Data-lab1\12A2-Kevin\CerebusData\TDCS';
-        stap.stim_elec  = 1;
+        stap.stim_elec  = 17;
     case 'Jango'
         stap.monkey     = 'Jango';
         stap.data_dir   = 'E:\Data-lab1\12A1-Jango\CerebusData\TDCS';

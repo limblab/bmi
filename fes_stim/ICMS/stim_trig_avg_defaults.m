@@ -11,13 +11,15 @@
 %           nbr_stims_ch        : nbr stimuli that will be delivered 
 %           t_before            : time before the stim that is plotted and used for computations (ms)
 %           t_after             : time after the stim that is plotted and used for computations (ms)
-%           record_force_yn     : record force and do the FTA (bool)
+%           record_emg_yn       : record emg and do the STA (bool)
+%           record_force_yn     : record force and do the STA (bool)
 %           save_data_yn        : save Matlab and Cerebus data (bool)
 %           plot_yn             : plot the results (bool)
 %           sync_out_elec       : sync out electrode number (to sync with cerebus)
 %           stimulator_resolut  : step size (mA)
 %           data_dir            : directory where the data will be saved
 %           monkey              : monkey name, to generate the filename
+%           bank                : bank in the cereport adapter
 %           task                : task name, to generate the filename
 %
 
