@@ -6,14 +6,15 @@ close all;
 
 %%%%%%%%%%%%
 % Must specify this stuff each day
-date = '2014-10-22';
+date = '2015-07-16';
 monkey = 'Mihili';
-use_array = 'PMd'; %which array is controlling
-dec_date = '2014-10-22';
+use_array = 'M1'; %which array is controlling
+dec_date = '2015-07-01';
 
 task = 'CO';
+dec_task = 'RT';
 data_root = fullfile('E:\', monkey,'Matt','BMIAdaptation',use_array);
-use_file = [data_root filesep dec_date filesep 'Mihili_' use_array '_' task '_BC_BL_' dec_date(6:7) dec_date(9:10) dec_date(1:4) '_001'];
+use_file = [data_root filesep dec_date filesep 'Mihili_' use_array '_' dec_task '_BC_BL_' dec_date(6:7) dec_date(9:10) dec_date(1:4) '_001'];
 %%%%%%%%%%%%%
 
 cd('C:\Users\system administrator\Desktop\S1_analysis')
@@ -33,8 +34,8 @@ clearxpc
 clear params
 params.monkey_name = monkey;
 params.save_dir = fullfile(data_root,date);
-params.mode = 'vel'; 
-params.task_name = ['CO_' params.mode];
+params.mode = 'BC_vel'; 
+params.task_name = [task '_' params.mode];
 params.decoders(1).decoder_file = [use_file '_Decoder_vel.mat'];
 params.decoders(1).decoder_type = 'vel';
 
@@ -51,14 +52,17 @@ params.artifact_removal = 0;
 params.artifact_removal_window = 0.001;
 params.artifact_removal_num_channels = 10;
 
+params.hp_rc = 7;
+screenMax = 7;
+
 % some stuff Ricardo added
 params.stop_task_if_x_artifacts = 1;
-
+params.stop_task_if_x_force = 0;
 
 if exist('params','var')
     params = bmi_adaptation_params(params);
 else
-    params = bmi_adprimaaptation_params;
+    params = bmi_adaptation_params;
 end
 params.elec_map = read_cmp(params.map_file);
 
@@ -74,6 +78,9 @@ xpc = open_xpc_udp(params);
 % Read Decoders and other files
 params = load_decoders(params);
 params.current_decoder = params.decoders(strcmpi({params.decoders.decoder_type},'vel'));
+% params.current_decoder.chanIDs( params.current_decoder.neuronIDs(:,1) > 96 ) = [];
+% params.current_decoder.neuronIDs( params.current_decoder.neuronIDs(:,1) > 96, : ) = [];
+
 params = measure_force_offsets(params);
 
 % Initialization
@@ -163,15 +170,21 @@ try
             hpf_predictions = params.offset_time_constant/(params.offset_time_constant+params.binsize)*...
                 (predictions + params.vel_offsets);
             params.vel_offsets = hpf_predictions - predictions;
-            if mod(iCycle,100)==0
-                set(handles.textbox_offset_x,'String',num2str(params.vel_offsets(1)));
-                set(handles.textbox_offset_y,'String',num2str(params.vel_offsets(2)));
-            end
+%             if mod(iCycle,100)==0
+%                 set(handles.textbox_offset_x,'String',num2str(params.vel_offsets(1)));
+%                 set(handles.textbox_offset_y,'String',num2str(params.vel_offsets(2)));
+%             end
             predictions = hpf_predictions;
             cursor_pos = cursor_pos + predictions;
             cursor_pos(1) = min(max(cursor_pos(1),-16),16);
             cursor_pos(2) = min(max(cursor_pos(2),-12),12);
             
+            % limit it from going off the screen
+            if cursor_pos(1) > screenMax, cursor_pos(1) = screenMax; end
+            if cursor_pos(1) < -screenMax, cursor_pos(1) = -screenMax; end
+            if cursor_pos(2) > screenMax, cursor_pos(2) = screenMax; end
+            if cursor_pos(2) < -screenMax, cursor_pos(2) = -screenMax; end
+
             bin_start_t = data.sys_time;
             
             if recording
@@ -185,9 +198,8 @@ try
             end
             
             if exist('xpc','var')
-                % send predictions to xpc                
-                fwrite(xpc.xpc_write, [1 1 cursor_pos cursor_pos cursor_pos],'float32');
-                %                     fprintf('%.2f\t%.2f\t%.2f\t%.2f\n',[cursor_pos predictions]);
+                % send predictions to xpc  
+                fwrite(xpc, [1 1 cursor_pos cursor_pos cursor_pos],'float32');
             end
             
             %display targets and cursor plots

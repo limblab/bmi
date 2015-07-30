@@ -20,7 +20,6 @@ arm_params_default.max_torque = 1000;
 arm_params_default.online = 1;
 arm_params_default.cocontraction_filter = 0.6;
 arm_params_default.use_brd = 1;
-arm_params_default.cocontraction_is_sum = 0;
 
 % Hill arm
 arm_params_default.HILL_MODEL_PARAMETERS = 0;
@@ -49,7 +48,9 @@ arm_params_default.joint_stiffness_min = [0 0];
 arm_params_default.joint_stiffness_max = [30 30];
 arm_params_default.joint_damping_min = [.8 .8];
 arm_params_default.joint_damping_max = [.8 .8];
+arm_params_default.damping_exponent = 1;
 arm_params_default.block_shoulder = 1;
+arm_params_default.cocontraction_is_sum = 0;
 
 % Ruiz arm
 arm_params_default.RUIZ_MODEL_PARAMETERS = 0;

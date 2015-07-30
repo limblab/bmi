@@ -164,8 +164,12 @@ function [new_spikes,artifact_found] = get_new_spikes(ts_cell_array,params,binsi
             new_spikes = zeros(size(params.current_decoder.neuronIDs,1),1);
             for iNeuron = 1:size(params.current_decoder.neuronIDs,1)
                 ts_col_idx = params.current_decoder.neuronIDs(iNeuron,2)+2; 
+%                 try
                 new_spikes(iNeuron) = length(ts_cell_array{(strcmp(ts_cell_array(:,1),params.current_decoder.chanIDs(iNeuron))),...
                     ts_col_idx})/binsize;
+%                 catch
+%                     keyboard
+%                 end
                 if params.current_decoder.neuronIDs(iNeuron,2) == 255
                     new_spikes(iNeuron) = 0;
                 end

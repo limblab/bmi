@@ -58,10 +58,17 @@ joint_stiffness = emg_coactivation.*(arm_params.joint_stiffness_max(:)-arm_param
     
 damping_coefficient = emg_coactivation.*(arm_params.joint_damping_max(:)-arm_params.joint_damping_min(:))+...
     arm_params.joint_damping_min(:);
-joint_damping = -damping_coefficient.*[theta(3);theta(4)-theta(3)];
+vel_sign = sign([theta(3);theta(4)-theta(3)]);
+joint_damping = real(-damping_coefficient.*vel_sign.*(abs([theta(3);theta(4)-theta(3)]).^arm_params.damping_exponent));
+
+
 muscle_stiffness_torque = joint_stiffness.*joint_error + joint_damping;
 
-joint_damping_b = -damping_coefficient.*[theta(7);theta(8)-theta(7)];
+% if rand < .2
+%     disp([num2str(theta(4)-theta(3)) ' ' num2str(joint_damping(2)) ' ' num2str(arm_params.damping_exponent)])
+% end
+vel_sign = sign([theta(7);theta(8)-theta(7)]);
+joint_damping_b = real(-damping_coefficient.*vel_sign.*(abs([theta(7);theta(8)-theta(7)]).^arm_params.damping_exponent));
 muscle_damping_torque_b = + joint_damping_b;
 
 constraint_angle_diff = [theta(1)-arm_params.null_angles(1);theta(2)-(theta(1)+diff(arm_params.null_angles))];
