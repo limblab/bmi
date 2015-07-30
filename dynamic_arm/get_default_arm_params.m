@@ -20,6 +20,7 @@ arm_params_default.max_torque = 1000;
 arm_params_default.online = 1;
 arm_params_default.cocontraction_filter = 0.6;
 arm_params_default.use_brd = 1;
+arm_params_default.cocontraction_is_sum = 0;
 
 % Hill arm
 arm_params_default.HILL_MODEL_PARAMETERS = 0;

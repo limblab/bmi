@@ -159,7 +159,6 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                 disp('No udp data read')
             end
         end
-        
         arm_params.F_end = [F_x F_y];
 
         if arm_params.walls
@@ -204,7 +203,11 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                     temp = min((.00001+arm_params.musc_act(3))/(.00001+arm_params.musc_act(4)),...
                         (.00001+arm_params.musc_act(4))/(.00001+arm_params.musc_act(3)));
 %                     temp = 1;
-                    cocontraction_new = temp * (arm_params.musc_act(3) + arm_params.musc_act(4));
+                    if arm_params.cocontraction_is_sum
+                        cocontraction_new = (arm_params.musc_act(3) + arm_params.musc_act(4));
+                    else
+                        cocontraction_new = temp * (arm_params.musc_act(3) + arm_params.musc_act(4));
+                    end
                     arm_params.cocontraction = (1-arm_params.cocontraction_filter)*cocontraction_new +...
                         arm_params.cocontraction_filter*arm_params.cocontraction;
                     temp_cocontraction = arm_params.cocontraction;

@@ -12,16 +12,20 @@ addpath(genpath([add_these filesep 'SDK for Windows']))
 % addpath(genpath(add_these))
 
 clear params
-params.monkey_name = 'Chewie';
+params.monkey_name = 'Jaco';
 % params.monkey_name = 'Test';
 params.save_dir = ['E:\' params.monkey_name];
 params.mode = 'emg'; % emg | n2e | n2e_cartesian | vel | iso | test_force | test_torque
 params.arm_model = 'hu'; % hill | prosthesis | hu | miller | perreault | ruiz | bmi | point_mass
 params.task_name = ['RP_' params.mode];
-params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-06-05_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-06-05_DCO_emg_emg_cartesian_filter_all.mat';
+params.decoders(1).decoder_file = '\\citadel\data\Jaco_8I1\Ricardo\Jaco_2015-07-20_DCO_emg_emg_cartesian\SavedFilters\Jaco_2015-07-20_DCO_emg_emg_cartesian_filter_all.mat';
 params.decoders(1).decoder_type = 'n2e1';
-params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-06-05_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-06-05_DCO_emg_emg_cartesian_filter_reciprocal.mat';
+params.decoders(2).decoder_file = '\\citadel\data\Jaco_8I1\Ricardo\Jaco_2015-07-20_DCO_emg_emg_cartesian\SavedFilters\Jaco_2015-07-20_DCO_emg_emg_cartesian_filter_reciprocal.mat';
 params.decoders(2).decoder_type = 'n2e2';
+% params.decoders(1).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-06-18_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-06-18_DCO_emg_emg_cartesian_filter_all.mat';
+% params.decoders(1).decoder_type = 'n2e1';
+% params.decoders(2).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-06-18_DCO_emg_emg_cartesian\SavedFilters\Chewie_2015-06-18_DCO_emg_emg_cartesian_filter_reciprocal.mat';
+% params.decoders(2).decoder_type = 'n2e2';
 params.decoders(3).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-22_DCO_iso_ruiz\Output_Data\bdf-cartesian_Binned_Decoder.mat';
 params.decoders(3).decoder_type = 'n2e_cartesian';
 params.decoders(4).decoder_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-09-05_RW\Chewie_2014-09-05_RW_001_Binned_Decoder.mat';
@@ -32,8 +36,12 @@ params.decoders(4).decoder_type = 'vel';
 % params.decoders(5).decoder_type = 'emg2muscle_torque';
 % params.arm_params_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2014-11-19_RP_n2e_ruiz\Chewie_2014-11-19_RP_n2e_ruiz_001_params.mat';
 % params.arm_params_file = 'E:\Chewie\Chewie_2014-11-20_RP_n2e_hu\Chewie_2014-11-20_RP_n2e_hu_001_params.mat';
-params.arm_params_file = [];
-params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Chewie 8I2\Blackrock implant surgery 6-14-10\1025-0394.cmp';
+% params.arm_params_file = [];
+% params.arm_params_file = '\\citadel\data\Chewie_8I2\Ricardo\Chewie_2015-06-18_RP2_n2e2_hu\CerebusData\Chewie_2015-06-18_RP2_n2e2_hu_001_params.mat';
+params.arm_params_file = '\\citadel\data\Jaco_8I1\Ricardo\Jaco_2015-07-22_RP_emg_hu\CerebusData\Jaco_2015-07-22_RP_emg_hu_001_params.mat';
+params.arm_params_file = 'E:\Lee\Lee_2015-07-30_RP_emg_hu\CerebusData\Lee_2015-07-30_RP_emg_hu_001_params.mat';
+% params.map_file = '\\citadel\limblab\lab_folder\\Animal-Miscellany\Chewie 8I2\Blackrock implant surgery 6-14-10\1025-0394.cmp';
+params.map_file = '\\citadel\limblab\lab_folder\Animal-Miscellany\Jaco 8I1\2014-02-04 Left Hemisphere Removal and Reimplant\SN_6250-001275_LH2.cmp';
 params.output = 'xpc';
 params.force_to_cursor_gain = .3;
 params.stop_task_if_x_artifacts = 1;
