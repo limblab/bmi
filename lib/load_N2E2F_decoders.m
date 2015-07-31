@@ -53,7 +53,14 @@ function [neuron_decoder,emg_decoder,params] = load_N2E2F_decoders(params)
                     'fillen'   , params.binsize*params.n_lag,...
                     'decoder_type','N2E');
                 if strcmp(params.neuron_decoder,'new_rand')
-                    neuron_decoder.H = randn(1 + params.n_neurons*params.n_lag, params.n_emgs)*0.0001;
+                    if strcmp(params.adapt_params.type,'normal')
+                        %weight scaling for neurons-to-EMG:
+                        w_factor = 0.00001;
+                    else
+                        %weight scaling for neurons-to-force
+                        w_factor = 0.0001;
+                    end
+                        neuron_decoder.H = randn(1 + params.n_neurons*params.n_lag, params.n_emgs)*w_factor;
                 elseif strcmp(params.neuron_decoder,'new_zeros')
                     neuron_decoder.H = zeros(1 + params.n_neurons*params.n_lag, params.n_emgs);
                 end
