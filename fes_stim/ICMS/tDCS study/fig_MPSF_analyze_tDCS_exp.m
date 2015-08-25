@@ -118,7 +118,7 @@ for i = 1:nbr_muscles
             end
         end
         
-        legend(fig_legend,'Location','northwest')
+        legend(fig_legend,'Location','southwest')
     end
     
 end
