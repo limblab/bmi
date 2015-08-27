@@ -244,10 +244,12 @@ if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
 
             end
         end
+    
         
-    else
-        
-        
+	% ---------------------------------------------------------------------
+    % For bipolar stimulation (cathode_map has the return electrodes)
+
+    else  
     end
 
     
