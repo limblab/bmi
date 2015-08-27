@@ -74,7 +74,7 @@ end
 % -------------------------------------------------------------------------
 % Retrieve each trial and calculate STA_metrics
 
-time_axis                   = [];
+% time_axis                   = [];
 
 
 % For the baseline trials
