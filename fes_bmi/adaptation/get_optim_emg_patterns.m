@@ -38,3 +38,4 @@ emg_max = ones( size(init_emg_val));
 
 emg_patterns = fmincon(@(EMG) Force2EMG_costfun_nosig(EMG,targets,E2F,lambda),init_emg_val,[],[],[],[],emg_min,emg_max,[],fmin_options);
 emg_patterns(1,:) = zeros(1,n_emgs); %overwrite the pattern for center target to all 0 EMG
+emg_patterns(emg_patterns<0.01) = 0; %overwrite very low EMGs to 0
