@@ -76,6 +76,7 @@ if data.adapt_flag
             
             if params.sigmoid
                 opt_emgs = sigmoid(opt_emgs,'inverse');
+                emgs     = sigmoid(emgs,'inverse');
             end
             
             % emg error:

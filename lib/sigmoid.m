@@ -19,6 +19,7 @@ end
 
 % res = 1./(1+exp(-x));
 
+
 switch mode
     case 'inverse'         
         %'inverse' (find x from f(x))
