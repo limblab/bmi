@@ -30,12 +30,13 @@ end
 % doing bipolar stimulation (cathode not empty), check that cathodes have
 % the right number of muscles
 if ~isempty(params.bmi_fes_stim_params.cathode_map{1})
-    nbr_stim_cathodes               = size(params.bmi_fes_stim_params.cathode_map,2);
-    nbr_muscles_bmi_fes_params      = [nbr_muscles_bmi_fes_params, nbr_stim_cathodes];
+    
+    nbr_muscles_bmi_fes_params      = [nbr_muscles_bmi_fes_params, size(params.bmi_fes_stim_params.cathode_map,2)];
 
     % some stuff that will be used later
     nbr_perc_stim_per_cathode       = length(find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(2,:))));
     stim_cathodes                   = find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(1,:)));
+    nbr_stim_cathodes               = size(stim_cathodes,2);
 end
 
 if numel(unique(nbr_muscles_bmi_fes_params)) > 1
@@ -44,9 +45,9 @@ end
 
 
 % -------------------------------------------------------------------------
-% check that the nbr of decoded EMGs we have specified matches the number
-% of muscles that we want to stimulate (non-empty muscles in the first row
-% of 'anode_map') 
+% check that the specified nbr of decoded EMGs matches the number of
+% muscles that want to be stimulated (non-empty muscles in the first row of
+% 'anode_map')   
 if nbr_emgs_decoder ~= nbr_stim_anodes
     error('The number of decoded EMGs does not match the number of stimulation anodes')
 end
