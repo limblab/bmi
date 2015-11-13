@@ -314,6 +314,11 @@ try
             close(handles.fh);
         end
     end
+    if exist('ffes','var')
+        if ishandle(ffes.fh)
+            close(ffes.fh);
+        end
+    end
     
 catch e
     if params.online
