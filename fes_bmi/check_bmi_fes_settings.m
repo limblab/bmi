@@ -109,7 +109,7 @@ for i = 1:nbr_emgs_decoder
     pos_dec_muscle_in_EMG_stim_map(i)   = find( strncmp( params.neuron_decoder.outnames{i}, ...
             params.bmi_fes_stim_params.EMG_to_stim_map(1,:), length(params.neuron_decoder.outnames{i}) ) );
     % if a decoder muscle is missing in EMG_to_stim map, quit...
-    if isempty( pos_dec_muscle_in_EMG_stim_map(i) )
+    if ~pos_dec_muscle_in_EMG_stim_map(i)
         error(['Muscle ' params.neuron_decoder.outnames{i} ' not included in EMG_to_stim_map']);
     end
 end

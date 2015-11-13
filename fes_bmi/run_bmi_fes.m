@@ -14,7 +14,7 @@ sp.EMG_to_stim_map      = [{'FCU', 'ECU', 'EDC2'}; ...
                             {'FCU', 'ECU', 'EDCu'}];
                         
 % Monopolar or bipolar stimulation
-stim_mode               = 'bipolar'; % 'bipolar'; 'monopolar'
+stim_mode               = 'monopolar'; % 'bipolar'; 'monopolar'
 
 
 % This flag allows you to run the code without the stimulator
@@ -138,16 +138,16 @@ switch monkey
 end
 
 
-sp.EMG_min              = repmat( 0.15, 1,numel(sp.muscles));
-sp.EMG_max              = repmat( 1, 1,numel(sp.muscles));
+sp.EMG_min              = repmat( 0.15, 1, numel(sp.muscles));
+sp.EMG_max              = repmat( 1, 1, numel(sp.muscles));
         
-sp.PW_min               = repmat( 0.02, 1,numel(sp.muscles));
-sp.PW_max               = repmat( 0.4, 1,numel(sp.muscles));
+sp.PW_min               = repmat( 0.02, 1, numel(sp.muscles));
+sp.PW_max               = repmat( 0.4, 1, numel(sp.muscles));
 
 % even if we do PW-modulated FES, we initialize this for consistency of
 % matrix size
-sp.amplitude_min        = repmat( 2, 1,numel(sp.muscles));
-sp.amplitude_max        = repmat( 6, 1,numel(sp.muscles));  % this is the amplitude for PW-modulated FES
+sp.amplitude_min        = repmat( 2, 1, numel(sp.muscles));
+sp.amplitude_max        = repmat( 6, 1, numel(sp.muscles));  % this is the amplitude for PW-modulated FES
 
 
 params.bmi_fes_stim_params  = sp;
