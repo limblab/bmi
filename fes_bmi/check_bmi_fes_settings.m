@@ -24,7 +24,7 @@ nbr_muscles_bmi_fes_params  = zeros(1,length(params_to_check));
 % muscles  
 
 for i = 1:length(params_to_check)
-    nbr_muscles_bmi_fes_params(i)   = length( params.bmi_fes_stim_params.(params_to_check{i}) );
+    nbr_muscles_bmi_fes_params(i) = length( params.bmi_fes_stim_params.(params_to_check{i}) );
 end
 
 % * If doing bipolar stim (cathode not empty), check that cathodes has the
@@ -33,11 +33,11 @@ end
 if ~isempty(params.bmi_fes_stim_params.cathode_map{1})
     
     % add the nbr of muscles to the list of number of muscles for all vars
-    nbr_muscles_bmi_fes_params      = [nbr_muscles_bmi_fes_params, size(params.bmi_fes_stim_params.cathode_map,2)];
+    nbr_muscles_bmi_fes_params  = [nbr_muscles_bmi_fes_params, size(params.bmi_fes_stim_params.cathode_map,2)];
 
-    stim_cathodes                   = find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(1,:)));
-    nbr_stim_cathodes               = size(stim_cathodes,2);
-    nbr_perc_stim_per_cathode       = length(find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(2,:))));
+    stim_cathodes               = find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(1,:)));
+    nbr_stim_cathodes           = size(stim_cathodes,2);
+    nbr_perc_stim_per_cathode   = length(find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(2,:))));
     
     params_to_check{numel(params_to_check)+1}   = 'cathode_map';
 end
@@ -59,11 +59,11 @@ if nbr_emgs_decoder ~= nbr_stim_anodes
 end
 
 % * check that the decoded muscles are in the EMG_to_stim_map
-pos_dec_muscle_in_EMG_stim_map          = zeros(1,nbr_emgs_decoder);
+pos_dec_muscle_in_EMG_stim_map      = zeros(1,nbr_emgs_decoder);
 for i = 1:nbr_emgs_decoder
     % store the position of the decoder muscles in EMG_to_stim_map, which
     % will be used for redimensioning all the fields in bmi_fes_stim_params
-    pos_dec_muscle_in_EMG_stim_map(i)   = find( strncmp( params.neuron_decoder.outnames{i}, ...
+    pos_dec_muscle_in_EMG_stim_map(i) = find( strncmp( params.neuron_decoder.outnames{i}, ...
             params.bmi_fes_stim_params.EMG_to_stim_map(1,:), length(params.neuron_decoder.outnames{i}) ) );
     % if a decoder muscle is missing in EMG_to_stim map, quit...
     if ~pos_dec_muscle_in_EMG_stim_map(i)
@@ -136,14 +136,14 @@ end
 % 5. redimension all of the parameters in 'bmi_fes_stim_params', so they
 % are only specified for those stimulation muscles in 'EMG_to_stim_map' 
 
-muscles_to_stim                         = params.bmi_fes_stim_params.EMG_to_stim_map(2,pos_dec_muscle_in_EMG_stim_map);
-pos_muscles_to_stim                     = zeros(1,nbr_emgs_decoder);
+muscles_to_stim                 = params.bmi_fes_stim_params.EMG_to_stim_map(2,pos_dec_muscle_in_EMG_stim_map);
+pos_muscles_to_stim             = zeros(1,nbr_emgs_decoder);
 
 for i = 1:nbr_emgs_decoder
-    pos_muscles_to_stim(i)              = find( strncmp( muscles_to_stim{i}, params.bmi_fes_stim_params.muscles, length(muscles_to_stim{i}) ) );
+    pos_muscles_to_stim(i)      = find( strncmp( muscles_to_stim{i}, params.bmi_fes_stim_params.muscles, length(muscles_to_stim{i}) ) );
 end
 
 for i = 1:length(params_to_check)
-    temp_field                          = params.bmi_fes_stim_params.(params_to_check{i});
-    params.bmi_fes_stim_params.(params_to_check{i})     = temp_field(:,pos_muscles_to_stim);
+    temp_field                  = params.bmi_fes_stim_params.(params_to_check{i});
+    params.bmi_fes_stim_params.(params_to_check{i}) = temp_field(:,pos_muscles_to_stim);
 end
