@@ -38,6 +38,8 @@ if ~isempty(params.bmi_fes_stim_params.cathode_map{1})
     stim_cathodes                   = find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(1,:)));
     nbr_stim_cathodes               = size(stim_cathodes,2);
     nbr_perc_stim_per_cathode       = length(find(~cellfun(@isempty,params.bmi_fes_stim_params.cathode_map(2,:))));
+    
+    params_to_check{numel(params_to_check)+1}   = 'cathode_map';
 end
 
 % * the check itself
@@ -71,7 +73,11 @@ end
 
 % * check if the muscles to which we want to assign the predicted EMGs are
 % available
-
+for i = 1:numel(params.bmi_fes_stim_params.EMG_to_stim_map(2,:))
+   if ~find( strcmpi(params.bmi_fes_stim_params.EMG_to_stim_map(2,i),params.bmi_fes_stim_params.muscles))
+       error(['Muscle ' params.bmi_fes_stim_params.EMG_to_stim_map{2,i} ' not included in muscles']);
+   end
+end
 
 
 % -------------------------------------------------------------------------
@@ -141,5 +147,3 @@ for i = 1:length(params_to_check)
     temp_field                          = params.bmi_fes_stim_params.(params_to_check{i});
     params.bmi_fes_stim_params.(params_to_check{i})     = temp_field(:,pos_muscles_to_stim);
 end
-
-% -----> add the list of anodes
