@@ -1,5 +1,6 @@
 function M = arm_inertia_matrix(arm_params,theta)
 %% gribblelab.org/compeuro/5_Computational_Motor_Control_Dynamics.html
+% http://gribblelab.org/compneuro/5_Computational_Motor_Control_Dynamics.html
 
 g = 0;
 m = arm_params.m;
