@@ -8,34 +8,41 @@ switch params.output
     case 'stimulator'
 
         % connect
-        connection  = xippmex;
+        handles.gv  = xippmex;
 
         % find stimulation channels
-        stim_ch     = xippmex('elec','stim');
+        channel_list = xippmex('elec','stim');
 
         % ToDo: check that the anode and cathode channels are in stim_ch
+
+        
+        % if everything ok
+        connection  = 1;
         
     % for the wireless stimulator
     case 'wireless_stim'
 
-        dbg_lvl     = 1;
-        connection  = wireless_stim(params.bmi_fes_stim_params.port_wireless, dbg_lvl);
+        dbg_lvl     = 1; % could be made into a parameter
+        handles.ws  = wireless_stim(params.bmi_fes_stim_params.port_wireless, dbg_lvl);
         
         try
             % comm_timeout specified in ms, or disable
-            ws.init(1, ws.comm_timeout_disable); % 1 = reset FPGA stim controller
+            handles.ws.init( 1, handles.ws.comm_timeout_disable ); % 1 = reset FPGA stim controller
             
-            ws.version();      % print version info, call after init
+            handles.ws.version();      % print version info, call after init
             
             if dbg_lvl ~= 0
                 % retrieve & display settings from all channels
-                channel_list    = 1:ws.num_channels;
-                commands        = ws.get_stim(channel_list);
-                ws.display_command_list(commands, channel_list);
+                channel_list    = 1:handles.ws.num_channels;
+                commands        = handles.ws.get_stim(channel_list);
+                handles.ws.display_command_list(commands, channel_list);
             end
             
+            % if everything ok
+            connection  = 1;
+            
         catch ME
-            delete(ws);
+            delete(handles.ws);
             rethrow(ME);
         end
     
@@ -46,7 +53,7 @@ end
 
 % Return errors and close everything if there's an error initializing the
 % respective stimulator
-if connection ~= 1
+if ~connection
     cbmex('close');
     
     if exist('xpc','var')
