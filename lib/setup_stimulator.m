@@ -17,7 +17,21 @@ switch params.output
 
         
         % if everything ok
-        connection  = 1;
+        if handles.gv.connection ~= 1
+ 
+            cbmex('close');
+    
+            if exist('xpc','var')
+                fclose(xpc);
+                delete(xpc);
+                echoudp('off')
+                clear xpc
+            end
+            
+            close(handles.keep_running);
+            
+            error('Grapevine not found');
+        end
         
     % for the wireless stimulator
     case 'wireless_stim'
@@ -26,10 +40,18 @@ switch params.output
         handles.ws  = wireless_stim(params.bmi_fes_stim_params.port_wireless, dbg_lvl);
         
         try
+            
+            % TEMP: switch to the folder that contains the calibration file
+            cur_dir = pwd;
+            cd([params.save_dir filesep datestr(now,'yyyymmdd')])
+            
             % comm_timeout specified in ms, or disable
             handles.ws.init( 1, handles.ws.comm_timeout_disable ); % 1 = reset FPGA stim controller
             
             handles.ws.version();      % print version info, call after init
+            
+            % TEMP: go back to the folder you were
+            cd(cur_dir)
             
             if dbg_lvl ~= 0
                 % retrieve & display settings from all channels
@@ -38,37 +60,23 @@ switch params.output
                 handles.ws.display_command_list(commands, channel_list);
             end
             
-            % if everything ok
-            connection  = 1;
-            
+        % if something went wrong close communication with Central and the
+        % stimulator and quit
         catch ME
             delete(handles.ws);
+            
+            cbmex('close');
+    
+            if exist('xpc','var')
+                fclose(xpc);
+                delete(xpc);
+                echoudp('off')
+                clear xpc
+            end
+            
+            close(handles.keep_running);
             rethrow(ME);
         end
     
 end
 
-
-
-
-% Return errors and close everything if there's an error initializing the
-% respective stimulator
-if ~connection
-    cbmex('close');
-    
-    if exist('xpc','var')
-        fclose(xpc);
-        delete(xpc);
-        echoudp('off')
-        clear xpc
-    end
-    
-    close(handles.keep_running);
-    
-    switch params.output
-        case 'stimulator'
-            error('ERROR: Xippmex did not initialize');
-        case 'wireless_stim'
-            error('ERROR: No connection to wireless stimulator');
-    end
-end
