@@ -38,7 +38,7 @@ if params.cursor_assist
 end
 
 % check that there's no error in the stimulation parameters 
-if strcmpi(params.output,'stimulator')
+if strcmpi(params.output,'stimulator') || strcmpi(params.output,'wireless_stim') 
     params = check_bmi_fes_settings( neuron_decoder, params );
 end
 
@@ -80,7 +80,7 @@ if params.display_plots
 %     'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
 end
 
-if strcmpi(params.output,'stimulator')
+if strcmpi(params.output,'stimulator') || strcmpi(params.output,'wireless_stim')
     ffes.fh = figure('Name','FES commands');
     ffes = stim_fig( ffes, [], [],  params.bmi_fes_stim_params, 'init' );
 end
@@ -100,12 +100,17 @@ if params.online
   
     bin_start_t = 0.0; % time at beginning of next bin
         
-    %start cerebus file recording :
+    % start cerebus file recording :
     cbmex('fileconfig', handles.cerebus_file, '', 1);
     data.sys_time = cbmex('time');
 
     % start data buffering
     cbmex('trialconfig',1,'nocontinuous');
+    
+    % setup stimulator, if doing FES
+    if strcmpi(params.output,'stimulator') || strcmpi(params.output,'wireless_stim') 
+        handles = setup_stimulator(params,handles);
+    end
 else
     %Binned Data File
     max_cycles = length(offline_data.timeframe);
@@ -175,11 +180,20 @@ try
                 fwrite(xpc, [1 1 cursor_pos],'float32');
             end
             
-            if strcmpi(params.output,'stimulator')
+            if strcmpi(params.output,'stimulator') || strcmpi(params.output,'wireless_stim')
+                
                 [data.stim_PW,data.stim_amp] = EMG_to_stim( data.emgs, params.bmi_fes_stim_params );
-                stim_cmd = stim_elect_mapping( data.stim_PW, data.stim_amp,params.bmi_fes_stim_params );
+                
+                if strcmpi(params.output,'wireless_stim')
+                    stim_cmd = stim_elect_mapping_wireless( data.stim_PW, data.stim_amp, params.bmi_fes_stim_params );
+                    if params.online, % stim_command, 
+                    end;
+                else
+                    stim_cmd = stim_elect_mapping( data.stim_PW, data.stim_amp, params.bmi_fes_stim_params );
+                    if params.online, xippmex( 'stimseq', stim_cmd ), end;
+                end
+                
                 ffes = stim_fig( ffes, data.stim_PW,data.stim_amp, params.bmi_fes_stim_params, 'exec' ); 
-                if params.online, xippmex( 'stimseq', stim_cmd ), end;
             end
             
             %% Neurons-to-EMG Adaptation
