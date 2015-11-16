@@ -8,28 +8,23 @@ switch params.output
     case 'stimulator'
 
         % connect
-        handles.gv  = xippmex;
+        handles.gv  = xippmex; 
 
         % find stimulation channels
         channel_list = xippmex('elec','stim');
 
         % ToDo: check that the anode and cathode channels are in stim_ch
 
-        
-        % if everything ok
+        % if there's a communication error with the grapevine
         if handles.gv.connection ~= 1
- 
             cbmex('close');
-    
             if exist('xpc','var')
                 fclose(xpc);
                 delete(xpc);
                 echoudp('off')
                 clear xpc
             end
-            
             close(handles.keep_running);
-            
             error('Grapevine not found');
         end
         
@@ -40,7 +35,6 @@ switch params.output
         handles.ws  = wireless_stim(params.bmi_fes_stim_params.port_wireless, dbg_lvl);
         
         try
-            
             % TEMP: switch to the folder that contains the calibration file
             cur_dir = pwd;
             cd([params.save_dir filesep datestr(now,'yyyymmdd')])
@@ -60,23 +54,22 @@ switch params.output
                 handles.ws.display_command_list(commands, channel_list);
             end
             
+            % set up some default stimulation params
+            setup_wireless_stim_fes(handles.ws);
+            
         % if something went wrong close communication with Central and the
         % stimulator and quit
         catch ME
             delete(handles.ws);
-            
             cbmex('close');
-    
             if exist('xpc','var')
                 fclose(xpc);
                 delete(xpc);
                 echoudp('off')
                 clear xpc
             end
-            
             close(handles.keep_running);
             rethrow(ME);
         end
-    
 end
 
