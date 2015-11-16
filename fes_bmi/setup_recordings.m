@@ -11,12 +11,14 @@ function handles = setup_recordings(params,handles)
     end
     handles.filename = filename;
     
-    save_dir = [params.save_dir filesep date_str];
-    if ~isdir(save_dir)
-        mkdir(save_dir);
+    if params.save_data
+        save_dir = [params.save_dir filesep date_str];
+        if ~isdir(save_dir)
+            mkdir(save_dir);
+        end
+        handles.save_dir = save_dir;
     end
-    handles.save_dir = save_dir;
-
+    
     if params.adapt
         adapt_dir = [save_dir filesep filename 'adapt_decoders'];
         conflict_dir = isdir(adapt_dir);
@@ -36,7 +38,7 @@ function handles = setup_recordings(params,handles)
     if ~strcmp(params.mode,'direct')
         handles.emg_file   = fullfile(save_dir, [filename 'emgpreds.txt']);
     end
-    if strcmp(params.output,'stimulator')
+    if strcmp(params.output,'stimulator') || strcmp(params.output,'wireless_stim')
         handles.stim_out_file = fullfile(save_dir, [filename 'stim_out.txt']);
     end
     handles.curs_pred_file = fullfile(save_dir, [filename 'curspreds.txt']);
