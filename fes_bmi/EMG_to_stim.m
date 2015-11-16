@@ -23,11 +23,9 @@ if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
         if EMG_pred(i) < bmi_fes_stim_params.EMG_min(i)
             
             stim_PW(i)  = 0;
-            
         elseif EMG_pred(i) > bmi_fes_stim_params.EMG_max(i)
             
             stim_PW(i)  = bmi_fes_stim_params.PW_max(i);
-            
         else
             
             stim_PW(i)  = EMG_pred(i) * ...
@@ -36,18 +34,16 @@ if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
         end
     end
     
-elseif trcmp(bmi_fes_stim_params,'amplitude_modulation')
+elseif strcmp(bmi_fes_stim_params,'amplitude_modulation')
     
     for i = 1:nbr_emgs
         
         if EMG_pred(i) < bmi_fes_stim_params.EMG_min(i)
             
             stim_amp(i) = 0;
-            
         elseif EMG_pred(i) > bmi_fes_stim_params.EMG_max(i)
             
             stim_amp(i) = bmi_fes_stim_params.amplitude_max(i);
-            
         else
             
             stim_amp(i) = EMG_pred(i) * ...
@@ -55,7 +51,6 @@ elseif trcmp(bmi_fes_stim_params,'amplitude_modulation')
                 / ( bmi_fes_stim_params.EMG_max(i) - bmi_fes_stim_params.EMG_min(i) );
         end
     end
-    
 end
 
 end
