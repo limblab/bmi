@@ -14,7 +14,7 @@ sp.EMG_to_stim_map      = [{'FCU', 'ECU', 'EDC2'}; ...
                             {'FCU', 'ECU', 'EDCu'}];
                         
 % Monopolar or bipolar stimulation
-stim_mode               = 'monopolar'; % 'bipolar'; 'monopolar'
+stim_mode               = 'bipolar'; % 'bipolar'; 'monopolar'
 
 
 % This flag allows you to run the code without the stimulator
@@ -95,7 +95,7 @@ params.neuron_decoder   = N2E;
 
 
 
-params.output           = 'stimulator';
+params.output           = 'wireless_stim'; % 'stimulator'; 
 params.mode             = 'emg_only';
 
 
@@ -148,6 +148,11 @@ sp.PW_max               = repmat( 0.4, 1, numel(sp.muscles));
 % matrix size
 sp.amplitude_min        = repmat( 2, 1, numel(sp.muscles));
 sp.amplitude_max        = repmat( 6, 1, numel(sp.muscles));  % this is the amplitude for PW-modulated FES
+
+
+% port of the serial-usb interface for communicating with the wireless
+% stimulator
+sp.port_wireless        = 'COM3';
 
 
 params.bmi_fes_stim_params  = sp;
