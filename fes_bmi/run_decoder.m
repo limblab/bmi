@@ -89,7 +89,7 @@ if ~params.online
     prog_bar = waitbar(0, sprintf('Replaying Offline Data'));
 end
 %% Setup data files and directories for recording
-if params.save_data
+if params.save_data || strcmpi(params.output,'stimulator') || strcmpi(params.output,'wireless_stim')
     handles = setup_recordings(params,handles);
 end
 %% Start data streaming
@@ -185,9 +185,8 @@ try
                 [data.stim_PW,data.stim_amp] = EMG_to_stim( data.emgs, params.bmi_fes_stim_params );
                 
                 if strcmpi(params.output,'wireless_stim')
-                    stim_cmd = stim_elect_mapping_wireless( data.stim_PW, data.stim_amp, params.bmi_fes_stim_params );
-                    if params.online, % stim_command, 
-                    end;
+                    [stim_cmd, channel_list] = stim_elect_mapping_wireless( data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, handles.ws );
+                    if params.online,  handles.ws.set_stim(stim_cmd, channel_list), end;
                 else
                     stim_cmd = stim_elect_mapping( data.stim_PW, data.stim_amp, params.bmi_fes_stim_params );
                     if params.online, xippmex( 'stimseq', stim_cmd ), end;

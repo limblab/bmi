@@ -7,18 +7,18 @@ clear all; close all; clc;
 monkey                  = 'Jango'; % 'Kevin'
 
 % List of muscles for the decoder
-emg_list_4_dec          = {'FCU', 'ECU', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
+emg_list_4_dec          = {'FCU', 'FCR', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
 
 % Mapping of EMGs in the decoder to Electrodes in the Monkey
-sp.EMG_to_stim_map      = [{'FCU', 'ECU', 'EDC2'}; ...
-                            {'FCU', 'ECU', 'EDCu'}];
+sp.EMG_to_stim_map      = [{'FCU', 'FCR', 'EDC2'}; ...
+                            {'FCU', 'FCR', 'EDCu'}];
                         
 % Monopolar or bipolar stimulation
-stim_mode               = 'bipolar'; % 'bipolar'; 'monopolar'
+stim_mode               = 'monopolar'; % 'bipolar'; 'monopolar'
 
 
 % This flag allows you to run the code without the stimulator
-stimulator_plugged_in   = false;
+stimulator_plugged_in   = true;
 
 % Whether you want to save the data
 params.save_data        = false;
@@ -28,8 +28,11 @@ params.save_data        = false;
 %% Build the neuron-to-EMG decoder
 
 % % Raw data file for the decoder
-% file4decoder            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
-% 
+% if ismac
+%     file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
+% elseif ispc
+%     file4decoder        = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001.nev';
+% end
 % 
 % % Bin the data 
 % % --> Do not forget to normalize EMG and Force !!! <--
@@ -53,27 +56,32 @@ params.save_data        = false;
 % 
 % % Build the neuron-to-EMG decoder
 % N2E                     = BuildModel( train_data, dec_opts );
+% 
+% clear train_data binnedData dec_opts
 
 
 
 % ------------------------------------------------------------------------
 %% If you want to use an existing decoder
-dec_file                        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
-
+if ismac
+    dec_file            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
+elseif ispc
+    dec_file            = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001_binned_Decoder.mat';
+end
 
 % If N2E is a file, this will load it 
 if ~isstruct(dec_file)
-    N2E                         = LoadDataStruct(dec_file);
+    N2E                 = LoadDataStruct(dec_file);
     
     % Get rid of the muscles we don't care about (i.e. not included in emg_list_4_dec)
     if isfield(N2E, 'H')
-        emg_pos_in_dec          = zeros(1,numel(emg_list_4_dec));
+        emg_pos_in_dec  = zeros(1,numel(emg_list_4_dec));
         for i = 1:length(emg_pos_in_dec)
             emg_pos_in_dec(i)   = find( strncmp(N2E.outnames,emg_list_4_dec(i),length(emg_list_4_dec{i})) );
         end
         
-        N2E.H                   = N2E.H(:,emg_pos_in_dec);
-        N2E.outnames            = emg_list_4_dec;
+        N2E.H           = N2E.H(:,emg_pos_in_dec);
+        N2E.outnames    = emg_list_4_dec;
     else
         error('Invalid neuron-to-emg decoder');
     end
@@ -83,7 +91,11 @@ end
 % ------------------------------------------------------------------------
 %% If you want to use offline data instead of online recordings from the monkey
 
-params.offline_data             = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/BinnedData/behavior plasticity/20150320_Jango_WF_001_binned.mat';
+if ismac
+    params.offline_data = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/BinnedData/behavior plasticity/20150320_Jango_WF_001_binned.mat';
+elseif ispc
+    params.offline_data = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_002_bin.mat';
+end
 
 
 % ------------------------------------------------------------------------
@@ -118,18 +130,34 @@ end
 
 switch monkey
     case 'Jango'
-        sp.muscles      = {'EDCu','FCU','EDCr','ECU','ECRb','PL','ECRl','FDP','FCR'};
-%         sp.anode_map    = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
-%                             { [], [1/3 1/3 1/3], [], [], [], [], [], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
         
-        sp.anode_map    = [{ [14 16 18], [2 4 6], [], [8 10 12], [], [], [], [], [] }; ...
-                            { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
+        switch params.output
+            case 'stimulator' % for the grapevine
+                sp.muscles      = {'EDCu','FCU','EDCr','ECU','ECRb','PL','ECRl','FDP','FCR'};
+%               sp.anode_map    = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
+%                                     { [], [1/3 1/3 1/3], [], [], [], [], [], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
+                sp.anode_map    = [{ [14 16 18], [2 4 6], [], [8 10 12], [], [], [], [], [] }; ...
+                                    { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
                         
-        if strcmp(stim_mode,'bipolar')
-            sp.cathode_map  = [{ [1 3 5], [7 9 11], [], [13 15 17], [], [], [], [], [] }; ...
-                                { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
-        elseif strcmp(stim_mode,'monopolar')
-            sp.cathode_map          = {{ }};
+                if strcmp(stim_mode,'bipolar')
+                    sp.cathode_map  = [{ [1 3 5], [7 9 11], [], [13 15 17], [], [], [], [], [] }; ...
+                                        { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
+                elseif strcmp(stim_mode,'monopolar')
+                    sp.cathode_map          = {{ }};
+                end
+                
+            case 'wireless_stim'
+                sp.muscles      = {'EDCu','FCU','ECU','ECRb','PL','ECRl','FDP','FCR'};
+                sp.anode_map    = [{ 3, 1, [], [], [], [], [], 2 }; ...
+                                    { 1, 1, [], [], [], [], [], 1 }];
+                                
+                if strcmp(stim_mode,'bipolar')
+                    warning('The wireless stimulator does not allow to do bipolar stim');
+                    pause;
+                    sp.cathode_map          = {{ }};
+                elseif strcmp(stim_mode,'monopolar')
+                    sp.cathode_map          = {{ }};
+                end
         end
         
     case 'Kevin'
@@ -156,6 +184,11 @@ sp.port_wireless        = 'COM3';
 
 
 params.bmi_fes_stim_params  = sp;
+
+
+% for storing the data
+params.save_data        = true;
+params.save_dir         = 'E:\Data-lab1\TestData';
 
 
 % get rid of some variables
