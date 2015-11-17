@@ -8,7 +8,27 @@
 %
 
 
-function cmd_combined = stim_elect_mapping_wireless( stim_PW, stim_amp, bmi_fes_stim_params )
+function [cmd, ch_list] = stim_elect_mapping_wireless( stim_PW, stim_amp, bmi_fes_stim_params, ws )
 
+stim_PW = stim_PW*1000; % converts from ms (input) to us (output)
 
-cmd_combined                    = []; % the command that will be passed to the stimulator
+switch bmi_fes_stim_params.mode
+    
+    case 'PW_modulation'
+        
+        % create the stimulation command
+        for i = 1:length(stim_PW)
+            cmd{i} = struct('CathDur', stim_PW(i), 'AnodDur', stim_PW(i), 'Run', ws.run_cont);
+        end
+        
+        % assign it to the stimulation electrode
+        elecs_this_muscle = zeros(1,length(stim_PW));
+        for i = 1:length(stim_PW)
+            elecs_this_muscle(i) = bmi_fes_stim_params.anode_map{1,i};
+        end
+       
+    case 'amplitude_modulation'
+        
+end
+
+ch_list = elecs_this_muscle;
