@@ -1,3 +1,20 @@
+%
+% Stimulate with the Grapevine. Parameters are set in a structure following
+% stim_params_defaults. A second argument can be passed to make the
+% stimulation continuous.
+%
+%       function ezstim( varargin )
+%
+%
+% Input parameters
+%       1) 'stim_params'        : structure with the stimulation
+%               parameters, see stim_params_defaults.m
+%       2) 'continuous'         : if set to 1, it will stimulate
+%               continuously. A message box appears to stop stimulation.
+%
+%
+%
+
 function ezstim(varargin)
 
 stim_params = struct; continuous = false;
