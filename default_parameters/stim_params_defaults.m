@@ -1,4 +1,5 @@
 function stim_params = stim_params_defaults(varargin)
+
 %   Default stimulation parameters for grapevine stimulator
 %   Use with 'stim_params_to_string.m' function to generate stim_string
 %
@@ -35,16 +36,17 @@ stim_params_defaults = struct( ...
     'stim_res'      ,0.018...
     );
 
+
 % fill default options missing from input argument
 if nargin
-    stim_params = varargin{1};
-    input_param_names = fieldnames(stim_params);
+    stim_params         = varargin{1};
+    input_param_names   = fieldnames(stim_params);
 else
-    stim_params = [];
-    input_param_names = [];
+    stim_params         = [];
+    input_param_names   = [];
 end
 
-all_param_names   = fieldnames(stim_params_defaults);
+all_param_names         = fieldnames(stim_params_defaults);
 
 for i = 1:numel(input_param_names)
     if ~any(strcmp(input_param_names{i},all_param_names))
@@ -53,7 +55,7 @@ for i = 1:numel(input_param_names)
     end
 end
         
-for i=1:numel(all_param_names)
+for i = 1:numel(all_param_names)
     if ~isfield(stim_params,all_param_names(i))
         stim_params.(all_param_names{i}) = stim_params_defaults.(all_param_names{i});
     end
