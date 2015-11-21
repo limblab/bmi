@@ -18,7 +18,7 @@ switch bmi_fes_stim_params.mode
         
         % create the stimulation command
         for i = 1:length(stim_PW)
-            cmd{i} = struct('CathDur', stim_PW(i), 'AnodDur', stim_PW(i), 'Run', ws.run_cont);
+            cmd{i} = struct('CathDur', stim_PW(i), 'AnodDur', stim_PW(i), 'Run', ws.run_cont); % run_once_go
         end
         
         % assign it to the stimulation electrode
