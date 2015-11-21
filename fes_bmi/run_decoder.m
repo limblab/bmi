@@ -183,7 +183,6 @@ try
             if strcmpi(params.output,'stimulator') || strcmpi(params.output,'wireless_stim')
                 
                 [data.stim_PW,data.stim_amp] = EMG_to_stim( data.emgs, params.bmi_fes_stim_params );
-                
                 if strcmpi(params.output,'wireless_stim')
                     [stim_cmd, channel_list] = stim_elect_mapping_wireless( data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, handles.ws );
                     if params.online,  handles.ws.set_stim(stim_cmd, channel_list), end;
@@ -192,7 +191,7 @@ try
                     if params.online, xippmex( 'stimseq', stim_cmd ), end;
                 end
                 
-                ffes = stim_fig( ffes, data.stim_PW,data.stim_amp, params.bmi_fes_stim_params, 'exec' ); 
+                 ffes = stim_fig( ffes, data.stim_PW,data.stim_amp, params.bmi_fes_stim_params, 'exec' ); 
             end
             
             %% Neurons-to-EMG Adaptation
