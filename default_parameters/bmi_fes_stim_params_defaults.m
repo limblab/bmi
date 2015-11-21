@@ -26,7 +26,7 @@ function bmi_fes_stim_params = bmi_fes_stim_params_defaults(varargin)
 %   'stim_resolut'  : resolution of the stimulator (mA)
 %   'inter_ph_int'  : inter-phase interval (us)
 %   'port_wireless' : COM port; for the wireless stimulator
-%   'mode'          : 'monopolar' or 'bipolar' stim
+%   'return'          : 'monopolar' or 'bipolar' stim
 %
 
 
@@ -48,7 +48,7 @@ bmi_fes_stim_params_defaults = struct( ...
     'stim_resolut', 0.018, ...
     'inter_ph_int', 33.3e-6, ...
     'port_wireless', 'COM3', ...
-    'mode', 'monopolar'
+    'return', 'monopolar' ...
 );
 
 
