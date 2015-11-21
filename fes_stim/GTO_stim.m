@@ -18,10 +18,10 @@ sp.freq                 = stim_freq;
 
 switch mode
     case 'bi'
-        sp.elect_list   = [2 4 6 8 5 7 9 11];
+        sp.elect_list   = [5 7 9 11 2 4 6 8];
         sp.pol          = [1 1 1 1 0 0 0 0];
     case 'mono'
-        sp.elect_list   = [2 4 6 8];
+        sp.elect_list   = [5 7 9 11];
         sp.pol          = [1 1 1 1];
 end        
 sp.pw                   = stim_pw;
@@ -32,10 +32,11 @@ sp.amp                  = round(stim_ampl/4) ...
 % If sync_out is set, send out sync signal (single pulse, 2.2 mA) through
 % channel 32 
 if nargin == 6
+    sync_out            = varargin{1};
     if sync_out
-        sp.tl           = [sp.tl * ones(1,numel(elect_list)), ...
-                                1000/sta_params.stim_freq];
-        sp.amp          = [sp.amp, 127];
+        sp.tl           = [sp.tl * ones(1,numel(sp.elect_list)), ...
+                                1000/sp.freq];
+        sp.amp          = [sp.amp, 2.2];
         sp.elect_list   = [sp.elect_list, 32];
         sp.pol          = [sp.pol, 1];
     end
