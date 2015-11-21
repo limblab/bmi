@@ -7,21 +7,29 @@ clear all; close all; clc;
 monkey                  = 'Jango'; % 'Kevin'
 
 % List of muscles for the decoder
-emg_list_4_dec          = {'FCU', 'FCR', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
+% emg_list_4_dec          = {'FCU', 'FDP', 'PL', 'ECU', 'ECRl', 'EDCr'};  %{'FCR', 'FCU', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
+emg_list_4_dec          = {'FDP', 'PL', 'ECU', 'EDCr'};  %{'FCR', 'FCU', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
 
 % Mapping of EMGs in the decoder to Electrodes in the Monkey
-sp.EMG_to_stim_map      = [{'FCU', 'FCR', 'EDC2'}; ...
-                            {'FCU', 'FCR', 'EDCu'}];
-                        
+% sp.EMG_to_stim_map      = [{'FCR', 'FCU', 'EDC2'}; ...
+%                             {'FCR', 'FCU', 'EDCu'}];
+sp.EMG_to_stim_map      = [{'ECU', 'FDP', 'EDCr', 'PL'}; ...
+                            {'ECU', 'FDP', 'EDCr', 'PL'}];
+
 % Monopolar or bipolar stimulation
 stim_mode               = 'monopolar'; % 'bipolar'; 'monopolar'
 
+% Grapevine or wireless stimulator
+params.output           = 'stimulator'; % 'stimulator'; 'wireless_stim';
 
-% This flag allows you to run the code without the stimulator
+
+% Run the code without the stimulator
 stimulator_plugged_in   = true;
 
-% Whether you want to save the data
-params.save_data        = false;
+% Save the data
+params.save_data        = true;
+% and where
+params.save_dir         = 'E:\Data-lab1\TestData';
 
 
 % ------------------------------------------------------------------------
@@ -31,7 +39,7 @@ params.save_data        = false;
 % if ismac
 %     file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
 % elseif ispc
-%     file4decoder        = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001.nev';
+%     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_001.nev';
 % end
 % 
 % % Bin the data 
@@ -66,7 +74,8 @@ params.save_data        = false;
 if ismac
     dec_file            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
 elseif ispc
-    dec_file            = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001_binned_Decoder.mat';
+%     dec_file            = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001_binned_Decoder.mat';
+    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_binned_Decoder.mat';
 end
 
 % If N2E is a file, this will load it 
@@ -91,11 +100,11 @@ end
 % ------------------------------------------------------------------------
 %% If you want to use offline data instead of online recordings from the monkey
 
-if ismac
-    params.offline_data = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/BinnedData/behavior plasticity/20150320_Jango_WF_001_binned.mat';
-elseif ispc
-    params.offline_data = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_002_bin.mat';
-end
+% if ismac
+%     params.offline_data = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/BinnedData/behavior plasticity/20150320_Jango_WF_001_binned.mat';
+% elseif ispc
+%     params.offline_data = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_002_bin.mat';
+% end
 
 
 % ------------------------------------------------------------------------
@@ -104,15 +113,9 @@ end
 
 % Neuron-to-EMG decoder file
 params.neuron_decoder   = N2E;
-
-
-
-params.output           = 'wireless_stim'; % 'stimulator'; 
 params.mode             = 'emg_only';
 
-
 params.n_emgs           = numel(emg_list_4_dec);  % this is the number of EMGs in the decoder
-
 
 params.display_plots    = false; % these plots are for other BMI stuff
 
@@ -133,14 +136,14 @@ switch monkey
         
         switch params.output
             case 'stimulator' % for the grapevine
-                sp.muscles      = {'EDCu','FCU','EDCr','ECU','ECRb','PL','ECRl','FDP','FCR'};
+                sp.muscles      = {'ECU','FDP','FCR','EDCr','ECRb','PL'};
 %               sp.anode_map    = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
 %                                     { [], [1/3 1/3 1/3], [], [], [], [], [], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
-                sp.anode_map    = [{ [14 16 18], [2 4 6], [], [8 10 12], [], [], [], [], [] }; ...
-                                    { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
+                sp.anode_map    = [{ [23 28 27], [17 19 21], [], [3 5 7], [], [29] }; ...
+                                    { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [1] }];
                         
                 if strcmp(stim_mode,'bipolar')
-                    sp.cathode_map  = [{ [1 3 5], [7 9 11], [], [13 15 17], [], [], [], [], [] }; ...
+                    sp.cathode_map  = [{ [14 16 18], [2 4 6], [], [8 10 12], [], [], [], [], [] }; ...
                                         { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
                 elseif strcmp(stim_mode,'monopolar')
                     sp.cathode_map          = {{ }};
@@ -148,8 +151,8 @@ switch monkey
                 
             case 'wireless_stim'
                 sp.muscles      = {'EDCu','FCU','ECU','ECRb','PL','ECRl','FDP','FCR'};
-                sp.anode_map    = [{ 3, 1, [], [], [], [], [], 2 }; ...
-                                    { 1, 1, [], [], [], [], [], 1 }];
+                sp.anode_map    = [{ [], 1, [], [], [], [], [], [] }; ...
+                                    { [], 1, [], [], [], [], [], [] }];
                                 
                 if strcmp(stim_mode,'bipolar')
                     warning('The wireless stimulator does not allow to do bipolar stim');
@@ -166,10 +169,10 @@ switch monkey
 end
 
 
-sp.EMG_min              = repmat( 0.15, 1, numel(sp.muscles));
+sp.EMG_min              = repmat( 0.2, 1, numel(sp.muscles));
 sp.EMG_max              = repmat( 1, 1, numel(sp.muscles));
         
-sp.PW_min               = repmat( 0.02, 1, numel(sp.muscles));
+sp.PW_min               = repmat( 0.08, 1, numel(sp.muscles));
 sp.PW_max               = repmat( 0.4, 1, numel(sp.muscles));
 
 % even if we do PW-modulated FES, we initialize this for consistency of
@@ -177,6 +180,7 @@ sp.PW_max               = repmat( 0.4, 1, numel(sp.muscles));
 sp.amplitude_min        = repmat( 2, 1, numel(sp.muscles));
 sp.amplitude_max        = repmat( 6, 1, numel(sp.muscles));  % this is the amplitude for PW-modulated FES
 
+sp.return               = stim_mode;
 
 % port of the serial-usb interface for communicating with the wireless
 % stimulator
@@ -185,10 +189,6 @@ sp.port_wireless        = 'COM3';
 
 params.bmi_fes_stim_params  = sp;
 
-
-% for storing the data
-params.save_data        = true;
-params.save_dir         = 'E:\Data-lab1\TestData';
 
 
 % get rid of some variables
