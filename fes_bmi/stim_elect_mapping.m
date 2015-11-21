@@ -31,7 +31,7 @@ if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
     % ---------------------------------------------------------------------
     % For monopolar stimulation (cathode_map = {})
 
-    if isempty(bmi_fes_stim_params.cathode_map)
+    if strcmp(bmi_fes_stim_params.return,'monopolar')
 
 
         % Fill the stimulation command for every muscle we want to
