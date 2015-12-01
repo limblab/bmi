@@ -23,7 +23,7 @@ classdef wireless_stim < handle
                     disp('wireless_stim:constructor');
                 end
                 obj.serial = serial(serial_port_str);
-                set(obj.serial, 'BaudRate', 9600);
+                set(obj.serial, 'BaudRate', 115200);
                 obj.serial.InputBufferSize = 2000;
                 obj.serial.Timeout = 0.1; % in seconds
                 
@@ -90,6 +90,7 @@ classdef wireless_stim < handle
         % comm_timeout_ms - communication timeout in ms. -1 disables
         function init(obj, reset, comm_timeout_ms)
             if obj.dbg_lvl >= 1
+                tic;  % for time measurements
                 disp('wireless_stim:init');
             end
                         
@@ -106,6 +107,7 @@ classdef wireless_stim < handle
                 disp(['   mac:', sprintf(' %02x', fields.mac), ...
                       sprintf(', features 0x%08x', fields.feat)]);
             end
+
             rsp = obj.send_message(obj.peer_disconnect_req, [0]);
             if obj.dbg_lvl >= 2
                 disp([' peer_disconnect_req rsp:', sprintf(' %02x', rsp)]);
@@ -127,7 +129,19 @@ classdef wireless_stim < handle
                 disp(['   mac:', sprintf(' %02x', fields.mac), ...
                       sprintf(', features 0x%08x', fields.feat)]);
             end
-                        
+
+            if obj.dbg_lvl >= 2
+                obj.perf_display_params(false);
+                obj.perf_display_params(true);
+            end
+            % set to channel 2 running at 1000kb/s
+            obj.perf_set_param(false, 0, 2); % channel, local only!
+            obj.perf_set_param(false, 1, 17); % channel_page, local only!
+            if obj.dbg_lvl >= 1
+                obj.perf_display_params(false);
+                obj.perf_display_params(true);
+            end
+            
             if reset
                 warning('resetting stim, all registers will be loaded with defaults');
                 obj.reg_write(obj.reg_g_global_reset.addr, 1);
@@ -192,64 +206,101 @@ classdef wireless_stim < handle
 
         % Inividual stim parameter set/get functions
         %
-        % value, e.g. train_ms, or freq_hz - parameter to set or retrieve
+        % value list, e.g. train_ms, or freq_hz - 
+        %                Passed to set as a list of parameter values
+        %                to set, one list item per channel. If the list has
+        %                a single item, that item is written to all 
+        %                channels in the channel list.
+        %
+        %                Returned from get as a list of parameter values
+        %                read, one list item per channel.
+        %
         % channel_list - 1-based vector of electrode channel indices
         %                set to 1:num_channels for broadcast
-        
-        function set_TL(obj, train_ms, channel_list)
-            obj.set_param(train_ms, channel_list, obj.reg_train_ms);
+        %
+        % commit       - for command batch queuing. Set to false
+        %                to queue up commands for a single transaction
+        %                then true on the last parameter set.
+        %                supported for set only; defaults to true
+
+        function set_TL(obj, train_ms, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
+            obj.set_param(train_ms, channel_list, obj.reg_train_ms, commit);
         end
         function train_ms = get_TL(obj, channel_list)
             train_ms = obj.get_param(channel_list, obj.reg_train_ms);
         end
         
-        function set_Freq(obj, freq_hz, channel_list)
+        function set_Freq(obj, freq_hz, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
             min_freq_hz = 1e6/obj.reg_period_us.max;
             if (freq_hz < min_freq_hz || freq_hz > 1e6)
                 error('invalid frequency %f. min=%f max=1e6', freq_hz, min_freq_hz, freq_hz);
             end
             period_us = round(1e6/freq_hz);
-            obj.set_param(period_us, channel_list, obj.reg_period_us);
+            obj.set_param(period_us, channel_list, obj.reg_period_us, commit);
         end
         function freq_hz = get_Freq(obj, channel_list)
             period_us = obj.get_param(channel_list, obj.reg_period_us);
             freq_hz = 1e6./period_us;
         end
         
-        function set_CathDur(obj, cathode_us, channel_list)
-            obj.set_param(cathode_us, channel_list, obj.reg_cathode_us);
+        function set_CathDur(obj, cathode_us, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
+            obj.set_param(cathode_us, channel_list, obj.reg_cathode_us, commit);
         end
         function cathode_us = get_CathDur(obj, channel_list)
             cathode_us = obj.get_param(channel_list, obj.reg_cathode_us);
         end
-        function set_AnodDur(obj, anode_us, channel_list)
-            obj.set_param(anode_us, channel_list, obj.reg_anode_us);
+        function set_AnodDur(obj, anode_us, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
+            obj.set_param(anode_us, channel_list, obj.reg_anode_us, commit);
         end
         function anode_us = get_AnodDur(obj, channel_list)
             anode_us = obj.get_param(channel_list, obj.reg_anode_us);
         end
 
-        function set_CathAmp(obj, cathode_uamp, channel_list)
-            obj.set_param(cathode_uamp, channel_list, obj.reg_cathode_uamp);
+        function set_CathAmp(obj, cathode_uamp, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
+            obj.set_param(cathode_uamp, channel_list, obj.reg_cathode_uamp, commit);
         end
         function cathode_uamp = get_CathAmp(obj, channel_list)
             cathode_uamp = obj.get_param(channel_list, obj.reg_cathode_uamp);
         end
-        function set_AnodAmp(obj, anode_uamp, channel_list)
-            obj.set_param(anode_uamp, channel_list, obj.reg_anode_uamp);
+        function set_AnodAmp(obj, anode_uamp, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
+            obj.set_param(anode_uamp, channel_list, obj.reg_anode_uamp, commit);
         end
         function anode_uamp = get_AnodAmp(obj, channel_list)
             anode_uamp = obj.get_param(channel_list, obj.reg_anode_uamp);
         end
         
-        function set_TD(obj, delay_us, channel_list)
-            obj.set_param(delay_us, channel_list, obj.reg_delay_us);
+        function set_TD(obj, delay_us, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
+            obj.set_param(delay_us, channel_list, obj.reg_delay_us, commit);
         end
         function delay_us = get_TD(obj, channel_list)
             delay_us = obj.get_param(channel_list, obj.reg_delay_us);
         end
 
-        function set_PL(obj, polarity, channel_list)
+        function set_PL(obj, polarity, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
             switch polarity
               case 0
                 anode_first_en = 1;
@@ -258,15 +309,18 @@ classdef wireless_stim < handle
               otherwise
                 error('invalid polarity %d. Polarity must be 0 or 1', polarity)
             end
-            obj.set_param(anode_first_en, channel_list, obj.reg_anode_first_en);
+            obj.set_param(anode_first_en, channel_list, obj.reg_anode_first_en, commit);
         end
         function polarity = get_PL(obj, channel_list)
             anode_first_en = obj.get_param(channel_list, obj.reg_anode_first_en);
             polarity = ~anode_first_en;
         end
         
-        function set_IPIDur(obj, ipi_us, channel_list)
-            obj.set_param(ipi_us, channel_list, obj.reg_ipi_us);
+        function set_IPIDur(obj, ipi_us, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
+            obj.set_param(ipi_us, channel_list, obj.reg_ipi_us, commit);
         end
         function ipi_us = get_IPIDur(obj, channel_list)
             ipi_us = obj.get_param(channel_list, obj.reg_ipi_us);
@@ -274,26 +328,31 @@ classdef wireless_stim < handle
         
         % Set/get stimulation run state
         %
-        % run_state - obj.run_cont for continuous trains repeats
-        %             obj.run_once for a single train
-        %             obj.run_stop to stop stim
+        % run_state - obj.run_cont for continuous train mode and enable
+        %             obj.run_once for single train mode
+        %             obj.run_stop to stop all stim
+        %             obj.run_once_go to start a single train when in 
+        %              single train mode
         %             run_cont overrides run_once if both are set
         % channel_list - 1-based vector of electrode channel indices
         %                set to 1:num_channels for broadcast
-        function set_Run(obj, run_state, channel_list)
+        function set_Run(obj, run_state, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
             switch run_state
               case obj.run_stop
-                obj.set_param(0, channel_list, obj.reg_stim_en);
-                obj.set_param(0, channel_list, obj.reg_single_mode_en);
+                obj.set_param(0, channel_list, obj.reg_stim_en, false);
+                obj.set_param(0, channel_list, obj.reg_single_mode_en, commit);
               case obj.run_once
-                obj.set_param(0, channel_list, obj.reg_stim_en);
-                obj.set_param(1, channel_list, obj.reg_single_mode_en);
+                obj.set_param(0, channel_list, obj.reg_stim_en, false);
+                obj.set_param(1, channel_list, obj.reg_single_mode_en, commit);
                 % trigger a single shot train for run-once enbled channels
               case obj.run_once_go
-                obj.set_param(1, [1:obj.num_channels], obj.reg_single_mode_go);
+                obj.set_param(1, [1:obj.num_channels], obj.reg_single_mode_go, commit);
               case obj.run_cont
-                obj.set_param(0, channel_list, obj.reg_single_mode_en);
-                obj.set_param(1, channel_list, obj.reg_stim_en);
+                obj.set_param(0, channel_list, obj.reg_single_mode_en, false);
+                obj.set_param(1, channel_list, obj.reg_stim_en, commit);
               otherwise
                 error('invalid run_state setting %d', run_state)
             end
@@ -315,8 +374,11 @@ classdef wireless_stim < handle
             end
         end
 
-        function set_TrimAmp(obj, trim_uamp, channel_list)
-            obj.set_param(trim_uamp, channel_list, obj.reg_trim_uamp);
+        function set_TrimAmp(obj, trim_uamp, channel_list, commit)
+            if nargin < 4
+                commit = true;
+            end
+            obj.set_param(trim_uamp, channel_list, obj.reg_trim_uamp, commit);
         end
         function trim_uamp = get_TrimAmp(obj, channel_list)
             trim_uamp = obj.get_param(channel_list, obj.reg_trim_uamp);
@@ -328,26 +390,23 @@ classdef wireless_stim < handle
             % disconnect the output electrode to avoid interactions with the 
             % output cap and load
             obj.set_switch(0, 1, 0, channel_list);    % testbus, exhaust, electrode
-            %obj.set_switch(0, 0, 0, channel_list);    % testbus, exhaust, electrode
             %obj.reg_write(obj.reg_g_testbus_sel.addr, 1);  % select TESTSW1 on testbus
             
             % initialize cathode and anode amp to mid scale as well because
             % a train must be triggered to have new trim settings take effect,
             % and we want to avoid sampling a pulse
-            obj.set_CathAmp(32768, channel_list);
-            obj.set_AnodAmp(32768, channel_list);
+            obj.set_CathAmp(32768, channel_list, false);
+            obj.set_AnodAmp(32768, channel_list, false);
 
             % initialize trim amp from any existing cal data
             trim_cal = obj.trim_cal;
+            obj.set_TrimAmp(trim_cal, channel_list, false);
+            
             channel_list_length = length(channel_list);
-            for ch_idx = 1:channel_list_length
-                ch = channel_list(ch_idx);
-                obj.set_TrimAmp(trim_cal(ch), ch);
-            end
 
             % trigger a single pulse
-            obj.set_Run(obj.run_once, channel_list);
-            obj.set_Run(obj.run_once_go, channel_list);
+            obj.set_Run(obj.run_once, channel_list, false);
+            obj.set_Run(obj.run_once_go, channel_list, true);  % commit settings
             
             failsafe_thresh = 250;
             
@@ -365,18 +424,18 @@ classdef wireless_stim < handle
                     ch = channel_list(ch_idx);
                     %obj.set_switch(1, 0, 0, [ch]);    % connect testbus to ch
                     %[tb, ex, elec] = obj.get_switch([1:8])
-                    [config, adc] = obj.get_adc([ch], 15); %p_avg(p_idx));
+                    [config, adc] = obj.get_adc([ch], 16); % lots of averages on the first read
                     
                     str = sprintf('pass %d, iter %d, ch %d, adc %d, trim %d', ...
                                   p_idx, cal_failsafe(ch_idx), channel_list(ch_idx), ...
                                   int16(adc), trim_cal(ch));
-                    fprintf(['\n ' str]);
+                    disp(str);
                     
                     while abs(adc) > p_thresh(p_idx) && cal_failsafe(ch_idx) < failsafe_thresh
                         trim_cal(ch) = trim_cal(ch) + ...
                             p_adj(p_idx)*(adc < p_thresh(p_idx)) - p_adj(p_idx)*(adc > p_thresh(p_idx));
-                        obj.set_TrimAmp(trim_cal(ch), [ch]);
-                        obj.set_Run(obj.run_once_go, [ch]);
+                        obj.set_TrimAmp(trim_cal(ch), [ch], false);
+                        obj.set_Run(obj.run_once_go, [ch], true);
                         [config, adc] = obj.get_adc([ch], p_avg(p_idx));
                         cal_failsafe(ch_idx) = cal_failsafe(ch_idx) + 1;
 
@@ -384,12 +443,7 @@ classdef wireless_stim < handle
                         str = sprintf('pass %d, iter %d, ch %d, adc %d, trim %d', ...
                                       p_idx, cal_failsafe(ch_idx), channel_list(ch_idx), ...
                                       int16(adc), trim_cal(ch));
-                        if obj.dbg_lvl == 0
-                            % reduce printing for no debug
-                            fprintf([repmat('\b', 1, num_backsp) str]);
-                        else
-                            fprintf(['\n' str]);
-                        end
+                        disp(str);
                     end
                     %obj.set_switch(0, 0, 0, [ch]);    % disconnect testbus from ch
                 
@@ -397,7 +451,7 @@ classdef wireless_stim < handle
                         warning('pass %d trim cal did not converge for channel %d', p_idx, ch);                        
                         % revert to original values
                         trim_cal(ch) = obj.trim_cal(ch);
-                        obj.set_TrimAmp(trim_cal(ch), ch);
+                        obj.set_TrimAmp(trim_cal(ch), ch, true);
                         break;
                     end
                 end
@@ -405,9 +459,9 @@ classdef wireless_stim < handle
 
             % restore to defaults
             obj.set_switch(0, 1, 1, channel_list);  % testbus, exhaust, electrode
-            obj.set_CathAmp(obj.reg_cathode_uamp.def, channel_list);
-            obj.set_AnodAmp(obj.reg_anode_uamp.def, channel_list);
-            obj.set_Run(obj.run_stop, channel_list);
+            obj.set_CathAmp(obj.reg_cathode_uamp.def, channel_list, false);
+            obj.set_AnodAmp(obj.reg_anode_uamp.def, channel_list, false);
+            obj.set_Run(obj.run_stop, channel_list, true);
             
             % always save the full channel list cal data, even if calibrating
             % on a subset of channels
@@ -415,7 +469,6 @@ classdef wireless_stim < handle
             obj.trim_cal = trim_cal;
             save (obj.trim_cal_fname, 'channel_list', 'trim_cal');
             
-            fprintf('\n');
             if obj.dbg_lvl >= 1
                 disp(['trim_cal =', sprintf(' %d:%d', [channel_list; trim_cal])]);
             end
@@ -456,9 +509,9 @@ classdef wireless_stim < handle
         % channel_list - 1-based vector of electrode channel indices
         %                set to 1:num_channels for broadcast
         function set_switch(obj, testbus, exhaust, electrode, channel_list)
-            obj.set_param(testbus ~= 0, channel_list, obj.reg_sw_testbus);
-            obj.set_param(exhaust ~= 0, channel_list, obj.reg_sw_exhaust);
-            obj.set_param(electrode ~= 0, channel_list, obj.reg_sw_swout);
+            obj.set_param(testbus ~= 0, channel_list, obj.reg_sw_testbus, true);
+            obj.set_param(exhaust ~= 0, channel_list, obj.reg_sw_exhaust, true);
+            obj.set_param(electrode ~= 0, channel_list, obj.reg_sw_swout, true);
         end
         function [testbus, exhaust, electrode] = get_switch(obj, channel_list)
             testbus = obj.get_param(channel_list, obj.reg_sw_testbus);
@@ -500,45 +553,38 @@ classdef wireless_stim < handle
         
         % Set stim parameters for the specified electrode channels
         %
-        % command_list - cell array of heterogeneous command structures of the
-        %                same length as channel_list, or of length 1 to set all
-        %                channels in channel_list identically.
+        % commands     - single element struct array with stim params & values
         % channel_list - 1-based vector of electrode channel indices
         %                set to 1:num_channels for broadcast
         %
-        function set_stim(obj, command_list, channel_list)
+        function set_stim(obj, commands, channel_list)
             channel_list_len = length(channel_list);
-            command_list_len = length(command_list);
-            if command_list_len ~= channel_list_len && command_list_len > 1
-                error('number of parameter commands must match number of channels');
+            if length(commands) > 1
+                error('commands struct array must have only 1 element');
             end
             
-            for c_idx = 1:command_list_len
-                command = command_list{c_idx};
-                fields = fieldnames(command);
-                num_fields = length(fields);
-                
-                if length(unique(fields)) ~= num_fields
-                    error('duplicate fields found in command list entry %d', c_idx);
-                end
+            command = commands{1};
+            fields = fieldnames(command);
+            num_fields = length(fields);
+            
+            if length(unique(fields)) ~= num_fields
+                error('duplicate fields found in command list entry %d', c_idx);
+            end
 
-                for f_idx = 1:num_fields
-                    field = fields{f_idx};
-                    
-                    if isempty(find(strcmp(obj.command_fields, field)))
-                        error('invalid field %s in command %d', field, c_idx);
-                    end
-                    
-                    val = command.(field);
-                    func = ['set_',field];
-                    
-                    if (command_list_len == 1)
-                        % broadcast to all specified channels
-                        obj.(func)(val, channel_list);
-                    else
-                        % 1-1 command to channel set
-                        obj.(func)(val, channel_list(c_idx));
-                    end
+            for f_idx = 1:num_fields
+                field = fields{f_idx};
+                
+                if isempty(find(strcmp(obj.command_fields, field)))
+                    error('invalid field %s in command %d', field, c_idx);
+                end
+                
+                val_list = command.(field);
+                func = ['set_',field];
+                
+                if f_idx == num_fields
+                    obj.(func)(val_list, channel_list, true);  % commit if last item
+                else
+                    obj.(func)(val_list, channel_list, false);
                 end
             end
         end % set_stim
@@ -554,9 +600,9 @@ classdef wireless_stim < handle
             for f_idx = 1:length(obj.command_fields)
                 field = obj.command_fields{f_idx};
                 func = ['get_',field];
-                val = obj.(func)(channel_list);
+                val_list = obj.(func)(channel_list);
                 for ch_idx = 1:channel_list_len
-                    command_list{ch_idx}.(field) = val(ch_idx);
+                    command_list{ch_idx}.(field) = val_list(ch_idx);
                 end
             end            
         end
@@ -578,11 +624,11 @@ classdef wireless_stim < handle
                 disp(sprintf('command %d : channel %d', c_idx, channel_list(c_idx)));
                 command = command_list{c_idx};
                 fields = fieldnames(command);
-                for f_idx = 1:length(fields)
-                    field = fields{f_idx};
-                    val = command.(field);
-                    disp(sprintf('	%s : %d (0x%x)', field, val, val));
-                end
+                
+                c_list = arrayfun(@(idx) sprintf(' %s=%d(%x)',fields{idx},command.(fields{idx}),command.(fields{idx})), ...
+                                  1:length(fields), 'Unif', false);
+                s_list = regexprep(reshape(char(c_list)',1,[]), '\s+', ' ');
+                disp(s_list);
             end
         end
         
@@ -638,26 +684,44 @@ classdef wireless_stim < handle
 
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    properties (Constant) %, Access = private)
-        VERSION = 0.05;
+    properties (Constant, Access = private)
+        VERSION = 0.07;
         
         identify_board_req = 0;
         identify_board_remote_req = 0 + 128;
         perf_start_req = 1;
+        perf_set_req = 2;
+        perf_set_remote_req = 2 + 128;
+        perf_get_req = 3;
+        perf_get_remote_req = 3 + 128;
         peer_disconnect_req = 13; % 0xd
         spi_write_req = 64 + 128; % 0x40 | 0x80 to indicate remote request
         spi_read_req = 96 + 128; % 0x60 | 0x80 to indicate remote request
-        
+
         spi_write_confirm = 64 + 1; % 0x41
         spi_read_confirm = 96 + 1; % 0x61
-        message_id_to_rcv_bytes = containers.Map({wireless_stim.identify_board_req, ...
-                                                  wireless_stim.identify_board_remote_req, ...
-                                                  wireless_stim.perf_start_req, ...
-                                                  wireless_stim.peer_disconnect_req, ...
-                                                  wireless_stim.spi_write_req, ...
-                                                  wireless_stim.spi_read_req}, ... 
-                                                 {64, 65, 86, 6, 11, 11});
-    
+        
+        message_id_to_rcv_bytes = containers.Map( ...
+            { ...
+                wireless_stim.identify_board_req, ...
+                wireless_stim.identify_board_remote_req, ...
+                wireless_stim.perf_start_req, ...
+                wireless_stim.perf_set_req, ...
+                wireless_stim.perf_set_remote_req, ...
+                wireless_stim.perf_get_req, ...
+                wireless_stim.perf_get_remote_req, ...
+                wireless_stim.peer_disconnect_req, ...
+                wireless_stim.spi_write_req, ...
+                wireless_stim.spi_read_req ...
+            }, ...
+            {64, 65, 86, 8, 8, 8, 8, 6, 13, 13});
+        
+        % param_idx, param_name, param_len
+        perf_req_params = { {0,'channel',2}, {1,'channel_page',1}, ...
+                            {3,'tx_power_dbm',1}, {4,'csma',1}, {5,'frame_retry',1}, ...
+                            {6,'ack_req',1}, ...
+                            {9,'rcv_desense',1}, {10,'xcvr_state',1}, ...
+                            {12,'num_test_frames',4}, {13,'phy_frame_len',2} };    
         
         % 'Run' must be the last entry in this cell array so that the next stim
         % pulse includes the settings in the current command
@@ -699,7 +763,8 @@ classdef wireless_stim < handle
         reg_stim_en =        struct('addr',[0, 1],  'def',0,     'min',0, 'max',1);
         reg_single_mode_en = struct('addr',[0, 2],  'def',0,     'min',0, 'max',1);
         reg_period_us =      struct('addr',[0, 3],  'def',33333, 'min',0, 'max',1048575); % 30Hz 0x8235 0xfffff 20 bits
-        reg_delay_us =       struct('addr',[0, 4],  'def',3000,  'min',0, 'max',65535);   % 3ms 0xbb8 16 bits          
+        % enforce 50us on delay min due to firmware bug related to DAC SPI write timing
+        reg_delay_us =       struct('addr',[0, 4],  'def',3000,  'min',50, 'max',65535);   % 3ms 0xbb8 16 bits          
         reg_train_ms =       struct('addr',[0, 5],  'def',100,   'min',0, 'max',16383);   % 100ms 0x64 0x3ff 14 bits   
         reg_cathode_uamp =   struct('addr',[0, 6],  'def',33068, 'min',32768, 'max',65535); % 0x812c 0xffff 16 bits      
         reg_anode_uamp =     struct('addr',[0, 7],  'def',32468, 'min',0, 'max',32768);   % 0x7ed4 0xffff 16 bits      
@@ -722,6 +787,7 @@ classdef wireless_stim < handle
         dbg_lvl
         atmel_local_version
         atmel_remote_version
+        batch_q
     end
     methods %(Access = private)
         function addr_out = reg_ch_addr(obj, addr, channel, broadcast)
@@ -744,14 +810,19 @@ classdef wireless_stim < handle
             if status
                 error('failing status detected in serial message: 0x%x', status);
             end
-            val = swapbytes(typecast(uint8([0,rsp(4:6)]), 'uint32'));
+            val = swapbytes(typecast(uint8([0,rsp(6:8)]), 'uint32'));
             if obj.dbg_lvl >= 2
-                disp(['read ', sprintf('0x%06x(%d)', val, val), ...
-                      ' from ', sprintf('0x%04x', bitand(swapbytes(typecast(uint8(rsp(2:3)), 'uint16')), hex2dec('7fff')))]);
+                addr = bitand(swapbytes(typecast(uint8(rsp(4:5)), 'uint16')), hex2dec('7fff'));
+                disp(sprintf('read 0x%06x(%d) from 0x%04x', val, val, addr));
             end
         end
-        
-        function reg_write(obj, addr, val)
+
+        % batch is an optional parameter
+        function reg_write(obj, addr, val, batch)
+            if nargin < 4
+                batch = false;
+            end
+            
             if length(addr) ~= 2
                 error('addr must be length 2, len=%d', length(addr));
             end
@@ -760,14 +831,147 @@ classdef wireless_stim < handle
                 % registers are 24 bits max
                 error('invalid data value %d', val);
             end
-            rsp = obj.send_message(obj.spi_write_req, [addr, val_a(2:4)]);
+
+            payload = [addr, val_a(2:4)];
+            if batch
+                % threshold at 254 queued bytes
+                threshold = 254;
+                if length(obj.batch_q) > threshold
+                    error('register write queue full at %d bytes, max %d bytes', ...
+                          length(obj.batch_q), threshold);
+                end
+                obj.batch_q = [obj.batch_q, payload];  % append
+                return;
+            end
+            
+            rsp = obj.send_message(obj.spi_write_req, payload);
             status = rsp(1);
             if status
                 error('failing status detected in serial message: 0x%x', status);
             end
             if obj.dbg_lvl >= 2
-                disp(['wrote ', sprintf('0x%06x(%d)', val, val), ...
-                      ' to ', sprintf('0x%04x', bitand(swapbytes(typecast(uint8(rsp(2:3)), 'uint16')), hex2dec('7fff')))]);
+                addr = bitand(swapbytes(typecast(uint8(rsp(4:5)), 'uint16')), hex2dec('7fff'));
+                disp(sprintf('wrote 0x%06x(%d) to 0x%04x', val, val, addr));
+            end
+        end
+        
+        function reg_commit(obj)
+            if length(obj.batch_q) == 0
+                return;
+            end
+            
+            if obj.dbg_lvl >= 1
+                start = toc;
+            end
+            rsp = obj.send_message(obj.spi_write_req, obj.batch_q);
+            status = rsp(1);
+            if status
+                error('failing status detected in serial message: 0x%x', status);
+            end
+
+
+            if obj.dbg_lvl >= 1
+                stop = toc;
+                addr_size = 2;
+                data_size = 3;
+                payload_size = addr_size + data_size;
+
+                disp(sprintf('committed %d regs, %d bytes, %f sec', ...
+                             length(obj.batch_q)/payload_size, length(obj.batch_q), stop-start));
+
+                if obj.dbg_lvl >= 2
+                    for idx = 1:payload_size:length(obj.batch_q)
+                        addr_a = obj.batch_q(idx:idx+addr_size-1);
+                        addr = bitand(swapbytes(typecast(uint8(addr_a), 'uint16')), hex2dec('7fff'));
+                        val_a = obj.batch_q(idx+addr_size:idx+payload_size-1);
+                        val = swapbytes(typecast(uint8([0,val_a]), 'uint32'));
+                        disp(sprintf('wrote 0x%06x(%d) to 0x%04x', val, val, addr));
+                    end
+                end
+            end
+            obj.batch_q = [];  % clear the queue
+        end
+        
+        function perf_set_param(obj, remote, param_type, param_val)
+            cmd = obj.perf_set_req;
+            if remote == true
+                cmd = obj.perf_set_remote_req;
+            end
+
+            val_a = typecast(int32(param_val), 'uint8');
+            
+            for idx = 1:length(obj.perf_req_params)
+                param = obj.perf_req_params{idx}; % obtain {idx,name,len}
+                cur_param_type = param{1};
+                if cur_param_type == param_type
+                    param_len = param{3};
+                    val = val_a(1:param_len);
+
+                    rsp = obj.send_message(cmd, [param_type, param_len, val], param_len);
+                    status = rsp(1);
+                    if status
+                        error('failing status detected in serial message: 0x%x', status);
+                    end
+
+                    ret_param_type = rsp(2);
+                    ret_param_len = rsp(3);
+                    ret_param_val = fliplr(rsp(4:4+param_len-1));
+
+                    if obj.dbg_lvl >= 1
+                        disp([sprintf('set perf param %d: ', ret_param_type), param{2}, ...
+                              sprintf(' len=%d ', ret_param_len), 'val=', sprintf('%02x ',ret_param_val)]);
+                    end
+                end
+            end
+        end
+        
+        % default parameter values:
+        %
+        % local perf params:
+        %     0:0: channel len=2 val=00 01 
+        %     1:1: channel_page len=1 val=00 
+        %     3:3: tx_power_dbm len=1 val=0a 
+        %     4:4: csma len=1 val=01 
+        %     5:5: frame_retry len=1 val=00 
+        %     6:6: ack_req len=1 val=01 
+        %     9:9: rcv_desense len=1 val=00 
+        %     10:10: xcvr_state len=1 val=16 
+        %     12:12: num_test_frames len=4 val=00 00 00 64 
+        %     13:13: phy_frame_len len=2 val=00 14 
+        % remote perf params:
+        %     0:0: channel len=2 val=00 01 
+        %     1:1: channel_page len=1 val=00 
+        %     3:3: tx_power_dbm len=1 val=0a 
+        %     4:4: csma len=1 val=01 
+        %     5:5: frame_retry len=1 val=00 
+        %     6:6: ack_req len=1 val=01 
+        %     9:9: rcv_desense len=1 val=00 
+        %     10:10: xcvr_state len=1 val=11 
+        %     12:12: num_test_frames len=4 val=00 00 00 64 
+        %     13:13: phy_frame_len len=2 val=00 14 
+        function perf_display_params(obj, remote)
+            cmd = obj.perf_get_req;
+            if remote == true
+                disp('remote perf params:');
+                cmd = obj.perf_get_remote_req;
+            else
+                disp('local perf params:');
+            end
+                
+            for idx = 1:length(obj.perf_req_params)
+                param = obj.perf_req_params{idx}; % obtain {idx,name,len}
+                param_type = param{1};
+                rsp = obj.send_message(cmd, [param_type], param{3});
+                status = rsp(1);
+                if status
+                    error('failing status detected in serial message: 0x%x', status);
+                end
+                ret_param_type = rsp(2);
+                param_len = rsp(3);
+                param_val = fliplr(rsp(4:4+param_len-1));
+
+                disp([sprintf('    %d:%d: ', param_type, ret_param_type), param{2}, ...
+                      sprintf(' len=%d ', param_len), 'val=', sprintf('%02x ',param_val)]);
             end
         end
         
@@ -792,7 +996,12 @@ classdef wireless_stim < handle
             fields.feat = typecast(uint8(message(pos:pos+len-1)), 'uint32');
         end
         
-        function out = send_message(obj, message_id, payload)
+        % var_rcv_bytes is optional
+        function out = send_message(obj, message_id, payload, var_rcv_bytes)
+            if  nargin < 4
+                var_rcv_bytes = 0;
+            end
+            
             sot = 1;
             protocol_id = 0;
             eot = 4;
@@ -801,11 +1010,15 @@ classdef wireless_stim < handle
             if obj.dbg_lvl >= 3
                 disp(['in =', sprintf(' %02x', message)]);
             end
-
+            
+            if obj.dbg_lvl >= 3
+                start = toc;
+            end
             fwrite(obj.serial, message);
 
             lastwarn('');
-            out = fread(obj.serial, obj.message_id_to_rcv_bytes(message_id));
+            out = fread(obj.serial, obj.message_id_to_rcv_bytes(message_id) + var_rcv_bytes);
+            rxlen = length(out);
             if obj.dbg_lvl >= 3
                 disp(['out =', sprintf(' %02x', out)]);
             end
@@ -818,12 +1031,28 @@ classdef wireless_stim < handle
                 payload = out(5:5+message_len-3);
                 out = payload';
             end
+            if obj.dbg_lvl >= 3
+                stop = toc;
+                disp(sprintf('send_message id=0x%02x time=%f', message_id, stop-start));
+            end
         end
         
-        function set_param(obj, val, channel_list, reg)
-            if val > reg.max || val < reg.min
-                error('invalid set value %d, max=%d, min=%d', ...
-                      val, reg.max, reg.min)
+        % commit is optional, true by default
+        function set_param(obj, val_list, channel_list, reg, commit)
+            if nargin < 5
+                commit = true;
+            end
+            
+            if obj.dbg_lvl >= 3
+                disp(sprintf('set_param ch %s val %s reg %s commit %d', ...
+                             sprintf('%d ', channel_list), sprintf('%d ', val_list), ...
+                             sprintf('%d ', reg.addr), commit));
+            end
+            if max(val_list) > reg.max
+                error('invalid set value %d, max=%d', max(val_list), reg.max)
+            end
+            if min(val_list) < reg.min
+                error('invalid set value %d, min=%d', min(val_list), reg.min)
             end
 
             channel_list_len = length(channel_list);
@@ -834,10 +1063,18 @@ classdef wireless_stim < handle
                 error('duplicate channels are not allowed');
             end
             
-            % broadcast
-            if channel_list_len == obj.num_channels 
+            val_list_len = length(val_list);
+            if val_list_len ~= channel_list_len && val_list_len ~= 1
+                error('one value per channel required');
+            end
+            
+            % broadcast single value to all channels
+            if channel_list_len == obj.num_channels && val_list_len == 1
                 addr = obj.reg_ch_addr(reg.addr, 0, 1);
-                obj.reg_write(addr, val);
+                obj.reg_write(addr, val_list, true);  % batch writes
+                if commit
+                    obj.reg_commit();
+                end
                 return
             end
 
@@ -846,12 +1083,21 @@ classdef wireless_stim < handle
                 if (channel > obj.num_channels || channel < 1)
                     error('invalid channel %d', channel);
                 end
+                if val_list_len == 1
+                    cur_val = val_list;
+                else
+                    cur_val = val_list(ch_idx);
+                end
+                    
                 addr = obj.reg_ch_addr(reg.addr, channel, 0);
-                obj.reg_write(addr, val);
+                obj.reg_write(addr, cur_val, true);  % batch writes
+            end
+            if commit
+                obj.reg_commit();
             end
         end % set_param
         
-        function val = get_param(obj, channel_list, reg)
+        function val_list = get_param(obj, channel_list, reg)
             channel_list_len = length(channel_list);
             if channel_list_len > obj.num_channels || channel_list_len <= 0
                 error('invalid number of channels %d', channel_list_len);
@@ -866,7 +1112,7 @@ classdef wireless_stim < handle
                     error('invalid channel %d', channel);
                 end
                 addr = obj.reg_ch_addr(reg.addr, channel, 0);
-                val(ch_idx) = obj.reg_read(addr);
+                val_list(ch_idx) = obj.reg_read(addr);
             end
         end % get_param
         
@@ -886,9 +1132,11 @@ classdef wireless_stim < handle
             while tries > 0 && status == 0
                 status = obj.detect_18V();
                 pause(0.1);
+                tries = tries - 1;
             end
             if status == 0
                 error('+/- 18V supply not detected. Cannot enable +/-5V supply');
+                %warning('+/- 18V supply not detected. Cannot enable +/-5V supply');
             else
                 val = bitor(val, 4);  % val | 3'b100
                 obj.reg_write(obj.reg_g_debug_com_out.addr, val);
