@@ -17,20 +17,29 @@
 
 function ezstim(varargin)
 
+% retrieve parameters
 stim_params = struct; continuous = false;
-if nargin   stim_params = varargin{1}; end
-if nargin>1 continuous  = varargin{2}; end
+if nargin,   stim_params = varargin{1}; end
+if nargin>1, continuous  = varargin{2}; end
 
+% fill the rest of the parameters, or load defaults
 stim_params = stim_params_defaults(stim_params);
+
+% -------------------------------------------------------------------------
+% convert stimulation paramters to stimulation string for the grapevine
 stim_string = stim_params_to_stim_string(stim_params);
 
-
-
+% open communication with Grapevine
 xippmex('open');
 drawnow;
+
+% stimulate
 xippmex('stim',stim_string);
 drawnow;
 
+% -------------------------------------------------------------------------
+% if continuous stimulation was chosen, stimulate until the user closes the
+% stimulation message box
 if continuous
     global_tmr = tic;
     tmr = tic;
@@ -56,7 +65,6 @@ if continuous
     fprintf('\n');
 end
 
+% -------------------------------------------------------------------------
+% close communication with Grapevine
 xippmex('close');
-
-
-
