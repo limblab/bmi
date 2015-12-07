@@ -70,7 +70,8 @@ if nargout > 4
     disp('ERROR: The function only returns up to three variables, of type emg, force and ttap');
 end
 
-
+% definte standard word values
+w = Words;
 
 %--------------------------------------------------------------------------
 %% connect with Central 
@@ -307,12 +308,24 @@ while hw.curr_stim_nbr < ttap.nbr_stims_ch
             disp('Press any key to stimulate')
             pause;
         elseif strncmp(ttap.control_mode,'word',4)
-            % ToDo: Read the words from central
-            % read_words()
-        
-            % see if we got the word we want....
+            words = [];
+            while isempty(words)
+                % ToDo: Read the words from central
+                words = read_words(); % returns empty if no words
+                
+                % see if we got the word we want....
+                %   If there are multiple words, checks if ANY are correct
+                %   If none are correct, resets words to empty
+                if ~isempty(words) && ~any(words(:,2) == ttap.word)
+                    words = [];
+                end
+                if isempty(words) % if the desired word isn't found, pause
+                    pause(ttap.word_refresh_time/1000);
+                end
+            end % if ttap.word is found, while loop exits and stim begins
+            pause(ttap.word_delay/1000);
         end
-                        
+        
         % start data collection
         cbmex('trialconfig', 1);
         drawnow;
