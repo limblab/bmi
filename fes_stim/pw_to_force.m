@@ -113,7 +113,7 @@ end
 % Plots
 
 % handle to maximized figure
-f_fig               = figure('units','normalized','outerposition',[0 0 1 1]);
+figure('units','normalized','outerposition',[0 0 1 1]);
 % create vector with colors per PW
 aux.colors          = jet(aux.nbr_pws);
 
