@@ -18,7 +18,7 @@
 
 function pw_to_f_params = pw_to_force_params_defaults( varargin )
 
-pw_to_f_params_defaults = struct( ...
+pw_to_f_params_def = struct( ...
     't_before',             20, ...
     't_after',              30, ...
     'rectify',              true, ...
@@ -36,10 +36,10 @@ else
 end
 
 % Check that all the params that have been passed are named right
-all_params_names        = fieldnames(pw_to_f_params_defaults);
+all_params_names        = fieldnames(pw_to_f_params_def);
 
 for i = 1:numel(input_params_names)
-   if any( strcmp(input_params_names{i},all_params_names ))
+   if ~any( strcmp(input_params_names{i},all_params_names ))
        errordlg(sprintf('Invalid parameter\n"%s"',input_params_names{i}));
        return;
    end
@@ -49,6 +49,6 @@ end
 % argument has been passed)  
 for i = 1:numel(all_params_names)
     if ~isfield(pw_to_f_params, all_params_names(i))
-        pw_to_f_params.(all_params_names{i}) = pw_to_f_params_defaults.(all_params_names{i});
+        pw_to_f_params.(all_params_names{i}) = pw_to_f_params_def.(all_params_names{i});
     end
 end

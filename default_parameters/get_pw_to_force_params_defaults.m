@@ -35,7 +35,7 @@
 
 function get_pw_to_f_params = get_pw_to_force_params_defaults( varargin )
 
-get_pw_to_f_params_defaults = struct( ...
+get_pw_to_f_params_def = struct( ...
     'elec',             [3 5 7], ...
     'amp',              2, ...
     'freq',             30, ...
@@ -53,7 +53,8 @@ get_pw_to_f_params_defaults = struct( ...
     'data_dir',         'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES', ...
     'monkey',           'Jango', ...
     'task',             'WF',...
-    'muscle',           'ECR'...
+    'muscle',           'ECR',...
+    'pw_to_f_params',   pw_to_force_params_defaults ...
     );
 
 
@@ -66,12 +67,20 @@ else
     get_pw_to_f_params  = [];
     input_params_names  = [];
 end
-    
+
+% fill default 'pw_to_f_params' params missing from input argument
+if nargin
+    if isfield(get_pw_to_f_params_def,'pw_to_f_params')
+       get_pw_to_f_params_def.pw_to_f_params = pw_to_force_params_defaults(get_pw_to_f_params_def.pw_to_f_params);
+    end
+end
+
+
 % Check that all the params that have been passed are named right
-all_params_names        = fieldnames(get_pw_to_f_params_defaults);
+all_params_names        = fieldnames(get_pw_to_f_params_def);
 
 for i = 1:numel(input_params_names)
-   if any( strcmp(input_params_names{i},all_params_names ))
+   if ~any( strcmp(input_params_names{i},all_params_names ))
        errordlg(sprintf('Invalid parameter\n"%s"',input_params_names{i}));
        return;
    end
@@ -81,6 +90,6 @@ end
 % argument has been passed)  
 for i = 1:numel(all_params_names)
     if ~isfield(get_pw_to_f_params, all_params_names(i))
-        get_pw_to_f_params.(all_params_names{i}) = get_pw_to_f_params_defaults.(all_params_names{i});
+        get_pw_to_f_params.(all_params_names{i}) = get_pw_to_f_params_def.(all_params_names{i});
     end
 end
