@@ -77,8 +77,8 @@ for i = 1:numel(input_params_names)
    end
 end
 
-% Write defaults values in the missing fields (all of them, if no argument
-% has been passed) 
+% Write defaults values to the missing fields (or to all of them, if no
+% argument has been passed)  
 for i = 1:numel(all_params_names)
     if ~isfield(get_pw_to_f_params, all_params_names(i))
         get_pw_to_f_params.(all_params_names{i}) = get_pw_to_f_params_defaults.(all_params_names{i});
