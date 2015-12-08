@@ -17,7 +17,7 @@ function force = get_pw_to_force( varargin )
 %------------------------------------
 % read parameters. If no argument is passed load defaults
 if nargin > 1   
-    error('ERROR: The function only takes one argument of type pw_to_f_params');
+    error('ERROR: The function only takes one argument of type get_pw_to_f_params');
 elseif nargin == 1
     pwfp                = varargin{1};
     % fill missing params, if any
@@ -148,8 +148,8 @@ if strncmp(pwfp.stimulator,'gv',2)
     % create an amplitude vector, because it size has to be equal to the
     % number of electrodes since we want different amp for the stim
     % electrodes and the sync ch
-    if length(pwfp.amp) == 1, pwfp.amp = repmat(pwfp.amp,1,length(pwfp.elec)); end
-    hw.sp.amp           = [pwfp.amp/numel(pwfp.elec), pwfp.stim_res*127];
+    if length(pwfp.amp) == 1, hw.sp.amp = repmat(pwfp.amp,1,length(pwfp.elec)); end
+    hw.sp.amp           = [hw.sp.amp/numel(pwfp.elec), pwfp.stim_res*127];
     hw.sp.freq          = pwfp.freq;
     hw.sp.pw            = pwfp.pw_rng(1); % this value will be overwritten every stim cycle
     % create a train length vector, because it size has to be equal to the
@@ -248,11 +248,19 @@ force.t_sync_pulses     = aux.ts_sync_pulses / 30000;
 force.stim_pw           = hw.pw_order;
 
 
-% add meta fields
+% add meta fields to force
+force.meta.time         = hw.start_t;
 force.meta.mokey        = pwfp.monkey;
 force.meta.task         = pwfp.task;
 force.meta.muscle       = pwfp.muscle;
-force.meta.time         = hw.start_t;
+force.meta.stim_amp     = pwfp.amp;
+force.meta.stim_freq    = pwfp.freq;
+force.meta.stim_dur     = pwfp.stim_dur;
+force.meta.stim_pws     = hw.stim_pws;
+
+% clear aux var
+clear aux;
+
 
 % ------------------------------------------------------------------------
 % Characterize and plot the responses
