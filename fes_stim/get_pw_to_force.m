@@ -20,8 +20,10 @@ if nargin > 1
     error('ERROR: The function only takes one argument of type pw_to_f_params');
 elseif nargin == 1
     pwfp                = varargin{1};
+    % fill missing params, if any
+    pwfp                = pw_to_force_params_defaults(pwfp);
 elseif nargin == 0
-    pwfp                = train_trig_avg_defaults();
+    pwfp                = pw_to_force_params_defaults();
 end
 
 
@@ -50,8 +52,7 @@ end
 % For file storage in Central
 
 % create file name
-hw.cb_file_name         = fullfile( hw.data_dir, [pwfp.monkey '_' hw.start_t '_' ...
-                            pwfp.task '_' pwfp.muscle '_pw_to_f']);
+hw.cb_file_name         = [pwfp.monkey '_' hw.start_t '_' pwfp.task '_' pwfp.muscle '_pw_to_f'];
 
 % start Central's file storage app, assigning the filename
 cbmex('fileconfig', fullfile(hw.data_dir,hw.cb_file_name), '', 1);
@@ -68,7 +69,7 @@ drawnow; pause(1);
 analog_data(:,1)      	= ts_cell_array([analog_data{:,1}]',1);
 
 
-% look for the 'sync out' signal, called 'Stim_trig' in Central
+% look for the 'sync out' threshold crossing signal, called 'Stim_trig' in Central
 hw.cb_sync.ch_nbr       = find(strncmpi(ts_cell_array(:,1),'Stim',4));
 % if there is no sync signal (in Cenral's hardware settings), exit
 if isempty(hw.cb_sync.ch_nbr)
@@ -76,7 +77,7 @@ if isempty(hw.cb_sync.ch_nbr)
 else
     disp('Sync signal found');
     % store sync signal fs
-    hw.cb_sync.fs       = cell2mat( analog_data(hw.cb_sync.ch_nbr, 1), 2 );
+    hw.cb_sync.fs       = cell2mat( analog_data(find(strncmp(analog_data(:,1), 'Stim', 4),1),2) );
 end
 
 
@@ -181,14 +182,6 @@ while hw.ctr_stim_nbr < hw.nbr_total_stims
     %-----------------------------------------------------------------
     % Prepare to stimulate
     
-    % Wait for 'min_time_btw_trains' ms --to avoid delivering a bunch of trains
-    % in a row
-    t_wait              = tic;
-    elapsed_t           = toc(t_wait);
-    while elapsed_t < ttap.min_time_btw_trains/1000
-        elapsed_t       = toc(t_wait);
-    end
-    
     % update the stimulation string
     %   overwrite PW
     hw.sp.pw            = hw.pw_order( hw.ctr_stim_nbr );
@@ -211,6 +204,13 @@ while hw.ctr_stim_nbr < hw.nbr_total_stims
     % send stimulation command
     xippmex('stim',hw.stim_string);
     
+    % Wait for 'min_time_btw_trains' ms --to avoid delivering a bunch of trains
+    % in a row
+    t_wait              = tic;
+    elapsed_t           = toc(t_wait);
+    while elapsed_t < pwfp.min_time_btw_trains/1000
+        elapsed_t       = toc(t_wait);
+    end
     
     % update ctr
     hw.ctr_stim_nbr     = hw.ctr_stim_nbr + 1;
@@ -218,9 +218,41 @@ end
 
 
 %--------------------------------------------------------------------------
-%% read Force data and sync pulses
+%% read force data and sync pulses
 
-% read the data from central (flush the data cache)
+disp('Stimulation finished')
+
+% pause for 1 s to make sure we read the whole buffer
+pause(1)
+
+% read data from central (flush the data cache)
 [ts_cell_array, ~, analog_data] = cbmex('trialdata',1);
 cbmex('trialconfig', 0);
 drawnow;
+
+% retrieve force data
+analog_data(:,1)      	= ts_cell_array([analog_data{:,1}]',1);
+aux.force               = analog_data( strncmp(analog_data(:,1), 'Force', 5), 3 );
+% --> struct 'aux' will be used for temporary stuff and then cleared
+for i = 1:force.nbr_forces
+    force.data(:,i+1)   = double(aux.force{i,1});
+end
+% add time vector in first column
+force.data(:,1)         = 0:1/force.fs:1/force.fs*(length(force.data)-1);
+
+
+% find sync pulses
+aux.ts_sync_pulses      = double( cell2mat(ts_cell_array(hw.cb_sync.ch_nbr,2)) );
+% store sync pulses, and pulse width in 'force'
+force.t_sync_pulses     = aux.ts_sync_pulses / 30000;
+force.stim_pw           = hw.pw_order;
+
+
+% add meta fields
+force.meta.mokey        = pwfp.monkey;
+force.meta.task         = pwfp.task;
+force.meta.muscle       = pwfp.muscle;
+force.meta.time         = hw.start_t;
+
+% ------------------------------------------------------------------------
+% compute STA
