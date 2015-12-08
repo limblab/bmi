@@ -2,7 +2,7 @@
 % Stimulate to obtain the relationship between stimulation pulse width and
 % joing force  
 %
-%   GET_PW_TO_FORCE( pw_f_params )
+%   force = GET_PW_TO_FORCE( get_pw_f_params )
 %
 %
 % Notes:
@@ -10,7 +10,7 @@
 %   rather than reading little chunks before and after each stimulus
 %
 
-function get_pw_to_force( varargin ) 
+function force = get_pw_to_force( varargin ) 
 
 
 
@@ -21,9 +21,9 @@ if nargin > 1
 elseif nargin == 1
     pwfp                = varargin{1};
     % fill missing params, if any
-    pwfp                = pw_to_force_params_defaults(pwfp);
+    pwfp                = get_pw_to_force_params_defaults(pwfp);
 elseif nargin == 0
-    pwfp                = pw_to_force_params_defaults();
+    pwfp                = get_pw_to_force_params_defaults();
 end
 
 
@@ -255,4 +255,5 @@ force.meta.muscle       = pwfp.muscle;
 force.meta.time         = hw.start_t;
 
 % ------------------------------------------------------------------------
-% compute STA
+% Characterize and plot the responses
+pw_to_force( force );
