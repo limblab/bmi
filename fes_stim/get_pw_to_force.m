@@ -169,12 +169,18 @@ elseif strncmp(pwfp.stimulator,'ws',2)
 end
 
 
+% Message box to stop the stimulation and exit, saving the data
+hw.keep_running             = msgbox('Click ''ok'' to stop the stimulation','ICMS');
+set(hw.keep_running,'Position',[200 700 125 52]);
+drawnow;
+
+
 %--------------------------------------------------------------------------
 %% where the stimulation happens
 
 
 % start data collection
-cbmex('trialconfig', 1); drawnow;
+cbmex('trialconfig', 1); pause(1); drawnow;
 
 % sitmulation loop
 while hw.ctr_stim_nbr < hw.nbr_total_stims
@@ -214,6 +220,11 @@ while hw.ctr_stim_nbr < hw.nbr_total_stims
     
     % update ctr
     hw.ctr_stim_nbr     = hw.ctr_stim_nbr + 1;
+    
+    % if the message box is closed, stop recordings
+    if ~ishandle(hw.keep_running)
+        break; 
+     end
 end
 
 
@@ -257,11 +268,29 @@ force.meta.stim_amp     = pwfp.amp;
 force.meta.stim_freq    = pwfp.freq;
 force.meta.stim_dur     = pwfp.stim_dur;
 force.meta.stim_pws     = hw.stim_pws;
+force.meta.nbr_stims    = pwfp.nbr_reps;
 
 % clear aux var
 clear aux;
 
 
+%--------------------------------------------------------------------------
+%% stop communication with central
+    
+cbmex('fileconfig', hw.cb.full_file_name, '', 0);
+cbmex('close');
+drawnow;
+drawnow;
+disp('Communication with Central closed');
+
+
 % ------------------------------------------------------------------------
-% Characterize and plot the responses
-pw_to_force( force );
+%% Characterize and plot the responses, and save the data
+
+% call function that analyses and plots the data
+force = pw_to_force( force, pwfp.pw_to_f_params );
+
+% save the data
+save(fullfile(hw.data_dir,hw.cb_file_name),'force','pwfp');
+disp(['Force data and Params saved in ' hw.cb_file_name '.mat']);
+
