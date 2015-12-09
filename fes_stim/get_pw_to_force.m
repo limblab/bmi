@@ -136,6 +136,10 @@ hw.stim_pws             = linspace(pwfp.pw_rng(1),pwfp.pw_rng(2),pwfp.pw_steps);
 hw.pw_order             = repmat(hw.stim_pws,1,pwfp.nbr_reps);
 hw.nbr_total_stims      = numel(hw.pw_order);
 hw.pw_order             = hw.pw_order( randperm(hw.nbr_total_stims) );
+% % Dirty fix -- since it always misses the first pulse we'll repeat it at
+% % the end
+% hw.pw_order             = [hw.pw_order, hw.pw_order(1)];
+% hw.nbr_total_stims      = numel(hw.pw_order);
 
 % initialize stim ctr
 hw.ctr_stim_nbr         = 1;
@@ -174,6 +178,14 @@ hw.keep_running             = msgbox('Click ''ok'' to stop the stimulation','ICM
 set(hw.keep_running,'Position',[200 700 125 52]);
 drawnow;
 
+
+% Dirty fix -- stim once so it misses this spike and not an important
+aux.sp_dirty_fix.elect_list = 32;
+aux.sp_dirty_fix.amp = 2;
+aux.sp_dirty_fix = stim_params_defaults(aux.sp_dirty_fix);
+ezstim(aux.sp_dirty_fix);
+pause(2);
+% end of the dirty fix
 
 %--------------------------------------------------------------------------
 %% where the stimulation happens
@@ -233,8 +245,10 @@ end
 
 disp('Stimulation finished')
 
+
 % pause for 1 s to make sure we read the whole buffer
-pause(1)
+pause(3);
+drawnow;
 
 % read data from central (flush the data cache)
 [ts_cell_array, ~, analog_data] = cbmex('trialdata',1);
@@ -258,6 +272,12 @@ aux.ts_sync_pulses      = double( cell2mat(ts_cell_array(hw.cb_sync.ch_nbr,2)) )
 force.t_sync_pulses     = aux.ts_sync_pulses / 30000;
 force.stim_pw           = hw.pw_order;
 
+% % ---------------------------
+% % This is a dirty fix because it's still missing spikes !!!!
+% force.analog_sync.data  = double( analog_data{ strncmp(analog_data(:,1), 'Stim', 4), 3 } );
+% force.analog_sync.fs    = cell2mat(analog_data(find(strncmp(analog_data(:,1), 'Stim', 4),1),2));
+
+
 
 % add meta fields to force
 force.meta.time         = hw.start_t;
@@ -277,7 +297,7 @@ clear aux;
 %--------------------------------------------------------------------------
 %% stop communication with central
     
-cbmex('fileconfig', hw.cb.full_file_name, '', 0);
+cbmex('fileconfig', hw.cb_file_name, '', 0);
 cbmex('close');
 drawnow;
 drawnow;
