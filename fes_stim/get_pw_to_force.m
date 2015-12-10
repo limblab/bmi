@@ -243,6 +243,9 @@ end
 %--------------------------------------------------------------------------
 %% read force data and sync pulses
 
+if is handle (hw.keep_running )
+    delete( hw.keep_running );
+end
 disp('Stimulation finished')
 
 
