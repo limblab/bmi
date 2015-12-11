@@ -20,7 +20,7 @@ sp.EMG_to_stim_map      = [{'ECU', 'FCR', 'FDP', 'EDCr', 'PL'}; ...
 stim_mode               = 'monopolar'; % 'bipolar'; 'monopolar'
 
 % Grapevine or wireless stimulator
-params.output           = 'stimulator'; % 'stimulator'; 'wireless_stim';
+params.output           = 'wireless_stim'; % 'stimulator'; 'wireless_stim';
 
 
 % Run the code without the stimulator
@@ -29,7 +29,7 @@ stimulator_plugged_in   = true;
 % Save the data
 params.save_data        = true;
 % and where
-params.save_dir         = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151125';
+params.save_dir         = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20151125';
 
 
 % ------------------------------------------------------------------------
@@ -78,7 +78,7 @@ elseif ispc
 %     dec_file            = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001_binned_Decoder.mat';
 %    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_binned_Decoder.mat';
 %    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151125\Jango_20151125_isoWF_003_binned_Decoder.mat';
-dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151201\Jango_20151201_isoWF_001_BDF_Decoder.mat';
+    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20151201\Jango_20151201_isoWF_001_BDF_Decoder.mat';
 end
 
 % If N2E is a file, this will load it 
