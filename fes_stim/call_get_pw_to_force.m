@@ -7,7 +7,7 @@
 
 function force = call_get_pw_to_force( gpwfp )
 
-% Assign electrodes in the stimulator, based on the selectec muscle and
+% Assign electrodes in the stimulator, based on the selected muscle and
 % monkey
 switch gpwfp.monkey
     case 'Jango'
