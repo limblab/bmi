@@ -16,7 +16,7 @@ switch params.output
         % ToDo: check that the anode and cathode channels are in stim_ch
 
         % if there's a communication error with the grapevine
-        if handles.gv.connection ~= 1
+        if handles.gv ~= 1
             cbmex('close');
             if exist('xpc','var')
                 fclose(xpc);
@@ -31,7 +31,7 @@ switch params.output
     % for the wireless stimulator
     case 'wireless_stim'
 
-        dbg_lvl     = 1; % could be made into a parameter
+        dbg_lvl     = 0; % could be made into a parameter
         handles.ws  = wireless_stim(params.bmi_fes_stim_params.port_wireless, dbg_lvl);
         
         try

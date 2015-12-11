@@ -21,6 +21,6 @@ ws.set_stim(command, channel_list);  % set the parameters
 
  % Configure train delay differently for each channel
  for c_idx = 1:channel_list_len
-     td             = c_idx * 400;   % stagger by 400 us
+     td             = c_idx * 500 + 50;   % stagger by 500 us. Minimum 50 us
      ws.set_TD(td, channel_list(c_idx))
  end
