@@ -54,8 +54,9 @@ switch params.output
                 handles.ws.display_command_list(commands, channel_list);
             end
             
-            % set up some default stimulation params
-            setup_wireless_stim_fes(handles.ws);
+            % set up some default stimulation params: freq, TD, pol.
+            % Includes calibration
+            setup_wireless_stim_fes(handles.ws, params.bmi_fes_stim_params);
             
         % if something went wrong close communication with Central and the
         % stimulator and quit
