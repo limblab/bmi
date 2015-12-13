@@ -11,7 +11,7 @@ end
     %       THRESHOLD = -5*Vrms
 
 % 2 - Convert Cerebus Files to binnedData format
-train_data2 = convert2BDF2Binned;
+train_data = convert2BDF2Binned;
 %     0.5 MIN FR THRESHOLD
 
 % 2b- Select "best" N neurons (optional)
@@ -50,3 +50,10 @@ run_decoder(params); % 5 min
 params.mode = 'emg_cascade';
 params.neuron_decoder = N2E;
 run_decoder(params); % 5 min
+
+% 5a - Brain-control using randomized optimal decoder:
+[N2F2,params.permute_idx.orig_idx,params.permute_idx.new_idx] = permute_decoder_weights(N2F,50);
+params.mode = 'direct';
+params.neuron_decoder = N2F2;
+run_decoder(params); % 5 min
+

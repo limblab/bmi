@@ -25,7 +25,9 @@ N2E  = BuildModel(train_data_subset,opts);
 
 % Load EMG to Force decoders [new as of 4/29/2015]
 %load('E:\Data-lab1\12A2-Kevin\LearnAdapt\E2F_Decoders\E2F_decoders_from04282015.mat')
-load('E:\Data-lab1\12A2-Kevin\LearnAdapt\E2F_Decoders\E2F_decoders_from06092015.mat')
+%load('E:\Data-lab1\12A2-Kevin\LearnAdapt\E2F_Decoders\E2F_decoders_from06092015.mat')
+%load('E:\Data-lab1\12A2-Kevin\LearnAdapt\E2F_Decoders\E2F_decoders_from06152015.mat')
+load('E:\Data-lab1\12A2-Kevin\LearnAdapt\E2F_Decoders\E2F_decoders_from06262015.mat')
 
 % Build EMG to Force model
 %opts = BuildModelGUI; %(in=EMG, out=cursor position, ***PAY ATTENTION length = 250ms****, polyn order=0 )
@@ -59,16 +61,16 @@ params  = bmi_params_steph('emg_cascade');
 
 % 5. 
 params.neuron_decoder = N2E;
-params.emg_decoder = E2F_normal_from06092015;
+params.emg_decoder = E2F_from06262015;
 
-% params.emg_decoder = E2F_rotated_from06092015;
-% params.emg_decoder = E2F_reflected_from06092015;
+% params.emg_decoder = E2F_rotated_from06262015;
+% params.emg_decoder = E2F_reflected_from06262015;
 
 % 6.  Turn on the task using the R8T4_isometric_easyparameters behavioral file  
 
 % 7. 
 % Set the recording time that you want on the FileStorage GUI
-run_decoder2(params)
+run_decoder(params)
 
 
 

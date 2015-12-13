@@ -244,8 +244,13 @@ try
                     tmp_data   = [bin_start_t double(data.emgs(1,:))];
                     save(handles.emg_file,'tmp_data','-append','-ascii');
                 end
-                if strcmp(params.output,'stimulator')
-                    tmp_data   = [bin_start_t double(data.stim_PW) double(data.stim_amp)];
+                if strcmp(params.output,'stimulator') || strcmp(params.output,'wireless_stim')
+                    switch params.bmi_fes_stim_params.mode
+                        case 'PW_modulation'
+                            tmp_data   = [bin_start_t double(data.stim_PW)];
+                        case 'amplitude_modulation'
+                            tmp_data   = [bin_start_t double(data.stim_amp)];
+                    end
                     save(handles.stim_out_file,'tmp_data','-append','-ascii');
                 end
                 tmp_data = [bin_start_t double(cursor_pos)];
