@@ -14,17 +14,40 @@ stim_PW = stim_PW*1000; % converts from ms (input) to us (output)
 
 switch bmi_fes_stim_params.mode
     
+    % For PW-modulated FES
     case 'PW_modulation'
         
-        % create the stimulation command
-        cmd{1} = struct('CathDur', stim_PW, 'AnodDur', stim_PW, 'Run', ws.run_cont); % run_once_go
+        switch bmi_fes_stim_params.return
+            
+            case 'monopolar'
         
-        % assign it to the stimulation electrode
-        elecs_this_muscle = zeros(1,length(stim_PW));
-        for i = 1:length(stim_PW)
-            elecs_this_muscle(i) = bmi_fes_stim_params.anode_map{1,i};
+                % create the stimulation command
+                cmd{1}      = struct('CathDur', stim_PW, 'AnodDur', stim_PW, 'Run', ws.run_cont); % run_once_go
+
+                % assign it to the stim anode
+                elecs_this_muscle = zeros(1,length(stim_PW));
+                for i = 1:length(elecs_this_muscle)
+                    elecs_this_muscle(i) = bmi_fes_stim_params.anode_map{1,i};
+                end
+                
+            case 'bipolar'
+                
+                % create the stimulation command. The PW repeats twice, for
+                % the anodes and cathodes
+                cmd{1}      = struct('CathDur', repmat(stim_PW,1,2), 'AnodDur', repmat(stim_PW,1,2), ...
+                                'Run', ws.run_cont); % run_once_go
+                            
+                % assign it to the corresponding stim anode and cathode
+                elecs_this_muscle = zeros(1,2*length(stim_PW));
+                for i = 1:length(stim_PW)
+                    elecs_this_muscle(i) = bmi_fes_stim_params.anode_map{1,i};
+                end
+                for i = 1:length(stim_PW)
+                    elecs_this_muscle(i+length(stim_PW)) = bmi_fes_stim_params.cathode_map{1,i};
+                end
         end
        
+    % For amplitude-modulated FES
     case 'amplitude_modulation'
         
 end
