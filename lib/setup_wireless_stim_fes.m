@@ -38,9 +38,9 @@ switch bmi_fes_params.return
         ws.set_stim(command, channel_list);  % set the parameters
 
         % For the anodes...
+        % read what electodes are set as anodes
+        anode_list      = [ bmi_fes_params.anode_map{1,:} ];
         for i = 1:numel([ bmi_fes_params.anode_map{1,:} ])
-            % read what electodes are set as anodes
-            anode_list  = [ bmi_fes_params.anode_map{1,:} ];
             % Configure train delay differently for each channel
             % -- Stagger by 500 us, to minimize fatigue
             td          = (i-1) * 500 + 50;   % Minimum TD = 50 us, to avoid problems with the waveforms
@@ -50,14 +50,14 @@ switch bmi_fes_params.return
         end
         
         % For the cathodes...
+        % read what electodes are set as cathodes
+        cathode_list    = [ bmi_fes_params.cathode_map{1,:} ];
         for i = 1:numel([ bmi_fes_params.cathode_map{1,:} ])
-            % read what electodes are set as cathodes
-            cathode_list = [ bmi_fes_params.cathode_map{1,:} ];
             % Configure train delay differently for each channel
             % -- Stagger by 500 us, to minimize fatigue
             td          = (i-1) * 500 + 50;   % Minimum TD = 50 us, to avoid problems with the waveforms
             ws.set_TD( td, cathode_list(i) );
             % Set polarity to anodic first 
-            ws.set_PL( 0, cathode_list(i) );
+            ws.set_PL( 1, cathode_list(i) );
         end
 end
