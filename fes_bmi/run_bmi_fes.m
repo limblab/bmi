@@ -24,13 +24,16 @@ params.output           = 'wireless_stim'; % 'stimulator'; 'wireless_stim';
 
 
 % Run the code without the stimulator
-stimulator_plugged_in   = false;
+stimulator_plugged_in   = true;
 
 % Save the data
 params.save_data        = true;
-% and where
+
+% file name
+params.save_name        = 'Jango_WF_MUblock_';
+% and folder name
 if ispc
-	params.save_dir     = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20151212';
+	params.save_dir     = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES';
 elseif ismac
     params.save_dir     = '/Users/juangallego/Desktop';
 end
@@ -188,10 +191,10 @@ end
 %     8              14
 
 
-sp.EMG_min              = [0.25 0.25]; %repmat( 0.2, 1, numel(sp.muscles));
+sp.EMG_min              = [0.0 0.0]; %repmat( 0.2, 1, numel(sp.muscles));
 sp.EMG_max              = [0.6 0.6]; %repmat( 1, 1, numel(sp.muscles));
         
-sp.PW_min               = repmat( 0.1, 1, numel(sp.muscles));
+sp.PW_min               = repmat( 0.2, 1, numel(sp.muscles));
 sp.PW_max               = repmat( 0.4, 1, numel(sp.muscles));
 
 % even if we do PW-modulated FES, we initialize this for consistency of
