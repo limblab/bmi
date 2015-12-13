@@ -8,28 +8,32 @@ monkey                  = 'Jango'; % 'Kevin'
 
 % List of muscles for the decoder
 % emg_list_4_dec          = {'FCU', 'FDP', 'PL', 'ECU', 'ECRl', 'EDCr'};  %{'FCR', 'FCU', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
-emg_list_4_dec          = {'FDP', 'PL', 'FCU'};  %{'FCR', 'FCU', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
+emg_list_4_dec          = {'FDP', 'PL'};  %{'FCR', 'FCU', 'EDC2'}; % {'FCU', 'PL', 'FCR'};
 
 % Mapping of EMGs in the decoder to Electrodes in the Monkey
 % sp.EMG_to_stim_map      = [{'FCR', 'FCU', 'EDC2'}; ...
 %                             {'FCR', 'FCU', 'EDCu'}];
-sp.EMG_to_stim_map      = [{'FDP', 'PL', 'FCU'}; ...
-                            {'FDP', 'PL', 'FCU'}];
+sp.EMG_to_stim_map      = [{'FDP', 'PL'}; ...
+                            {'FDP', 'PL'}];
 
 % Monopolar or bipolar stimulation
-stim_mode               = 'monopolar'; % 'bipolar'; 'monopolar'
+stim_mode               = 'bipolar'; % 'bipolar'; 'monopolar'
 
 % Grapevine or wireless stimulator
-params.output           = 'stimulator'; % 'stimulator'; 'wireless_stim';
+params.output           = 'wireless_stim'; % 'stimulator'; 'wireless_stim';
 
 
 % Run the code without the stimulator
-stimulator_plugged_in   = true;
+stimulator_plugged_in   = false;
 
 % Save the data
 params.save_data        = true;
 % and where
-params.save_dir         = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20151211';
+if ispc
+	params.save_dir     = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20151212';
+elseif ismac
+    params.save_dir     = '/Users/juangallego/Desktop';
+end
 
 
 % ------------------------------------------------------------------------
@@ -139,32 +143,31 @@ switch monkey
         
         switch params.output
             case 'stimulator' % for the grapevine
-                sp.muscles      = {'FDP', 'PL', 'FCU'};
-%               sp.anode_map    = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
-%                                     { [], [1/3 1/3 1/3], [], [], [], [], [], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
-                sp.anode_map    = [{ [14 16 18], [8 10 12], [7 9 11] }; ...
-                                    { [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
+                sp.muscles          = {'FDP', 'PL', 'FCU'};
+%               sp.anode_map        = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
+%                                       { [], [1/3 1/3 1/3], [], [], [], [], [], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
+                sp.anode_map        = [{ [14 16 18], [8 10 12], [7 9 11] }; ...
+                                        { [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
                         
                 if strcmp(stim_mode,'bipolar')
                     sp.cathode_map  = [{ [14 16 18], [2 4 6], [], [8 10 12], [], [], [], [], [] }; ...
                                         { [1/3 1/3 1/3], [1/3 1/3 1/3], [], [1/3 1/3 1/3], [], [], [], [], [] }];
                 elseif strcmp(stim_mode,'monopolar')
-                    sp.cathode_map          = {{ }};
+                    sp.cathode_map  = {{ }};
                 end
                 
             case 'wireless_stim'
-                sp.muscles      = {'ECU','FCR','FDP','EDCr','PL'};
-%               sp.anode_map    = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
+                sp.muscles          = {'FDP','PL'};
+%               sp.anode_map        = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
 %                                     { [], [1/3 1/3 1/3], [], [], [], [], [], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
-                sp.anode_map    = [{ 1, 2, 3, 4, 5 }; ...
-                                    { 1, 1, 1, 1, 1 }];
+                sp.anode_map        = [{ 1, 3 }; ...
+                                        { 1, 1 }];
                                 
                 if strcmp(stim_mode,'bipolar')
-                    warning('The wireless stimulator does not allow to do bipolar stim');
-                    pause;
-                    sp.cathode_map          = {{ }};
+                    sp.cathode_map  = [{ 2, 4 }; ...
+                                        { 1, 1 }];
                 elseif strcmp(stim_mode,'monopolar')
-                    sp.cathode_map          = {{ }};
+                    sp.cathode_map  = {{ }};
                 end
         end
         
@@ -173,9 +176,20 @@ switch monkey
         % sp.anode_map    
 end
 
+% In the wireless stimulator, the following 8 channels are functional:
+%     channel       100 ohm load board
+%     1              1
+%     2              2
+%     3              5
+%     4              6
+%     5              9
+%     6              10
+%     7              13
+%     8              14
 
-sp.EMG_min              = [0.25 0.25 0.25]; %repmat( 0.2, 1, numel(sp.muscles));
-sp.EMG_max              = [0.6 0.6 0.6]; %repmat( 1, 1, numel(sp.muscles));
+
+sp.EMG_min              = [0.25 0.25]; %repmat( 0.2, 1, numel(sp.muscles));
+sp.EMG_max              = [0.6 0.6]; %repmat( 1, 1, numel(sp.muscles));
         
 sp.PW_min               = repmat( 0.1, 1, numel(sp.muscles));
 sp.PW_max               = repmat( 0.4, 1, numel(sp.muscles));
