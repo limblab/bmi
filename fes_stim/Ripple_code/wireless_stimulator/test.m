@@ -1,8 +1,25 @@
-function test(serial_string, sequence, dbg_lvl)
+%
+% test
+%  wireless_stim.m class test function launcher
+%
+% serial_string - "/dev/ttyUSB0" e.g. on linux or "COM4" on Windows
+% sequence - test function selector (see case statement below)
+% dbg_lvl
+%   1 = no trace, use for returning time meas
+%   2 = function level trace
+%   3 = register level trace
+%   4 = message (wireless packet) level trace
+% varargin - use for optional parameter passing to test functions
+%
+function ret = test(serial_string, sequence, dbg_lvl, varargin)
     if nargin < 3
         dbg_lvl = 0;
     end
-    
+    if nargin < 2
+        sequence = -1;
+    end
+       
+    ret = 0;
     ws = wireless_stim(serial_string, dbg_lvl);
     
     % try/catch helps avoid left-open serial port handles and leaving
@@ -22,16 +39,19 @@ function test(serial_string, sequence, dbg_lvl)
           case 0
             keyboard();
           case 1
-            train_sequence1(ws, [1:ws.num_channels]);
+            ret = train_sequence1(ws, [1:ws.num_channels], varargin);
           case 2
-            train_sequence2(ws);
+            ret = train_sequence2(ws, varargin);
           case 3
-            train_sequence3(ws);
+            ret = train_sequence3(ws, varargin);
+          case 4
+            ret = time_meas(ws, dbg_lvl, varargin);
           otherwise
             warning('no sequence selected');
         end
 
-        if dbg_lvl ~= 0
+        
+        if dbg_lvl >= 2 && dbg_lvl <= 3
             % retrieve & display settings from all channels
             channel_list = [1:ws.num_channels];
             commands = ws.get_stim(channel_list);
@@ -40,7 +60,7 @@ function test(serial_string, sequence, dbg_lvl)
         
     catch ME
         delete(ws);
-        %disp(ME);
+        disp(datestr(datetime(),'HH:MM:ss:FFF'));
         rethrow(ME);
     end
 
@@ -49,14 +69,18 @@ end
 
 % example train sequence, setup specified channels to run continuously
 % for delay seconds with charge balanced parameters
-function train_sequence1(ws, channel_list)
+function ret = train_sequence1(ws, channel_list, varargin)
     [ST, I] = dbstack();
 
     amp_offset_10k_ohm = 1000;  % ~1mA
-    amp_offset_100_ohm = 30000;
+    amp_offset_100_ohm = 10000; %30000;
     amp = amp_offset_100_ohm;   % select your load board here
     
-    delay = 30;  % seconds
+    if length(varargin) == 1
+        delay_in_minutes = cell2mat(varargin{1});
+    else
+        delay_in_minutes = 5;
+    end
 
     % Setup a single element struct array to configure param settings
     command{1} = struct('TL', 100, ...         % 100ms
@@ -70,35 +94,39 @@ function train_sequence1(ws, channel_list)
     ws.set_stim(command, channel_list);  % set the parameters
     
     disp(sprintf('%s:%s: starting continuous sequence', ...
-                 ST(1).name, datestr(datetime(),'HH:mm:ss:FFF')));
+                 ST(1).name, datestr(datetime(),'HH:MM:ss:FFF')));
     ws.set_Run(ws.run_cont, channel_list);
-    
-    pause(delay);
+    %ws.idle(1);  % for idle power testing
+
+    for idx = 1:delay_in_minutes
+        pause(60);
+        % check in every 15 minutes
+        if mod(idx,15) == 0
+            disp(sprintf('%s:%s: continuing sequence', ...
+                         ST(1).name, datestr(datetime(),'HH:MM:ss:FFF')));
+            % perform regular communication to make sure stimulator is
+            % still there and operating
+            ws.get_Run(channel_list);
+        end
+    end
+
     disp(sprintf('%s:%s: stopping continuous sequence', ...
-                 ST(1).name, datestr(datetime(),'HH:mm:ss:FFF')));
+                 ST(1).name, datestr(datetime(),'HH:MM:ss:FFF')));
+    ws.idle(0);
     ws.set_Run(ws.run_stop, channel_list);
     
-    % Alternative method:
-    if 0
-        % Use a single command struct to setup the durations for all
-        % channels (broadcast) and start the train
-        command{1} = struct('Run', ws.run_cont);
-        ws.set_stim(command, channel_list);
-        pause(delay);
-        command{1} = struct('Run', ws.run_stop);
-        ws.set_stim(command, channel_list);
-    end
+    ret = 0;
 end
 
 
 % example train sequence, pw modulated, same params for all channels
-function train_sequence2(ws)
+function ret = train_sequence2(ws, varargin)
     [ST, I] = dbstack();
     channel_list = 1:ws.num_channels;  % all channels
     channel_list_len = length(channel_list);
 
     disp(sprintf('%s:%s: setup params', ...
-                 ST(1).name, datestr(datetime(),'HH:mm:ss:FFF')));
+                 ST(1).name, datestr(datetime(),'HH:MM:ss:FFF')));
     amp_offset_10k_ohm = 1000;  % ~1mA
     amp_offset_100_ohm = 5000;  % ~5mA
     amp = amp_offset_100_ohm;   % select your load board here
@@ -124,41 +152,51 @@ function train_sequence2(ws)
         ws.set_TD(td, channel_list);
     end
     
-    for pw_offset = 150:5:400  % 150us to 400us in 5us steps
-        % varying pw per channel
-        pw = pw_offset + [-50:10:(channel_list_len-1)*10-50];
+    if length(varargin) == 1
+        loops = cell2mat(varargin{1});
+    else
+        loops = 1;
+    end
 
-        disp(sprintf('%s:%s: applying pulse widths %s starting train', ...
-                     ST(1).name, datestr(datetime(),'HH:mm:ss:FFF'), ...
-                     sprintf('%d ', pw)));
-        
-        % Use a single element cell array of command structs to setup the
-        % durations for all channels and start the train.
-        %
-        % This could be done with separate set_CathDur, set_AnodDur, and
-        % set_Run calls as well.
-        %
-        % 'Run' should be the last parameter in the struct to ensure the pw
-        % are applied before starting the train
-        command{1} = struct('CathDur', pw, 'AnodDur', pw, 'Run', ws.run_once_go);
-        ws.set_stim(command, channel_list);
-        
-        pause(0.5);  % wait 0.5s until next train
+    for loop = 1:loops
+        for pw_offset = 150:5:400  % 150us to 400us in 5us steps
+            % varying pw per channel
+            pw = pw_offset + [-50:10:(channel_list_len-1)*10-50];
+            
+            disp(sprintf('%s:%s: applying pulse widths %s starting train', ...
+                         ST(1).name, datestr(datetime(),'HH:MM:ss:FFF'), ...
+                         sprintf('%d ', pw)));
+            
+            % Use a single element cell array of command structs to setup the
+            % durations for all channels and start the train.
+            %
+            % This could be done with separate set_CathDur, set_AnodDur, and
+            % set_Run calls as well.
+            %
+            % 'Run' should be the last parameter in the struct to ensure the pw
+            % are applied before starting the train
+            command{1} = struct('CathDur', pw, 'AnodDur', pw, 'Run', ws.run_once_go);
+            ws.set_stim(command, channel_list);
+            
+            pause(0.5);  % wait 0.5s until next train
+        end
     end
     % restore nominal
     command{1} = struct('CathDur', 200, 'AnodDur', 200);
     ws.set_stim(command, channel_list);
+    
+    ret = 0;
 end
 
 
 % example train sequence, amplitude modulated, same params for all channels
-function train_sequence3(ws)
+function ret = train_sequence3(ws, varargin)
     [ST, I] = dbstack();
     channel_list = 1:ws.num_channels;  % all channels
     channel_list_len = length(channel_list);
 
     disp(sprintf('%s:%s: setup params', ...
-                 ST(1).name, datestr(datetime(),'HH:mm:ss:FFF')));
+                 ST(1).name, datestr(datetime(),'HH:MM:ss:FFF')));
     
     % Configure train delay differently for each channel
     stagger = 150;  % us
@@ -179,20 +217,110 @@ function train_sequence3(ws)
     max_100_ohm_load = 32000; % ~32mA (very high)
     max = max_100_ohm_load;  % select your load board here
     step = round((max-0)/50); % 50 steps
-    for amp_offset = 0:step:max
-        % varying amplitude per channel, within a step range
-        amp = amp_offset + [0:step/channel_list_len:step-(step/channel_list_len)];
-        
-        disp(sprintf('%s:%s: applying amplitude offsets %s starting train', ...
-                     ST(1).name, datestr(datetime(),'HH:mm:ss:FFF'), ...
-                     sprintf('%d ', amp)));
+    
+    if length(varargin) == 1
+        loops = cell2mat(varargin{1});
+    else
+        loops = 1;
+    end
 
-        command{1} = struct('CathAmp', 32768+amp, 'AnodAmp', 32768-amp, 'Run', ws.run_once_go);
-        ws.set_stim(command, channel_list);
-        
-        pause(0.5);  % wait 0.5s until next train
+    for loop = 1:loops
+        for amp_offset = 0:step:max
+            % varying amplitude per channel, within a step range
+            amp = amp_offset + [0:step/channel_list_len:step-(step/channel_list_len)];
+            
+            disp(sprintf('%s:%s: applying amplitude offsets %s starting train', ...
+                         ST(1).name, datestr(datetime(),'HH:MM:ss:FFF'), ...
+                         sprintf('%d ', amp)));
+            
+            command{1} = struct('CathAmp', 32768+amp, 'AnodAmp', 32768-amp, 'Run', ws.run_once_go);
+            ws.set_stim(command, channel_list);
+            
+            pause(0.5);  % wait 0.5s until next train
+        end
     end
     % restore nominal
     command{1} = struct('CathAmp', 32768+300, 'AnodAmp', 32768-300);
     ws.set_stim(command, channel_list);
+    
+    ret = 0;
+end
+
+
+% example train sequence for latency measurements
+function ret = time_meas(ws, dbg_lvl, varargin)
+    [ST, I] = dbstack();
+    channel_list = 1:ws.num_channels;  % all channels
+    channel_list_len = length(channel_list);
+
+    if dbg_lvl == 0
+        disp(sprintf('%s:%s: dbg_lvl=%d must be 1 or greater. Returning...', ...
+                     ST(1).name, datestr(datetime(),'HH:MM:ss:FFF'), dbg_lvl));
+        return;
+    end
+    
+    disp(sprintf('%s:%s: setup params', ...
+                 ST(1).name, datestr(datetime(),'HH:MM:ss:FFF')));
+    amp_offset_10k_ohm = 1000;  % ~1mA
+    amp_offset_100_ohm = 5000;  % ~5mA
+    amp = amp_offset_100_ohm;   % select your load board here
+
+    % Configure train delay differently for each channel
+    stagger = 100;  % us
+    td = [stagger:stagger:stagger*channel_list_len];
+    
+    % Setup a single element struct array to configure param settings
+    command{1} = struct('TL', 100, ...         % 100ms
+                        'Freq', 30, ...        % 30 Hz
+                        'CathAmp', 32768+amp, ...  % 16-bit DAC setting
+                        'AnodAmp', 32768-amp, ...  % 16-bit DAC setting
+                        'TD', td, ...           % train delay per channel
+                        'PL', 1, ...           % Cathodic first
+                        'Run', ws.run_once ... % Single train mode
+                        );
+    ws.set_stim(command, channel_list);  % set the parameters
+
+    % for testing reduced channel count updates
+    channel_list = 1:8; %ws.num_channels;  % all channels
+    channel_list_len = length(channel_list);
+    
+    
+    num_iter = 100;
+    if length(varargin) == 1
+        num_iter = cell2mat(varargin{1});
+    end
+    
+    % varying pw per channel
+    pw = 200 + [-50:10:(channel_list_len-1)*10-50];
+    disp(sprintf('%s:%s: applying pulse widths %s for %d iterations', ...
+                 ST(1).name, datestr(datetime(),'HH:MM:ss:FFF'), ...
+                 sprintf('%d ', pw), num_iter));
+    % Use a single element cell array of command structs to setup the
+    % durations for all channels and start the train.
+    %
+    % 'Run' should be the last parameter in the struct to ensure the pw
+    % are applied before starting the train
+    command{1} = struct('CathDur', pw, 'AnodDur', pw, 'Run', ws.run_once_go);
+    
+    % clear lantency measurement arrays
+    ws.time_meas_host = [];
+    ws.time_meas_usb = [];
+    
+    for idx = 1:num_iter
+        ws.set_stim(command, channel_list);
+    end
+    
+    ret{1} = ws.time_meas_host;
+    ret{2} = ws.time_meas_usb;
+    
+    ret_avg = [];
+    for item = 1:length(ret)
+        if ret{item}
+            histogram(cell2mat(ret(item)));
+            ret_avg = [ret_avg mean(ret{item})];
+        end
+        hold on;
+    end
+    hold off;
+    disp(['latency histogram means: ', sprintf('%d ', ret_avg)]);
 end
