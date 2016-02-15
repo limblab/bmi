@@ -51,6 +51,7 @@ arm_params_default.joint_damping_max = [.8 .8];
 arm_params_default.damping_exponent = 1;
 arm_params_default.block_shoulder = 1;
 arm_params_default.cocontraction_is_sum = 0;
+arm_params_default.display_cocontraction_index = 1;
 
 % Ruiz arm
 arm_params_default.RUIZ_MODEL_PARAMETERS = 0;

@@ -16,6 +16,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
     flag_reset = 0;
     EMG_data = zeros(size(m_data_1.Data.EMG_data));    
     temp_cocontraction = 0;
+    cocontraction_display = 0;
     while ((m_data_1.Data.bmi_running)) % && i < 300)
         tic
         i = i+1;
@@ -211,6 +212,14 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
                     arm_params.cocontraction = (1-arm_params.cocontraction_filter)*cocontraction_new +...
                         arm_params.cocontraction_filter*arm_params.cocontraction;
                     temp_cocontraction = arm_params.cocontraction;
+                    
+                    if arm_params.display_cocontraction_index
+                        cocontraction_display_new = temp * (arm_params.musc_act(3) + arm_params.musc_act(4));
+                    else
+                        cocontraction_display_new = cocontraction_new;
+                    end
+                    cocontraction_display = (1-arm_params.cocontraction_filter)*cocontraction_display_new +...
+                        arm_params.cocontraction_filter*cocontraction_display;                    
                 end
                 [t,x] = ode15s(@(t,x0_b) hu_arm_model(t,x0_b,arm_params),t_temp,x0_b,options);
                 [~,out_var] = hu_arm_model(t,x(end,:),arm_params);
@@ -258,6 +267,7 @@ function run_arm_model(m_data_1,m_data_2,h,xpc)
         m_data_2.Data.F_end = F_end;
         m_data_2.Data.theta = encoder_theta;
         m_data_2.Data.cocontraction = arm_params.cocontraction;
+        m_data_2.Data.cocontraction_display = cocontraction_display;
         
         arm_params.theta = x(end,1:2);
         if (strcmp(arm_params.control_mode,'point_mass') || strcmp(arm_params.control_mode,'emg_cartesian'))
