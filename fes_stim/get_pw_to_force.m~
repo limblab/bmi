@@ -90,7 +90,7 @@ force.fs                = cell2mat(analog_data(find(strncmp(analog_data(:,1), 'F
 
 
 %--------------------------------------------------------------------------
-%% Set up the stimulator
+%% Setting up the stimulator
 
 %------------------------------------
 % if using the Grapevine, connect to it, and do some checks
@@ -209,11 +209,6 @@ pause(2);
 % start data collection
 cbmex('trialconfig', 1); pause(1); drawnow;
 
-
-% send a train of pulses because CBMex often times misses the first train
-% ToDo
-
-
 % sitmulation loop
 while hw.ctr_stim_nbr < hw.nbr_total_stims
    
@@ -327,12 +322,7 @@ drawnow;
 disp('Communication with Central closed');
 
 
-%--------------------------------------------------------------------------
-%% stop communication with the wireless stimulator
-
-if strcmp(pwfp.stimulator,'ws')
-    delete(hw.ws);
-end
+%% stop communication with central
 
 
 % ------------------------------------------------------------------------
