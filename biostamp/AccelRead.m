@@ -1,4 +1,4 @@
-function AccelRead(FileName,threshold,plotson)
+function AccelRead(FileVar,Name,threshold,plotson)
 % % AccelRead(FileName,{plotson})
 % ----Accelerometer Reader----
 % Reads in data from the biostamp reader, and does a whole bunch of stuff
@@ -6,10 +6,13 @@ function AccelRead(FileName,threshold,plotson)
 % fixed extrinsic frame.x
 % 
 % ---Inputs---
-%   FileName = file with all of the biostamp data
+%   FileVar = switch saying whether to load new file (0) or use var in the
+%               workspace (1)
+%   Name = file or variable name
 %   plotson = optional variable that tells the function whether or not to
 %       plot everything
 
+% profile on
 
 % sets plotson to 1 if no input is given
 switch nargin
@@ -30,21 +33,37 @@ labels(2,:) = {'seconds' 'g' 'g' 'g' 'deg/s' 'deg/s' 'deg/s'};
 % everything read out, without any coordinate changes, Location is
 % everything in terms of a space frame -> that's basically just the first
 % point where accel = gravity;
-data.num = xlsread(FileName,'','','basic');
-Biostamp = struct('time',data.num(:,1),'accel',[],'gyro',[],'roll',[],'pitch',[],'yaw',[]);
-Location = struct('xyz',[],'vel',[],'ang',[]);
+w = waitbar(36/168,'Reading in Variables');
+
+switch FileVar
+    case 0
+        data.num = xlsread(Name,'','','basic');
+        Biostamp = struct('time',data.num(:,1),'accel',[],'gyro',[],'roll',[],'pitch',[],'yaw',[]);
+        
+        % 2^16 -> 2000 deg/sec and 4G, correcting labels
+        Biostamp.accel = 4*(data.num(:,2:4))/2^15;
+        Biostamp.gyro = 2000*(data.num(:,5:7))/2^15;
+
+    case 1
+        Biostamp = Name;
+        
+    otherwise
+        error('FileVar must be either 0 (file) or 1 (variable)')
+        quit
+end
+
+waitbar(55/168,'finding means');
+
+len = length(Biostamp.time);
+len_el = len - 10; %Get rid of first 10 points
+Location = struct('xyz',zeros(len,1),'vel',zeros(len,1),'ang',zeros(len,1));
+        
 
 
-
-% 2^16 -> 2000 deg/sec and 4G, correcting labels
-Biostamp.accel = 4*(data.num(:,2:4))/2^15;
-Biostamp.gyro = 2000*(data.num(:,5:7))/2^15;
 
 
 
 % Finding all doz arithmatic means
-len = length(Biostamp.time);
-len_el = len - 10; %Get rid of first 10 points
 AccelMean = sqrt(Biostamp.accel(11:end,1).^2 + ...
     Biostamp.accel(11:end,2).^2 + Biostamp.accel(11:end,3).^2);
 RollVelMean = sum(Biostamp.gyro(11:end,1))/len_el
@@ -61,23 +80,24 @@ for i=1:len_el-1
     Biostamp.yaw(i+1) = (Biostamp.gyro(i+10,3)-YawVelMean)*.004 + Biostamp.yaw(i);
 end
 
+waitbar(83/168,'finding stable point');
 
 % Finding indices of locations where magnitude of acceleration is under a
 % certain threshold and ang vel is ~ 0
-AMinInd = find(abs(AccelMean-1) < threshold);
-WMinInd = find((Biostamp.gyro(:,1)-RollVelMean).^2 + (Biostamp.gyro(:,2)-PitchVelMean).^2 ...
-    + (Biostamp.gyro(:,3)-YawVelMean).^2);
+AMinInd = uint8(find(abs(AccelMean-1) < threshold));
+WMinInd = uint8(find((Biostamp.gyro(:,1)-RollVelMean).^2 + (Biostamp.gyro(:,2)-PitchVelMean).^2 ...
+    + (Biostamp.gyro(:,3)-YawVelMean).^2));
 AnotherIndVector = [];
-
-for i=AMinInd
-    if any(WMinInd==i)
+for i=1:length(AMinInd)
+    if any(WMinInd==AMinInd(i))
         AnotherIndVector = [AnotherIndVector,i];
     end
 end
-
 [~,StartInd] = min(AnotherIndVector);
-        
 
+waitbar(98/168,'SpaceFrameConverter');
+
+Location = SpaceFrameConverter(Biostamp,StartInd,RollVelMean,PitchVelMean,YawVelMean);
 
 
 
@@ -88,6 +108,8 @@ if plotson == 1
     PlotRollPitchYaw(Biostamp)
     PlotInitData(Biostamp,labels)
 end
+
+% profile viewer
 
 end
 
@@ -147,6 +169,50 @@ for i = 1:3
     axis square
 end
 
+end
 
 
+
+
+function Location = SpaceFrameConverter(Biostamp,StartInd,RollVelMean,PitchVelMean,YawVelMean)
+% ---SpaceFrameConverter
+% function to find the location of the biostamp in an extrinsic coordinate
+% frame.
+% 
+% Inputs:
+%   Biostamp = struct following the format of AccelRead
+%   StartInd = index where extrinsic frame = intrinsic frame
+%   AccelMean = vector of the magnitude of acceleration at all points
+%   RollVelMean = average of the roll velocity - assumed to be a bias
+%   PitchVelMean = average of the pitch velocity - " " " "
+%   YawVelMean = average of the yaw velocity - " " " "
+
+
+% extrinsic frame is assumed to have gravity in negative z direction, and x
+% in the direction of the portions of i normal to the gravity vector.
+% for keeping track of everything, here's the transformation matrix:
+%   X_space = T * X_body
+% 
+%   T = | ix jx kx |
+%       | iy jy ky |
+%       | iz jz kz |
+
+% --- initial T ---
+theta = acos(Biostamp.accel(StartInd,1));
+phi = acos(Biostamp.accel(StartInd,2));
+rho  = acos(Biostamp.accel(StartInd,3));
+iz = -(Biostamp.accel(StartInd,1))*sin(pi/2 - theta);
+jz = -(Biostamp.accel(StartInd,2))*sin(pi/2 - phi);
+kz = -(Biostamp.accel(StartInd,3))*sin(pi/2 - rho);
+
+ix = Biostamp.accel(StartInd,1)*cos(pi/2 - theta);
+gxyj = Biostamp.accel(StartInd,2)*cos(pi/2 - phi);
+gxyk = Biostamp.accel(StartInd,3)*cos(pi/2 - rho);
+
+syms singamma sinalpha cosgamma cosalpha;
+system = [ix == gxyj*cosgamma + gxyk*cosalpha, gxyj*singamma == gxyk*sinalpha, ...
+    sinalpha^2+cosalpha^2 == 1, singamma^2 + cosgamma^2 ==1];
+S = solve(system,[singamma, sinalpha, cosgamma, cosalpha]);
+
+disp('finally!');
 end
