@@ -1,39 +1,59 @@
+%
+% Default stimulation parameters for grapevine stimulator or ripple's
+% wireless stimulator.
+%   
+% Use with 'stim_params_to_string.m' function to generate stim_string for
+% the grapevine, or with 'stim_params_to_stim_cmd_ws.m' to generate 
+% stim_cmd to generate stim_cmd for Ripple's wireless stimulator.
+%
+%   function stim_params = stim_params_defaults(varargin)
+%
+% stim_params_defaults generates the fields:
+%   'elect_list'    : one indexed list of stimulation electrodes. If it is
+%                       a 1-by-N array, all the electrodes will be treated
+%                       as anodes and a common eletrode will be used as
+%                       return; if it is a 2-by-N array, the first row of 
+%                       electrodes will be the anodes,and the corresponding 
+%                       electrodes in the second row the cathodes.
+%   'tl'            : length of pulse train (ms)
+%   'freq'          : frequency of pulse train (Hz)
+%   'pw'            : duration of single phase ('TD' in ripple) (ms)
+%   'amp'           : amplitude of single phase's current (mA)
+%   'delay'         : Delay for interleaving (ms)
+%   'pol'           : Polarity. 1 - cathodic first, 0 - anodic first
+%   'fs'            : length of time to fast settle (ms)
+%   'stim_res'      : stimulator resolution (in mA/step)
+%   'stimulator'    : 'ws' (for the wireless stimulator), or 'gv' for the
+%                       grapevine
+%   'serial_ws'     : COM port to which the wireless stim is connected
+%   'path_cal_ws'   : path of the calibration file for the wireless stim
+%
+% Other than chan_list, which contains N electrode numbers, all the other
+% fields may contain either a single value or a vector of N values. If
+% only one value is provided, it will be used for all the stimulation
+% channels listed in chan_list.
+%
+% A parameter structure with some of the same field names can be provided
+% as an input argument. The fields provided as input will not be
+% overwritten. This function will instead fill up the inputed structure
+% with the default values for the missing fields.
+
+
 function stim_params = stim_params_defaults(varargin)
 
-%   Default stimulation parameters for grapevine stimulator
-%   Use with 'stim_params_to_string.m' function to generate stim_string
-%
-%   stim_params_defaults generates the fields:
-%   'chan_list' : one indexed list of stimulation electrodes
-%   'tl'        : length of pulse train (ms)
-%   'freq'      : frequency of pulse train (Hz)
-%   'pw'        : duration of single phase ('TD' in ripple) (ms)
-%   'amp'       : amplitude of single phase's current (mA)
-%   'delay'     : Delay for interleaving (ms)
-%   'pol'       : Polarity. 1 - cathodic first, 0 - anodic first
-%   'fs'        : length of time to fast settle (ms)
-%   'stim_res'  : stimulator resolution (in mA/step)
-%
-%   Other than chan_list, which contains N electrode numbers, all the other
-%   fields may contain either a single value or a vector of N values. If
-%   only one value is provided, it will be used for all the stimulation
-%   channels listed in chan_list.
-%
-%   A parameter structure with some of the same field names can be provided
-%   as an input argument. The fields provided as input will not be
-%   overwritten. This function will instead fill up the inputed structure
-%   with the default values for the missing fields.
-
 stim_params_defaults = struct( ...
-    'elect_list'     ,[3 5 7],...
-    'amp'           ,2.286,...
+    'elect_list'    ,[13;14],...
+    'amp'           ,6,...
     'freq'          ,30,...
-    'pw'            ,0.2,...
+    'pw'            ,0.3,...
     'tl'            ,1000,...
     'delay'         ,0,...
     'pol'           ,1,...
     'fs'            ,0.0,...
-    'stim_res'      ,0.018...
+    'stim_res'      ,0.018,...
+    'stimulator'    ,'ws',...
+    'serial_ws'     ,'COM3',...
+    'path_cal_ws'   ,'E:\Data-lab1\Wireless_Stimulator'... 
     );
 
 
