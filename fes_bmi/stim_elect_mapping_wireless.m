@@ -1,3 +1,4 @@
+%
 % Function that converts stimulation commands to a string that can be
 % passed to the wireless stimulator. Stimulation commands are defined in
 % 'stim_PW'/'stim_amp', dependending on whether we do PW-modulated or
@@ -10,12 +11,15 @@
 
 function [cmd, ch_list] = stim_elect_mapping_wireless( stim_PW, stim_amp, bmi_fes_stim_params, ws )
 
-stim_PW = stim_PW*1000; % converts from ms (input) to us (output)
 
 switch bmi_fes_stim_params.mode
     
     % For PW-modulated FES
     case 'PW_modulation'
+        
+        % converts input PWs from ms to us (those are the units the wireless
+        % stimulator takes
+        stim_PW             = stim_PW*1000;
         
         switch bmi_fes_stim_params.return
             
@@ -34,8 +38,10 @@ switch bmi_fes_stim_params.mode
                 
                 % create the stimulation command. The PW repeats twice, for
                 % the anodes and cathodes
-                cmd{1}      = struct('CathDur', repmat(stim_PW,1,2), 'AnodDur', repmat(stim_PW,1,2), ...
-                                'Run', ws.run_cont); % run_once_go
+                cmd{1}      = struct('CathDur', repmat(stim_PW,1,2), ...
+                                    'AnodDur', repmat(stim_PW,1,2) ...
+                                    );
+                % there was a run_cont here. ToDo: Check if it's necessary
                             
                 % assign it to the corresponding stim anode and cathode
                 elecs_this_muscle = zeros(1,2*length(stim_PW));
@@ -50,6 +56,12 @@ switch bmi_fes_stim_params.mode
     % For amplitude-modulated FES
     case 'amplitude_modulation'
         
+        % converts input PWs from ms to us (those are the units the wireless
+        % stimulator takes
+        stim_amp            = stim_amp*1000;
+        
+        error('amplitude-modulated FES not implemented yet');
 end
 
-ch_list = elecs_this_muscle;
+% output params
+ch_list                     = elecs_this_muscle;
