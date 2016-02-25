@@ -35,9 +35,9 @@ switch params.output
         handles.ws  = wireless_stim(params.bmi_fes_stim_params.port_wireless, dbg_lvl);
         
         try
-            % TEMP: switch to the folder that contains the calibration file
+            % Switch to the folder that contains the calibration file
             cur_dir = pwd;
-            cd([params.save_dir filesep datestr(now,'yyyymmdd')])
+            cd( params.bmi_fes_stim_params.path_cal_ws );
             
             % comm_timeout specified in ms, or disable
             handles.ws.init( 1, handles.ws.comm_timeout_disable ); % 1 = reset FPGA stim controller
@@ -54,8 +54,9 @@ switch params.output
                 handles.ws.display_command_list(commands, channel_list);
             end
             
-            % set up some default stimulation params: freq, TD, pol.
-            % Includes calibration
+            % set up the stimulation params that will not be modulated
+            % (frequency, polarity, amplitude/PW [depending on the stim
+            % mode] ...) 
             setup_wireless_stim_fes(handles.ws, params.bmi_fes_stim_params);
             
         % if something went wrong close communication with Central and the

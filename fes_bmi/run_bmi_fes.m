@@ -32,13 +32,6 @@ if isempty(neuron_decoder)
     return;
 end
 
-% % load template trajectories
-% if params.cursor_assist
-%     % cursor_traj is a file name to a structure containing the fields
-%     % 'mean_paths' and 'back_paths', each of size < 101 x 2 x n_tgt >
-%     cursor_traj = load(params.cursor_traj);
-% end
-
 % check that there's no error in the stimulation parameters 
 if strcmpi(params.output,'stimulator') || strcmpi(params.output,'wireless_stim') 
     params          = check_bmi_fes_settings( neuron_decoder, params );
@@ -66,26 +59,7 @@ handles                 = [];
 handles.keep_running    = msgbox('Click ''ok'' to stop the BMI','BMI Controller');
 set(handles.keep_running,'Position',[200 700 125 52]);
 
-
 if params.display_plots
-%     handles.fh = figure;
-%     set(handles.fh,'Color','k','MenuBar','none','name','BMI cursor output');
-% 
-%     hold on;
-%     tgt_handle  = plot(0,0,'rs');
-%     set(tgt_handle,'LineWidth',2,'MarkerSize',30,'MarkerFaceColor','r');
-%     set(gca,'color','k');    
-%     curs_handle = plot(0,0,'yo');
-%     
-%     set(curs_handle,'MarkerSize',10,'MarkerFaceColor','y','MarkerEdgeColor','y');
-%     xlim([-12 12]); ylim([-12 12]);
-%     axis square; axis equal; axis manual;
-% 
-%     xpred_disp = annotation(gcf,'textbox', [0.65 0.85 0.16 0.05],...
-%     'FitBoxToText','off','String',sprintf('xpred: %.2f',cursor_pos(1)));
-%     ypred_disp = annotation(gcf,'textbox', [0.65 0.79 0.16 0.05],...
-%     'FitBoxToText','off','String',sprintf('ypred: %.2f',cursor_pos(2)));
-
     % handle for the FES figure
     handles.ffes.fh     = figure('Name','FES commands');
     handles.ffes        = stim_fig( handles.ffes, [], [],  params.bmi_fes_stim_params, 'init' );
@@ -99,6 +73,7 @@ end
 
 
 %% Setup data files and directories for recording
+
 if params.save_data
     handles             = setup_recordings(params,handles);
 end
@@ -122,21 +97,21 @@ if params.online
 
     % start data buffering
     cbmex('trialconfig',1,'nocontinuous');
-    
-    % setup stimulator, if doing FES
-    if strcmpi(params.output,'stimulator') || strcmpi(params.output,'wireless_stim') 
-        handles         = setup_stimulator(params,handles);
-    end
-    
-% If using signals recorded in a file, rather than doing an online
+
+    % If using signals recorded in a file, rather than doing an online
 % experiment
 else
     max_cycles          = length(offline_data.timeframe);
     bin_start_t         = double(offline_data.timeframe(1));
 end
 
+% setup stimulator, if doing FES
+if strcmpi(params.output,'stimulator') || strcmpi(params.output,'wireless_stim')
+    handles             = setup_stimulator(params,handles);
+end
+
 % start data buffering timer
-t_buf   = tic; 
+t_buf                   = tic; 
 drawnow;
 
 %% Run cycle
@@ -147,6 +122,7 @@ try
         % when a full cycle has elapsed
         if (reached_cycle_t)
             
+            % ------------------------------------------------------------
             %% Update timers and counters
             
             cycle_t     = toc(t_buf); %this should be equal to bin_size, but may be longer if last cycle operations took too long.
@@ -154,11 +130,13 @@ try
             bin_count   = bin_count +1;
             
             
+            % ------------------------------------------------------------
             %% Get and Process New Data
             
             data        = get_new_data(params,data,offline_data,bin_count,cycle_t,w);
             
             
+            % ------------------------------------------------------------
             %% Predictions
             
             % get a new prediction by transforming the data into a row
@@ -195,71 +173,54 @@ try
                 end
             end
             
-%             % bound predictions to monitor screen?
-%             cursor_pos = sign(data.curs_pred).*min(sign(data.curs_pred).*data.curs_pred,params.pred_bounds);
-%                 
-%             %% Output
-%             if params.cursor_assist
-%                 [cursor_pos,data] = cursor_assist(data,cursor_pos,cursor_traj);
-%                 data.curs_act = cursor_pos;
-%             else
-%                 %normal behavior, cursor mvt based on predictions
-%                 cursor_pos = data.curs_pred;
-%             end
-%             
-%             if strcmpi(params.output,'xpc')
-%                 % send predictions to xpc
-%                 fwrite(xpc, [1 1 cursor_pos],'float32');
-%             end
             
+            % ------------------------------------------------------------
             %% Stimulation
             
             % Translate EMG predictions into stimulator parameters
             [data.stim_PW, data.stim_amp]   = EMG_to_stim( data.emgs, params.bmi_fes_stim_params );
 
             % And send those parameters to the stimulator, if we are
-            % doing online 
-            if strcmpi(params.output,'wireless_stim')
-                [stim_cmd, channel_list]    = stim_elect_mapping_wireless( data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, handles.ws );
-                if params.online,  
-                    handles.ws.set_stim(stim_cmd, channel_list); 
+            % doing online, and this is not a catch trial
+            if data.fes_or_catch
+                if strcmpi(params.output,'wireless_stim')
+                    [stim_cmd, channel_list]    = stim_elect_mapping_wireless( data.stim_PW, ...
+                                                    data.stim_amp, params.bmi_fes_stim_params );
+                    handles.ws.set_stim(stim_cmd, channel_list);
+                elseif strcmpi(params.output,'stimulator')
+                    xippmex( 'stimseq', stim_cmd );
                 end
-            elseif strcmpi(params.output,'stimulator')
-                stim_cmd = stim_elect_mapping( data.stim_PW, data.stim_amp, params.bmi_fes_stim_params );
-                if params.online
-                    xippmex( 'stimseq', stim_cmd );  
+            % if it is a catch trial, stop the stimulation
+            else
+                if strcmpi(params.output,'wireless_stim')
+                    [stim_cmd, channel_list]    = stim_elect_mapping_wireless( data.stim_PW, ...
+                                                    data.stim_amp, params.bmi_fes_stim_params, 'catch' );
+                    handles.ws.set_stim(stim_cmd, channel_list);
+                    % ToDo: get this into a function
+                    switch params.bmi_fes_stim_params.mode
+                        case 'PW_modulation'
+                            data.stim_PW        = zeros(1,length(data.stim_PW));
+                        case 'amplitude_modulation'
+                            data.stim_amp       = zeros(1,length(data.stim_amp));
+                    end
+                        
+                elseif strcmpi(params.output,'stimulator')
+                    warning('Catch trials not implemented for the grapevine yet');
                 end
             end
 
             handles.ffes   = stim_fig( handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec' );
             
             
-%             %% Neurons-to-EMG Adaptation
-%             if params.adapt
-%                 switch params.adapt_params.type
-%                     case 'normal'
-%                         % fixed expected emg value for each muscle and each target
-%                         [data_buffer,data,neuron_decoder] = decoder_adaptation_N2E2F(params,data,bin_count,data_buffer,neuron_decoder);
-%                     case 'N2F_target'
-%                         % adaptation of neuron to force decoder using target force
-%                         [data_buffer,data,neuron_decoder] = decoder_adaptation_N2F_target(params,data,bin_count,data_buffer,neuron_decoder);
-%                     case 'tvp'
-%                         % time-varying emg patterns for each target
-%                         [data_buffer,data,neuron_decoder] = decoder_adaptation_N2E2F_traj(params,data,bin_count,data_buffer,neuron_decoder);
-%                     case 'supervised'
-%                         % adapt using actual force
-%                         [data_buffer,data,neuron_decoder] = decoder_adaptation_supervised(params,data,bin_count,data_buffer,neuron_decoder);
-%                     otherwise
-%                         error('Unknown decoder adaptation type : %s',params.adapt_params.adapt_type);
-%                 end     
-%             end
-                
+            % ------------------------------------------------------------
             %% Save and display progress
                   
             if params.save_data
 
-                % - Save the binned spikes
+                %check elapsed operation time, to store it in the FES file
+                cycle_t                 = toc(t_buf);
                 
+                % - Save the binned spikes
                 % spikes are timed from beginning of this bin
                 % because they occured in the past relative to now
                 tmp_data                = [bin_start_t data.spikes(1,:)];
@@ -283,52 +244,33 @@ try
                         case 'amplitude_modulation'
                             tmp_data    = [bin_start_t double(data.stim_amp)];
                     end
+                    % add FES (1) vs catch (0) trial flag
+                    % ToDo add
+                    % add cycle time (it will be the cycle time of the
+                    tmp_data            = [tmp_data double(cycle_t)];
+                    % add the FES or catch flag
+                    tmp_data            = [tmp_data data.fes_or_catch];
                     save(handles.stim_out_file,'tmp_data','-append','-ascii');
                 end
                 
-                % - save word
-                if isempty(data.words)
-                    data.words          = [0 0];
+                % - save word if there is a new one
+                if ~isempty(data.words)
+                    tmp_data                = [bin_start_t data.words(1,:)];
+                    save(handles.word_file,'tmp_data','-append','-ascii');
                 end
-                % ToDo.: double check we want to read only the first raw
-                tmp_data                = [bin_start_t data.words(1,:)];
-                save(handles.word_file,'tmp_data','-append','-ascii');
-                
-                % ToDo -- need to store cursor position / force
-%                 % - Cursor position and velocity
+             
+%                 % - save cursor position
 %                 tmp_data                = [bin_start_t double(cursor_pos)];
 %                 save(handles.curs_pos_file,'tmp_data','-append','-ascii');
 %                 tmp_data                = [bin_start_t double(data.curs_pred)];
 %                 save(handles.curs_pred_file,'tmp_data','-append','-ascii');
             end
             
-%             %display targets and cursor plots
-%             if params.display_plots && ~isnan(any(data.tgt_pos)) && ishandle(curs_handle)
-%                 
-% %                 set(curs_handle,'XData',cursor_pos(1),'YData',cursor_pos(2));
-%                 set(curs_handle,'XData',data.curs_pred(1),'YData',data.curs_pred(2));
-% %                 
-% %                 set(xpred_disp,'String',sprintf('xpred: %.2f',predictions(1)))
-% %                 set(ypred_disp,'String',sprintf('ypred: %.2f',predictions(2)))
-% 
-%                 if data.tgt_on
-%                     set(tgt_handle,'XData',data.tgt_pos(1),'YData',data.tgt_pos(2),'Visible','on');
-%                 else
-%                     set(tgt_handle,'Visible','off');
-%                 end
-%                 
-%                 if  data.adapt_trial && ~data.fix_decoder
-%                     display_color = 'b';
-%                 else
-%                     display_color = 'y';
-%                 end
-%                 set(curs_handle,'MarkerEdgeColor',display_color,'MarkerFaceColor',display_color);
-%             end
             
-            %% Wrapping up            
+            % ------------------------------------------------------------
+            %% Wrapping up
             
             % flush pending events
-            
             drawnow;
             
             %check elapsed operation time
@@ -344,6 +286,10 @@ try
             reached_cycle_t = false;
         end
         
+        
+        % -----------------------------------------------------------------
+        %% Wait for the control cycle to be over
+        
         % get elapsed buffering time
         et_buf                              = toc(t_buf); 
         
@@ -356,8 +302,11 @@ try
         
     end
 
-    % -----------------------------------
-    % if the user stopped execution
+    
+    
+    % ---------------------------------------------------------------------
+    % ---------------------------------------------------------------------
+    %% if the user stopped execution
     if params.online
         if params.save_data
             cbmex('fileconfig', handles.cerebus_file, '', 0);
@@ -382,6 +331,9 @@ try
         end
     end
     
+
+% -------------------------------------------------------------------------
+% -------------------------------------------------------------------------
 % if there is an error close everything
 catch e
     if params.online
@@ -393,7 +345,7 @@ catch e
         close(prog_bar);
     end
     if strcmpi(params.output,'wireless_stim')
-        handles.ws.set_Run(handles.ws.run_stop,channel_list);
+        handles.ws.set_Run(handles.ws.run_stop,1:16);
     end
     echoudp('off');
     fclose('all');
@@ -412,36 +364,6 @@ catch e
     end
     rethrow(e);
 end
-
-
-% %% optionally Save decoder at the end
-% if params.adapt
-%     % auto save:
-% %     dec_dir = [params.save_dir filesep datestr(now,'yyyy_mm_dd')];
-% %     if ~isdir(dec_dir)
-% %         mkdir(dec_dir);
-% %     end
-% %     filename = [dec_dir filesep 'Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
-% %     save(filename,'-struct','neuron_decoder');
-% %     fprintf('Saved Decoder File :\n%s\n',filename);
-% %     assignin('base','new_decoder_str',filename);
-% %     assignin('base','new_decoder',neuron_decoder);
-% 
-% %     %Save dialog
-% %         dec_dir = [params.save_dir];
-% %         filename = ['Adapted_decoder_' (datestr(now,'yyyy_mm_dd_HHMMSS')) '_End.mat'];
-% %         [filename, filepath] = uiputfile(fullfile(dec_dir,filename),'Save your new decoder');
-% %     if filepath
-% %         save(fullfile(filepath,filename),'-struct','neuron_decoder');
-% %         fprintf('Saved Decoder File :\n%s\n',filename);
-% %         assignin('base','new_decoder_str',filename);
-% %         assignin('base','new_decoder',neuron_decoder);
-% %     else
-% %         disp('Decoder not saved');
-% %     end
-% end
-% 
-% varargout = {neuron_decoder};
 
 end
 
@@ -482,20 +404,20 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
         new_spikes          = get_new_spikes( ts_cell_array, params, bin_dur );
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
     else
-        data.sys_time = double(offline_data.timeframe(bin_count));
-        [~,spike_idx,~] = intersect(offline_data.neuronIDs,params.neuronIDs,'rows','stable');
-        new_spikes = offline_data.spikeratedata(bin_count,spike_idx)';
-        new_words  = offline_data.words(offline_data.words(:,1)>= data.sys_time & ...
+        data.sys_time       = double(offline_data.timeframe(bin_count));
+        [~,spike_idx,~]     = intersect(offline_data.neuronIDs,params.neuronIDs,'rows','stable');
+        new_spikes          = offline_data.spikeratedata(bin_count,spike_idx)';
+        new_words           = offline_data.words(offline_data.words(:,1)>= data.sys_time & ...
             offline_data.words(:,1) < data.sys_time+params.binsize,:);
-        new_target = offline_data.targets.corners(offline_data.targets.corners(:,1)>= data.sys_time & ...
+        new_target          = offline_data.targets.corners(offline_data.targets.corners(:,1)>= data.sys_time & ...
             offline_data.targets.corners(:,1)< data.sys_time+params.binsize,2:end);
-        data.curs_act = offline_data.cursorposbin(bin_count,:);
+        data.curs_act       = offline_data.cursorposbin(bin_count,:);
     end
 
-    data.spikes = [new_spikes'; data.spikes(1:end-1,:)];
-    data.ave_fr = data.ave_fr*(bin_count-1)/bin_count + mean(new_spikes)/bin_count;
-    num_new_words = size(new_words,1);
-    data.words  = [new_words;     data.words(1:end-num_new_words,:)];
+    data.spikes             = [new_spikes'; data.spikes(1:end-1,:)];
+    data.ave_fr             = data.ave_fr*(bin_count-1)/bin_count + mean(new_spikes)/bin_count;
+    num_new_words           = size(new_words,1);
+    data.words              = [new_words; data.words(1:end-num_new_words,:)];
 
     if ~isempty(new_target)
         data.pending_tgt_pos  = [ (new_target(3)+new_target(1))/2 ...
@@ -543,6 +465,20 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
                 data.tgt_bin  = bin_count;
                 data.tgt_on   = true;
                 % fprintf('CT_on\n');
+                % increase trial counter
+                data.trial_ctr  = data.trial_ctr + 1;
+                % check if this is a catch trial, if we have catch trials
+                % at all
+                if params.bmi_fes_stim_params.perc_catch_trials
+                    if ~isempty(find(data.catch_trial_indx == data.trial_ctr,1))
+                        % if it is set the flag to no FES
+                        data.fes_or_catch = 0;
+                        fprintf('*~*~*~catch trial~*~*~*\n');
+                    else
+                        % otherwise set the flag to FES
+                        data.fes_or_catch = 1;
+                    end
+                end
             end
             % Adapt word
             if new_words(i,2)==w.Adapt
@@ -554,15 +490,15 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
             end
             % End trial
             if w.IsEndWord(new_words(i,2))
-                % offline, only on successful trials, but all trials online
-                if data.adapt_trial && (params.online || new_words(i,2)==w.Reward)
-                    if ~strcmp(params.adapt_params.type,'supervised_full')
-                        data.adapt_flag = true;
-                    end
-                end
-                data.adapt_trial = false;
+%                 % offline, only on successful trials, but all trials online
+%                 if data.adapt_trial && (params.online || new_words(i,2)==w.Reward)
+%                     if ~strcmp(params.adapt_params.type,'supervised_full')
+%                         data.adapt_flag = true;
+%                     end
+%                 end
+%                 data.adapt_trial = false;
                 data.tgt_on      = false;
-                data.effort_flag = false;
+%                 data.effort_flag = false;
             end
         end
     end

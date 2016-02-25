@@ -61,14 +61,25 @@ end
 % * check that the decoded muscles are in the EMG_to_stim_map
 pos_dec_muscle_in_EMG_stim_map      = zeros(1,nbr_emgs_decoder);
 for i = 1:nbr_emgs_decoder
+    % don't look at EMGs with label length longer than the label
+    % you are looking for because it can give an error (e.g., if
+    % you are looking for the position of FCR and there is an FCRl
+    % and an FCR matlab will try to return two values)
+    indx_2_look = [];
+    for ii = 1:length(params.bmi_fes_stim_params.EMG_to_stim_map(1,:))
+        if length(params.bmi_fes_stim_params.EMG_to_stim_map{1,ii}) ...
+                == length(params.neuron_decoder.outnames{i});
+            indx_2_look = [indx_2_look, ii];
+        end
+    end
     % store the position of the decoder muscles in EMG_to_stim_map, which
     % will be used for redimensioning all the fields in bmi_fes_stim_params
-    pos_dec_muscle_in_EMG_stim_map(i) = find( strncmp( params.neuron_decoder.outnames{i}, ...
-            params.bmi_fes_stim_params.EMG_to_stim_map(1,:), length(params.neuron_decoder.outnames{i}) ) );
-    % if a decoder muscle is missing in EMG_to_stim map, quit...
-    if ~pos_dec_muscle_in_EMG_stim_map(i)
-        error(['Muscle ' params.neuron_decoder.outnames{i} ' not included in EMG_to_stim_map']);
-    end
+    pos_dec_muscle_in_EMG_stim_map(i) = indx_2_look( find( strncmp( params.neuron_decoder.outnames{i}, ...
+            params.bmi_fes_stim_params.EMG_to_stim_map(1,indx_2_look), length(params.neuron_decoder.outnames{i}) ) ) );
+%     % if a decoder muscle is missing in EMG_to_stim map, quit...
+%     if ~pos_dec_muscle_in_EMG_stim_map(i)
+%         error(['Muscle ' params.neuron_decoder.outnames{i} ' not included in EMG_to_stim_map']);
+%     end
 end
 
 % * check if the muscles to which we want to assign the predicted EMGs are

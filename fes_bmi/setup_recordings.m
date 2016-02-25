@@ -40,6 +40,8 @@ function handles = setup_recordings(params,handles)
     end
     if strcmp(params.output,'stimulator') || strcmp(params.output,'wireless_stim')
         handles.stim_out_file = fullfile(save_dir, [filename 'stim_out.txt']);
+        % store the words as well
+        handles.word_file = fullfile(save_dir, [filename 'words.txt']);
     end
     handles.curs_pred_file = fullfile(save_dir, [filename 'curspreds.txt']);
     handles.curs_pos_file  = fullfile(save_dir, [filename 'cursorpos.txt']);
