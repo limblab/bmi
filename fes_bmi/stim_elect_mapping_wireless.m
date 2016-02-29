@@ -20,6 +20,11 @@ if nargin == 4
     end
 end
 
+% channels in the stimulator -we have to update the PW/I in all of them
+% because of how the zigbee communication works. If not using some
+% channels, just add zeroes
+ch_list                         = 1:16;
+
 
 switch bmi_fes_stim_params.mode
     
@@ -76,9 +81,15 @@ switch bmi_fes_stim_params.mode
                 stim_PW         = repmat(stim_PW,1,2);
                 stim_PW         = stim_PW(indx_ch);
                
+                % add the channels we are not stimulating to the command,
+                % and populate their PW with zeroes
+                % --the wireless stimulator expect a 16-channel command
+                PW_cmd          = zeros(1,length(ch_list));
+                PW_cmd(elecs_this_muscle)   = stim_PW;
+                
                 % create the stimulation command. 
-                cmd{1}          = struct('CathDur', stim_PW, ...
-                                    'AnodDur', stim_PW);
+                cmd{1}          = struct('CathDur', PW_cmd, ...
+                                    'AnodDur', PW_cmd);
         end
        
     % For amplitude-modulated FES
@@ -91,5 +102,3 @@ switch bmi_fes_stim_params.mode
         error('amplitude-modulated FES not implemented yet');
 end
 
-% output params
-ch_list                     = elecs_this_muscle;
