@@ -38,7 +38,8 @@ function handles = setup_recordings(params,handles)
     if ~strcmp(params.mode,'direct')
         handles.emg_file   = fullfile(save_dir, [filename 'emgpreds.txt']);
     end
-    if strcmp(params.output,'stimulator') || strcmp(params.output,'wireless_stim')
+    if strcmp(params.output,'stimulator') || strcmp(params.output,'wireless_stim') ...
+            || strcmp(params.output,'catch')
         handles.stim_out_file = fullfile(save_dir, [filename 'stim_out.txt']);
         % store the words as well
         handles.word_file = fullfile(save_dir, [filename 'words.txt']);
