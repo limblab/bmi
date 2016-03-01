@@ -57,17 +57,21 @@ end
 % elseif ispc
 %     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_001.nev';
 %     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151125_isoWF_003.nev';
+%     file4decoder        = 'E:\Data-lab1\TestData\_to_delete\datafile002.nev'
 % end
 % 
+% % Convert to BDF 
+% bdf                     = get_nev_mat_data(file4decoder,'nokin');
 % % Bin the data 
 % % --> Do not forget to normalize EMG and Force !!! <--
-% binnedData              = convert2BDF2Binned( file4decoder );
+% bin_params.NormData     = true;
+% binnedData              = convertBDF2binned( bdf, bin_params );
 % 
-%
+% 
 % % Parameters for the decoder: EMG predictions; filter length = 500 ms; bin
 % % size = 50 ms; no static non-linearity
 % dec_opts.PredEMGs       = 1;
-% dec_opts.PolynomialOrder = 2;
+% dec_opts.PolynomialOrder = 0;
 % 
 % 
 % % Look for the muscles specified in 'emg_list_4_dec'
@@ -88,47 +92,47 @@ end
 
 
 % ------------------------------------------------------------------------
-%% If you want to use an existing decoder
-if ismac
-    dec_file            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
-elseif ispc
-%     dec_file            = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001_binned_Decoder.mat';
-%    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_binned_Decoder.mat';
-%    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151125\Jango_20151125_isoWF_003_binned_Decoder.mat';
-    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160225\Pre-FES data\Jango_20160225_WF_R10T4_001_bdf_binned_Decoder.mat';
-end
-
-% If N2E is a file, this will load it 
-if ~isstruct(dec_file)
-    N2E                 = LoadDataStruct(dec_file);
-    
-    % Find the muscles which EMGs we want to decode in the decoder file,
-    % and get rid of the muscles we don't care about (i.e. not included in
-    % emg_list_4_dec)  
-    if isfield(N2E, 'H')
-        emg_pos_in_dec  = zeros(1,numel(emg_list_4_dec));
-        for i = 1:length(emg_pos_in_dec)
-            % don't look at EMGs with label length longer than the label
-            % you are looking for because it can give an error (e.g., if
-            % you are looking for the position of FCR and there is an FCRl
-            % and an FCR matlab will try to return two values)
-            indx_2_look = [];
-            for ii = 1:length(N2E.outnames)
-                if length(N2E.outnames{ii}) == length(emg_list_4_dec{i}) 
-                    indx_2_look = [indx_2_look, ii];
-                end
-            end
-            % find the index of the EMGs in the decoder
-            emg_pos_in_dec(1,i) = indx_2_look( find( strncmp(N2E.outnames(indx_2_look),...
-                                    emg_list_4_dec(i),length(emg_list_4_dec{i})) ));
-        end
-        % Get rid of the other muscles in the decoder
-        N2E.H           = N2E.H(:,emg_pos_in_dec);
-        N2E.outnames    = emg_list_4_dec;
-    else
-        error('Invalid neuron-to-emg decoder');
-    end
-end
+% %% If you want to use an existing decoder
+% if ismac
+%     dec_file            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
+% elseif ispc
+% %     dec_file            = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001_binned_Decoder.mat';
+% %    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_binned_Decoder.mat';
+% %    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151125\Jango_20151125_isoWF_003_binned_Decoder.mat';
+%     dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160225\Pre-FES data\Jango_20160225_WF_R10T4_001_bdf_binned_Decoder.mat';
+% end
+% 
+% % If N2E is a file, this will load it 
+% if ~isstruct(dec_file)
+%     N2E                 = LoadDataStruct(dec_file);
+%     
+%     % Find the muscles which EMGs we want to decode in the decoder file,
+%     % and get rid of the muscles we don't care about (i.e. not included in
+%     % emg_list_4_dec)  
+%     if isfield(N2E, 'H')
+%         emg_pos_in_dec  = zeros(1,numel(emg_list_4_dec));
+%         for i = 1:length(emg_pos_in_dec)
+%             % don't look at EMGs with label length longer than the label
+%             % you are looking for because it can give an error (e.g., if
+%             % you are looking for the position of FCR and there is an FCRl
+%             % and an FCR matlab will try to return two values)
+%             indx_2_look = [];
+%             for ii = 1:length(N2E.outnames)
+%                 if length(N2E.outnames{ii}) == length(emg_list_4_dec{i}) 
+%                     indx_2_look = [indx_2_look, ii];
+%                 end
+%             end
+%             % find the index of the EMGs in the decoder
+%             emg_pos_in_dec(1,i) = indx_2_look( find( strncmp(N2E.outnames(indx_2_look),...
+%                                     emg_list_4_dec(i),length(emg_list_4_dec{i})) ));
+%         end
+%         % Get rid of the other muscles in the decoder
+%         N2E.H           = N2E.H(:,emg_pos_in_dec);
+%         N2E.outnames    = emg_list_4_dec;
+%     else
+%         error('Invalid neuron-to-emg decoder');
+%     end
+% end
 
 
 % ------------------------------------------------------------------------
