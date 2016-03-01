@@ -56,6 +56,11 @@ Thumbs.db
 *.doc
 *.docx
 
+# Video formats
+*.avi
+*.mp4
+*.mov
+
 # Data files
 *.nev
 *.ns2
@@ -67,5 +72,8 @@ Thumbs.db
 *.pl2
 *.plo
 
-# Matlab generated auto save files
+# Matlab things
 *.asv
+*.mat
+
+*.m~
