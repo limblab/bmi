@@ -129,7 +129,7 @@ while hw.ctr_stim_nbr <= hw.nbr_total_stims
     % 2. start data collection
     cbmex('trialconfig', 1);
     % wait for a little bit until central starts recording
-    pause(0.2);
+    pause(0.1);
     drawnow; drawnow; drawnow;
     % get current time, for recording
     hw.t_start          = tic;
@@ -565,7 +565,7 @@ end
 %   (emg)           : emg data struct
 %   (stta_params)   : parameters to compute the StTA. Has to be passed as
 %                       the second to last argument
-%   (hw)            : struct containing hardware handles and params
+%   (h w)            : struct containing hardware handles and params
 %
 % Outputs:
 %   hw              : struct containing hardware handles and params
