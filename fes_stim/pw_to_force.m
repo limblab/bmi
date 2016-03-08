@@ -11,6 +11,11 @@
 
 function force = pw_to_force( force, varargin )
 
+
+% flag to remove mean baseline force -- temporary
+remove_mean_bsln        = true;
+
+
 %------------------------------------
 % read parameters. If no argument is passed load defaults
 if nargin == 1
@@ -57,6 +62,16 @@ force.analysis.std_peak_rect  = zeros( force.nbr_forces, aux.nbr_pws );
 indx_stim                   = params.t_before*force.fs/1000 + 1;
 % get indexes baseline interval 
 int_baseline                = 1:indx_stim-1; 
+
+
+% remove mean baseline
+if remove_mean_bsln
+   for i = 1:length(force.raw)
+       for ii = 2:force.nbr_forces+1 % because the first col. is time
+           force.raw{i}(:,ii) = force.raw{i}(:,ii) - mean(force.raw{1}(int_baseline,ii));
+       end
+   end
+end
 
 % calculate peak ABSOLUTE and RAW (signed) force evoked by each stimulus,
 % by simply looking for the maximum of the evoked force in each direction 
