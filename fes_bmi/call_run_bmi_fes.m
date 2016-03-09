@@ -5,6 +5,7 @@ clear all; close all; clc;
 
 % Who is in the lab?
 monkey                  = 'Jango'; % 'Kevin'
+task                    = 'MG_PG'; % 'MG_PG', 'WF', 'WM'
 
 % List of muscles for the decoder
 % emg_list_4_dec          = {'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDS'};
@@ -24,7 +25,10 @@ stim_mode               = 'bipolar'; % 'bipolar'; 'monopolar'
 params.output           = 'catch'; % 'catch'; 'stimulator'; 'wireless_stim';
 
 % file name
-params.save_name        = 'Jango_WF_MUblock_';
+params.save_name        = [monkey, '_' task '_MUblock_'];
+if strcmpi(params.output,'catch')
+    params.save_name    = [params.save_name, 'catch_'];
+end
 
 
 % Run the code without the stimulator?
@@ -259,3 +263,5 @@ params.bmi_fes_stim_params  = sp;
 %% Do it!
 
 run_bmi_fes(params);
+
+
