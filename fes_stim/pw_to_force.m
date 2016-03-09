@@ -14,6 +14,15 @@ function force = pw_to_force( force, varargin )
 
 % flag to remove mean baseline force -- temporary
 remove_mean_bsln        = true;
+% low pass filter the force signals
+lp_filter               = true;
+
+
+% % -- TEMPORARY FIX
+% % if there are two stim electrodes, the size of force.evoked_force will be
+% % response length -by- nbr force sensors -by- reps -by- 2, but in the 4th
+% % dimension is not necessary. Here we get rid of it
+% force.evoked_force(:,:,:,2 ) = [];
 
 
 %------------------------------------
@@ -28,10 +37,51 @@ end
 % define struct to store some stuff
 aux                 = struct();
 aux.nbr_pws         = length(force.meta.stim_pws);
+aux.nbr_stims       = length(force.raw);
+
+% -------------------------------------------------------------------------
+% Preprocessing
+
+% get sample at which stimulation started 
+indx_stim                   = params.t_before*force.fs/1000 + 1;
+% get indexes baseline interval 
+int_baseline                = 1:indx_stim-1; 
+
+
+% LP-filter
+if lp_filter
+    fc_lp                   = 20;
+    for i = 1:aux.nbr_stims
+        for ii = 1:force.nbr_forces
+            force.evoked_force(:,ii,i) = filt_nodelay(force.evoked_force(:,ii,i), force.fs, fc_lp );
+        end
+    end
+end
+
+
+% remove mean baseline
+if remove_mean_bsln
+    
+    % add a field in force to store the mean baselines
+    force.mean_baseline     = zeros(force.nbr_forces, aux.nbr_stims);
+    
+    for i = 1:aux.nbr_stims
+        for ii = 1:force.nbr_forces
+            force.mean_baseline(ii,i)   = mean(force.evoked_force(int_baseline,ii,i));
+            force.evoked_force(:,ii,i)  = force.evoked_force(:,ii,i) - ...
+                                        mean(force.mean_baseline(ii,i));
+        end
+    end
+end
+
+
+% get rid of outliers
+
+% ToDo
 
 
 % -------------------------------------------------------------------------
-% The analysis itself
+% Data analysis
 
 % 1. compute the mean and SD evoked response for each PW
 % results will be stored in vectors with dimensions: 
@@ -58,20 +108,6 @@ force.analysis.peak         = zeros( force.meta.nbr_stims, force.nbr_forces, aux
 force.analysis.mean_peak_rect = zeros( force.nbr_forces, aux.nbr_pws );
 force.analysis.std_peak_rect  = zeros( force.nbr_forces, aux.nbr_pws );
 
-% get sample at which stimulation started 
-indx_stim                   = params.t_before*force.fs/1000 + 1;
-% get indexes baseline interval 
-int_baseline                = 1:indx_stim-1; 
-
-
-% remove mean baseline
-if remove_mean_bsln
-   for i = 1:length(force.raw)
-       for ii = 2:force.nbr_forces+1 % because the first col. is time
-           force.raw{i}(:,ii) = force.raw{i}(:,ii) - mean(force.raw{1}(int_baseline,ii));
-       end
-   end
-end
 
 % calculate peak ABSOLUTE and RAW (signed) force evoked by each stimulus,
 % by simply looking for the maximum of the evoked force in each direction 
