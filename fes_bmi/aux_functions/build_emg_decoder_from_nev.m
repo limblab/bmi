@@ -60,8 +60,20 @@ binned_data         = convertBDF2binned(bdf,bin_opts);
 % find the EMGs that we want to decode, get rid of the others
 emg_pos_in_bin      = zeros(1,numel(emg_list_4_dec));
 for i = 1:length(emg_pos_in_bin)
-    emg_pos_in_bin(i) = find( strncmp(binned_data.emgguide,emg_list_4_dec(i),...
+    aux_emg_pos     = find( strncmp(binned_data.emgguide,emg_list_4_dec(i),...
                         length(emg_list_4_dec{i})) );
+    % the length of the EMG electrode name may have different length, and
+    % can overlap with another, in that case choose the one with shortest
+    % number of chars; this is the one you're looking for
+    if length(aux_emg_pos) > 1
+        aux_numchar_emg     = [];
+        for ii = 1:length(aux_emg_pos)
+            aux_numchar_emg = [aux_numchar_emg, ...
+                                length(binned_data.emgguide{aux_emg_pos(ii)})];
+        end
+        aux_emg_pos = aux_emg_pos( find( aux_numchar_emg == length(emg_list_4_dec{i}) ) );
+    end
+    emg_pos_in_bin(i)   = aux_emg_pos;
 end
 
 
