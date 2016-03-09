@@ -55,43 +55,18 @@ end
 % ------------------------------------------------------------------------
 %% Build the neuron-to-EMG decoder
 
-% % Raw data file for the decoder
-% if ismac
-%     file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
-% elseif ispc
+% Raw data file for the decoder
+if ismac
+    file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
+elseif ispc
 %     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_001.nev';
 %     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151125_isoWF_003.nev';
 %     file4decoder        = 'E:\Data-lab1\TestData\_to_delete\datafile002.nev'
-% end
-% 
-% % Convert to BDF 
-% bdf                     = get_nev_mat_data(file4decoder,'nokin');
-% % Bin the data 
-% % --> Do not forget to normalize EMG and Force !!! <--
-% bin_params.NormData     = true;
-% binnedData              = convertBDF2binned( bdf, bin_params );
-% 
-% 
-% % Parameters for the decoder: EMG predictions; filter length = 500 ms; bin
-% % size = 50 ms; no static non-linearity
-% dec_opts.PredEMGs       = 1;
-% dec_opts.PolynomialOrder = 0;
-% 
-% 
-% % Look for the muscles specified in 'emg_list_4_dec'
-% emg_pos_in_binnedData   = zeros(1,numel(emg_list_4_dec));
-% for i = 1:length(emg_pos_in_binnedData)
-%     emg_pos_in_binnedData(i) = find( strncmp(binnedData.emgguide,emg_list_4_dec(i),length(emg_list_4_dec{i})) );
-% end
-% 
-% train_data              = binnedData;
-% train_data.emgguide     = emg_list_4_dec;
-% train_data.emgdatabin   = binnedData.emgdatabin(:,emg_pos_in_binnedData);
-% 
-% % Build the neuron-to-EMG decoder
-% N2E                     = BuildModel( train_data, dec_opts );
-% 
-% clear train_data binnedData dec_opts
+    file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160308\Jango_MG_PG_20160308_T3_001.nev';
+end
+ 
+% Build decoder
+neuron2emg_decoder      = build_emg_decoder_from_nev( file4decoder, task, emg_list_4_dec );
 
 
 
