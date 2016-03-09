@@ -59,7 +59,7 @@ binned_data         = convertBDF2binned(bdf,bin_opts);
 % ------------------------------------------------------------------------
 % find the EMGs that we want to decode, get rid of the others
 emg_pos_in_bin      = zeros(1,numel(emg_list_4_dec));
-for i = 1:length(emg_pos_in_binnedData)
+for i = 1:length(emg_pos_in_bin)
     emg_pos_in_bin(i) = find( strncmp(binned_data.emgguide,emg_list_4_dec(i),...
                         length(emg_list_4_dec{i})) );
 end
@@ -67,4 +67,9 @@ end
 
 % ------------------------------------------------------------------------
 % Build the decoder
-neuron2emg_decoder  = BuildModel( train_data, dec_opts );
+
+train_data              = binned_data;
+train_data.emgguide     = emg_list_4_dec;
+train_data.emgdatabin   = binned_data.emgdatabin(:,emg_pos_in_bin);
+ 
+neuron2emg_decoder      = BuildModel( train_data, dec_opts );
