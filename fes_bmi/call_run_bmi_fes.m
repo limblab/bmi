@@ -35,7 +35,7 @@ end
 stimulator_plugged_in   = true;
 
 % Do an online experiment, or read neural data from file
-params.online           = true;
+params.online           = false;
 
 % Percentage of catch trials
 sp.perc_catch_trials    = 10;
@@ -62,56 +62,56 @@ elseif ispc
 %     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_001.nev';
 %     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151125_isoWF_003.nev';
 %     file4decoder        = 'E:\Data-lab1\TestData\_to_delete\datafile002.nev'
-    file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160308\Jango_MG_PG_20160308_T3_001.nev';
+    file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160313\Jango_MG_PG_20160313_T3_003.nev';
 end
  
 % Build decoder
-neuron2emg_decoder      = build_emg_decoder_from_nev( file4decoder, task, emg_list_4_dec );
+N2E                     = build_emg_decoder_from_nev( file4decoder, task, emg_list_4_dec );
 
 
 
 % ------------------------------------------------------------------------
-% %% If you want to use an existing decoder
-% if ismac
-%     dec_file            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
-% elseif ispc
-% %     dec_file            = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001_binned_Decoder.mat';
-% %    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_binned_Decoder.mat';
-% %    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151125\Jango_20151125_isoWF_003_binned_Decoder.mat';
-%     dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160225\Pre-FES data\Jango_20160225_WF_R10T4_001_bdf_binned_Decoder.mat';
-% end
-% 
-% % If N2E is a file, this will load it 
-% if ~isstruct(dec_file)
-%     N2E                 = LoadDataStruct(dec_file);
-%     
-%     % Find the muscles which EMGs we want to decode in the decoder file,
-%     % and get rid of the muscles we don't care about (i.e. not included in
-%     % emg_list_4_dec)  
-%     if isfield(N2E, 'H')
-%         emg_pos_in_dec  = zeros(1,numel(emg_list_4_dec));
-%         for i = 1:length(emg_pos_in_dec)
-%             % don't look at EMGs with label length longer than the label
-%             % you are looking for because it can give an error (e.g., if
-%             % you are looking for the position of FCR and there is an FCRl
-%             % and an FCR matlab will try to return two values)
-%             indx_2_look = [];
-%             for ii = 1:length(N2E.outnames)
-%                 if length(N2E.outnames{ii}) == length(emg_list_4_dec{i}) 
-%                     indx_2_look = [indx_2_look, ii];
-%                 end
-%             end
-%             % find the index of the EMGs in the decoder
-%             emg_pos_in_dec(1,i) = indx_2_look( find( strncmp(N2E.outnames(indx_2_look),...
-%                                     emg_list_4_dec(i),length(emg_list_4_dec{i})) ));
-%         end
-%         % Get rid of the other muscles in the decoder
-%         N2E.H           = N2E.H(:,emg_pos_in_dec);
-%         N2E.outnames    = emg_list_4_dec;
-%     else
-%         error('Invalid neuron-to-emg decoder');
-%     end
-% end
+%% If you want to use an existing decoder
+if ismac
+    dec_file            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
+elseif ispc
+%     dec_file            = 'Z:\Jango_12a1\Plasticity\Behavior\data_2015_03_20\20150320_Jango_WF_001_binned_Decoder.mat';
+%    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_binned_Decoder.mat';
+%    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151125\Jango_20151125_isoWF_003_binned_Decoder.mat';
+    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160313\Jango_MG_PG_20160313_T3_003.nev';
+end
+
+% If N2E is a file, this will load it 
+if ~isstruct(dec_file)
+    N2E                 = LoadDataStruct(dec_file);
+    
+    % Find the muscles which EMGs we want to decode in the decoder file,
+    % and get rid of the muscles we don't care about (i.e. not included in
+    % emg_list_4_dec)  
+    if isfield(N2E, 'H')
+        emg_pos_in_dec  = zeros(1,numel(emg_list_4_dec));
+        for i = 1:length(emg_pos_in_dec)
+            % don't look at EMGs with label length longer than the label
+            % you are looking for because it can give an error (e.g., if
+            % you are looking for the position of FCR and there is an FCRl
+            % and an FCR matlab will try to return two values)
+            indx_2_look = [];
+            for ii = 1:length(N2E.outnames)
+                if length(N2E.outnames{ii}) == length(emg_list_4_dec{i}) 
+                    indx_2_look = [indx_2_look, ii];
+                end
+            end
+            % find the index of the EMGs in the decoder
+            emg_pos_in_dec(1,i) = indx_2_look( find( strncmp(N2E.outnames(indx_2_look),...
+                                    emg_list_4_dec(i),length(emg_list_4_dec{i})) ));
+        end
+        % Get rid of the other muscles in the decoder
+        N2E.H           = N2E.H(:,emg_pos_in_dec);
+        N2E.outnames    = emg_list_4_dec;
+    else
+        error('Invalid neuron-to-emg decoder');
+    end
+end
 
 
 % ------------------------------------------------------------------------
@@ -122,7 +122,7 @@ if ~params.online
     if ismac
         params.offline_data = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/BinnedData/behavior plasticity/20150320_Jango_WF_001_binned.mat';
     elseif ispc
-        params.offline_data = 'E:\Data-lab1\12A1-Jango\BinnedData\20150223\Jango_20150223_WFHC_002_bin.mat';
+        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160313\Jango_MG_PG_20160313_T3_001_bin.mat';
     end
 end
 
@@ -130,6 +130,11 @@ end
 if params.online && ~params.save_data
     warning('I assume you forgot to set the option save_data = true, since this is an online experiment, right? -- I have set it for you');
     params.save_data    = true;
+end
+
+% and don't save the offline ones
+if ~params.online
+    params.save_data    = false;
 end
 
 
@@ -211,11 +216,11 @@ end
 % The controller maps the EMG into PW or amplitude using a proportional law
 % When doing PW-modulated FES, the stim amplitude is fixed to
 % amplitude_max, and when doing amplitude-modulated FES, to PW_max
-sp.EMG_min              = [.2 .2 .4 .4 .4];
-sp.EMG_max              = [.6 .6 .8 .8 .8];
+sp.EMG_min              = [0 .3 .1 .1 .1];
+sp.EMG_max              = [0 .9 .7 .8 .8];
         
-sp.PW_min               = repmat( 0.05, 1, numel(sp.muscles));
-sp.PW_max               = repmat( 0.4, 1, numel(sp.muscles));
+sp.PW_min               = [0 .05 .05 .05 .05]; % repmat( 0.05, 1, numel(sp.muscles));
+sp.PW_max               = [0 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
 
 sp.amplitude_min        = repmat( 2, 1, numel(sp.muscles));
 sp.amplitude_max        = repmat( 6, 1, numel(sp.muscles));  % this is the amplitude for PW-modulated FES

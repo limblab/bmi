@@ -23,7 +23,7 @@ function neuron2emg_decoder = build_emg_decoder_from_nev( varargin )
 dec_opts.PredEMGs   = 1;
 dec_opts.PolynomialOrder = 0; % no static non-linearity
 % dec_opts.fillen     = 0.5; % filter length (s)
-dec_opts.plotflag   = 1;
+% dec_opts.plotflag   = 1;
 
 bin_opts.NormData   = true;
 
@@ -71,7 +71,7 @@ for i = 1:length(emg_pos_in_bin)
             aux_numchar_emg = [aux_numchar_emg, ...
                                 length(binned_data.emgguide{aux_emg_pos(ii)})];
         end
-        aux_emg_pos = aux_emg_pos( find( aux_numchar_emg == length(emg_list_4_dec{i}) ) );
+        aux_emg_pos = aux_emg_pos( aux_numchar_emg == length(emg_list_4_dec{i}) );
     end
     emg_pos_in_bin(i)   = aux_emg_pos;
 end
@@ -85,3 +85,25 @@ train_data.emgguide     = emg_list_4_dec;
 train_data.emgdatabin   = binned_data.emgdatabin(:,emg_pos_in_bin);
  
 neuron2emg_decoder      = BuildModel( train_data, dec_opts );
+
+
+[R2, VAF]               = mfxval( train_data, dec_opts );
+
+
+% ------------------------------------------------------------------------
+% plot
+figure,
+subplot(121)
+bar(mean(R2,1))
+set(gca,'FontSize',14),set(gca,'TickDir','out')
+set(gca,'Xtick',1:length(emg_list_4_dec))
+set(gca,'XTickLabel',emg_list_4_dec)
+set(gca,'XTickLabelRotation',45)
+ylabel('R^2'),ylim([0 1]), xlim([0 length(emg_list_4_dec)+1])
+subplot(122)
+bar(mean(VAF,1))
+set(gca,'FontSize',14),set(gca,'TickDir','out')
+set(gca,'Xtick',1:length(emg_list_4_dec))
+set(gca,'XTickLabel',emg_list_4_dec)
+set(gca,'XTickLabelRotation',45)
+ylabel('VAF'),ylim([0 1]), xlim([0 length(emg_list_4_dec)+1])
