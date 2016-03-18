@@ -4,9 +4,7 @@ if ~exist('s','var')
     devs = devs.ID;
         
     addCounterOutputChannel(s,devs, 0, 'PulseGeneration');
-%     addAnalogInputChannel(s,devs, 8, 'Voltage');
     disp(['Connect motor to terminal ' s.Channels(1).Terminal])
-%         lh = addlistener(s,'DataAvailable', @plotData);
 end
 
 %%
