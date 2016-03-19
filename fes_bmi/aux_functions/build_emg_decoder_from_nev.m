@@ -11,6 +11,8 @@
 %   (file_path_and_name)    : file path and name in a single string
 %   task                    : task: 'WF', 'WM', 'MG_XX' (XX = [PW, KG, PG])
 %   emg_list4_dec           : list of EMGs that want to be decoded
+%   poly_order              : order of the polynomial in static
+%                               non-linearity
 %
 % Outputs:
 %   neuron2emg_decoder      : decoder
@@ -21,7 +23,6 @@ function neuron2emg_decoder = build_emg_decoder_from_nev( varargin )
 
 % some opts -can be made into parameters
 dec_opts.PredEMGs   = 1;
-dec_opts.PolynomialOrder = 0; % no static non-linearity
 % dec_opts.fillen     = 0.5; % filter length (s)
 % dec_opts.plotflag   = 1;
 
@@ -30,17 +31,22 @@ bin_opts.NormData   = true;
 
 % ------------------------------------------------------------------------
 % read inputs
-if nargin == 3
+if nargin == 4
     file4decoder    = varargin{1};
     task            = varargin{2};
-    emg_list_4_dec   = varargin{3};
-elseif nargin == 4
+    emg_list_4_dec  = varargin{3};
+    poly_order      = varargin{4};
+elseif nargin == 5
     file_path       = varargin{1};
     file_name_prefix = varargin{2};
     task            = varargin{3};
     emg_list_4_dec  = varargin{4};
+    poly_order      = varargin{5};
     file4decoder    = [file_path, file_name_prefix];
 end
+
+% static non-linearity?
+dec_opts.PolynomialOrder = poly_order;
 
 
 % ------------------------------------------------------------------------
@@ -83,7 +89,7 @@ end
 train_data              = binned_data;
 train_data.emgguide     = emg_list_4_dec;
 train_data.emgdatabin   = binned_data.emgdatabin(:,emg_pos_in_bin);
- 
+
 neuron2emg_decoder      = BuildModel( train_data, dec_opts );
 
 

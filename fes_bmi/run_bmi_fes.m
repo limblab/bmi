@@ -143,10 +143,19 @@ try
             % vector and multiply by the decoder 
             pred        = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
             
-            % high-pass filter the predictions --not done, by default
-            if params.hp_rc
-                pred    = pred*(params.hp_rc/(params.hp_rc+params.binsize));
+            % apply the static non-linearity, if there is one
+            if isfield(neuron_decoder,'P')
+                nonlinearity = zeros(1,length(pred));
+                for e = 1:length(pred)
+                    nonlinearity(e) = polyval(neuron_decoder.P(:,e),pred(e));
+                end
+                pred    = nonlinearity;
             end
+            
+%             % high-pass filter the predictions --not done, by default
+%             if params.hp_rc
+%                 pred    = pred*(params.hp_rc/(params.hp_rc+params.binsize));
+%             end
             
             % For some types of decoder, do some more actions
             % ToDo: get rid of the second two options, because they won't
@@ -163,14 +172,14 @@ try
                 data.emgs = [pred; data.emgs(1:end-1,:)];
                 % force predictions:
                 data.curs_pred = rowvec(data.emgs(:))'*emg_decoder.H;
-            % for a velocity decoder
-            else
-                if strcmpi(neuron_decoder.decoder_type,'N2V')
-                    if any( isnan(data.curs_pred)) data.curs_pred = [0 0]; end
-                    data.curs_pred = data.curs_pred + pred(1:2)*params.binsize;
-                else
-                    data.curs_pred = pred;
-                end
+%             % for a velocity decoder
+%             else
+%                 if strcmpi(neuron_decoder.decoder_type,'N2V')
+%                     if any( isnan(data.curs_pred)) data.curs_pred = [0 0]; end
+%                     data.curs_pred = data.curs_pred + pred(1:2)*params.binsize;
+%                 else
+%                     data.curs_pred = pred;
+%                 end
             end
             
             
