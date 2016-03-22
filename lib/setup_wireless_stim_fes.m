@@ -23,29 +23,42 @@ switch bmi_fes_params.mode
     % For PW-modulated FES
     case 'PW_modulation'
 
+        % because of how the zigbee communication is designed, you have to
+        % pass the values for all sixteen channels
+        chs_cmd         = 1:ws.num_channels;
+        
         % set train duration, stim freq and run mode 
         % ToDo: check if TL and Run are necessary if we are then doing cont
-        ws.set_TL( 100, channel_list );
-        ws.set_Freq( bmi_fes_params.freq , channel_list );
+        ws.set_TL( 100, chs_cmd );
+        ws.set_Freq( bmi_fes_params.freq , chs_cmd );
                                 
         % set pulse width to zero
-        ws.set_AnodDur( 0, channel_list );
-        ws.set_CathDur( 0, channel_list );
+        ws.set_AnodDur( 0, chs_cmd );
+        ws.set_CathDur( 0, chs_cmd );
         
         % Now choose between monopolar and bipolar FES 
         switch bmi_fes_params.return
             case 'monopolar'
 
+                % warning because this hasn't been tested yet
+                warning('this has not been tested yet');
+                pause;
+                
                 % reorder the stim amplitude according to the channel_list
                 amp             = amp(indx_ch);
+                % poulate a command for the sixteen channels, including
+                % those we won't be using --this is a requirement for
+                % zigbee communication
+                amp_cmd         = zeros(1,length(chs_cmd));
+                amp_cmd(channel_list)   = amp;
                 
                 % set amplitude -- done in a different command because of
                 % limitations in command length (register write in zigbee)
-                ws.set_AnodAmp( 32768-amp, channel_list );
-                ws.set_CathAmp( 32768+amp, channel_list );
+                ws.set_AnodAmp( 32768-amp_cmd, chs_cmd );
+                ws.set_CathAmp( 32768+amp_cmd, chs_cmd );
                 
                 % set polarity for all channels 
-                ws.set_PL( 1, channel_list )
+                ws.set_PL( 1, chs_cmd )
                 
                 % Configure train delay differently for each channel
                 % -- Stagger by 500 us, to minimize fatigue
@@ -57,24 +70,21 @@ switch bmi_fes_params.mode
 
             case 'bipolar'
 
-                % define arrays with the anodes and cathodes
+                 % define arrays with the anodes and cathodes
                 anode_list      = [ bmi_fes_params.anode_map{1,:} ];
-                cathode_list    = [ bmi_fes_params.cathode_map{1,:} ];                
+                cathode_list    = [ bmi_fes_params.cathode_map{1,:} ];
                 
-                % reorder the anodes and the cathodes
-                [anode_list, indx_an]   = sort(anode_list);
-                [cathode_list, indx_ca] = sort(cathode_list);
-                
-                % reorder the stim amplitudes according to the anodes
-                % -supposedly this is fine
-                amp             = amp(indx_an);
+                % the zigbee command has to include all 16 channels
+                % here we add all the channels (even those we are not
+                % stimulating) and set up their stimulation amplitudes
+                amp_cmd         = zeros(1,length(chs_cmd));
+                amp_cmd(anode_list)     = amp;
+                amp_cmd(cathode_list)   = amp;
                 
                 % set amplitude -- done in a different command because of
                 % limitations in command length (register write in zigbee)
-                ws.set_AnodAmp( 32768-amp, anode_list );
-                ws.set_CathAmp( 32768+amp, anode_list );
-                ws.set_AnodAmp( 32768-amp, cathode_list );
-                ws.set_CathAmp( 32768+amp, cathode_list );
+                ws.set_AnodAmp( 32768-amp_cmd, chs_cmd );
+                ws.set_CathAmp( 32768+amp_cmd, chs_cmd );
                 
                 % Set polarity for the anodes...
                 % read what electodes are set as anodes
@@ -108,4 +118,5 @@ switch bmi_fes_params.mode
 end
 
 % set to run continuous
-ws.set_Run( ws.run_cont, channel_list );
+ws.set_Run( ws.run_cont, anode_list );
+ws.set_Run( ws.run_cont, cathode_list );
