@@ -539,6 +539,9 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
     new_spikes              = zeros(params.n_neurons,1);
     new_ts                  = ts_cell_array(params.neuronIDs(:,1),:);
  
+    % remove stim artefacts!
+    new_ts                  = remove_stim_artifacts( new_ts, params, binsize );
+    
     %firing rate for new spikes
     for i = 1:params.n_neurons
         unit                = params.neuronIDs(i,2);

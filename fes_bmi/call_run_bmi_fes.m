@@ -22,7 +22,7 @@ sp.EMG_to_stim_map      = [{'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDS'}; ...
 stim_mode               = 'bipolar'; % 'bipolar'; 'monopolar'
 
 % Grapevine or wireless stimulator
-params.output           = 'wireless_stim'; % 'catch'; 'stimulator'; 'wireless_stim';
+params.output           = 'catch'; % 'catch'; 'stimulator'; 'wireless_stim';
 
 % file name
 params.save_name        = [monkey, '_' task '_MUblock_'];
