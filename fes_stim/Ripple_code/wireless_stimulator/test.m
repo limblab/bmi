@@ -1,4 +1,7 @@
 %
+% ripple, 2016
+% Brian Crofts
+%
 % test
 %  wireless_stim.m class test function launcher
 %
@@ -20,66 +23,73 @@ function ret = test(serial_string, sequence, dbg_lvl, varargin)
     end
        
     ret = 0;
+        
     ws = wireless_stim(serial_string, dbg_lvl);
+    cleanup_func = onCleanup(@() test_cleanup(ws));
     
-    % try/catch helps avoid left-open serial port handles and leaving
-    % the Atmel wireless modules' firmware in a bad state
-    try
-        % comm_timeout specified in ms, or disable
-        reset = 1;   % reset FPGA stim controller
-        ws.init(reset, ws.comm_timeout_disable);
-        %timeout_ms = ws.get_comm_timeout();
+    % comm_timeout specified in ms, or disable
+    reset = 1;   % reset FPGA stim controller
+    ws.init(reset, ws.comm_timeout_disable);
+    %timeout_ms = ws.get_comm_timeout();
         
-        ws.version();      % print version info, call after init
-        %ws.set_enable(1);  % global enable/disable, also called in init
-        %ws.set_action(0);  % 0 for curcyc, 1 for allcyc, also called in init
-        %action = ws.get_action();        
+    ws.version();      % print version info, call after init
+    %ws.set_enable(1);  % global enable/disable, also called in init
+    %ws.set_action(0);  % 0 for curcyc, 1 for allcyc, also called in init
+    %action = ws.get_action();        
 
-        switch sequence
-          case 0
-            keyboard();
-          case 1
-            ret = train_sequence1(ws, [1:ws.num_channels], varargin);
-          case 2
-            ret = train_sequence2(ws, varargin);
-          case 3
-            ret = train_sequence3(ws, varargin);
-          case 4
-            ret = time_meas(ws, dbg_lvl, varargin);
-          otherwise
-            warning('no sequence selected');
-        end
-
-        
-        if dbg_lvl >= 2 && dbg_lvl <= 3
-            % retrieve & display settings from all channels
-            channel_list = [1:ws.num_channels];
-            commands = ws.get_stim(channel_list);
-            ws.display_command_list(commands, channel_list);
-        end
-        
-    catch ME
-        delete(ws);
-        disp(datestr(datetime(),'HH:MM:ss:FFF'));
-        rethrow(ME);
+    ws.check_battery();
+    
+    switch sequence
+      case 0
+        keyboard();
+      case 1
+        ret = train_sequence1(ws, [1:ws.num_channels], varargin);
+      case 2
+        ret = train_sequence2(ws, varargin);
+      case 3
+        ret = train_sequence3(ws, varargin);
+      case 4
+        ret = time_meas(ws, dbg_lvl, varargin);
+      otherwise
+        warning('no sequence selected');
     end
-
-    delete(ws);
+    ws.check_battery();
+    
+    if dbg_lvl >= 2 && dbg_lvl <= 3
+        % retrieve & display settings from all channels
+        channel_list = [1:ws.num_channels];
+        commands = ws.get_stim(channel_list);
+        ws.display_command_list(commands, channel_list);
+    end
+    % delete(ws) handled by onCleanup func
 end
+
+% helps avoid left-open serial port handles and leaving
+% the Atmel wireless modules' firmware in a bad state
+function test_cleanup(obj)
+    delete(obj);
+    disp(datestr(datetime(),'HH:MM:ss:FFF exiting...'));    
+end
+
 
 % example train sequence, setup specified channels to run continuously
 % for delay seconds with charge balanced parameters
 function ret = train_sequence1(ws, channel_list, varargin)
     [ST, I] = dbstack();
 
-    amp_offset_10k_ohm = 1000;  % ~1mA
-    amp_offset_100_ohm = 10000; %30000;
-    amp = amp_offset_100_ohm;   % select your load board here
+    amp_offset_10k_ohm = 100;   % 100uA, 1V into 10k ohms
+    amp_offset_100_ohm = 10000; % 10mA, 1V into 100 ohms
     
-    if length(varargin) == 1
-        delay_in_minutes = cell2mat(varargin{1});
-    else
+    if ws.get_device_id() == 1          % micro stim
+        amp = amp_offset_10k_ohm;
+    elseif ws.get_device_id() == 0      % macro stim
+        amp = amp_offset_100_ohm;
+    end
+    
+    if isempty(cell2mat(varargin{1}))
         delay_in_minutes = 5;
+    else
+        delay_in_minutes = cell2mat(varargin{1});
     end
 
     % Setup a single element struct array to configure param settings
@@ -99,7 +109,9 @@ function ret = train_sequence1(ws, channel_list, varargin)
     %ws.idle(1);  % for idle power testing
 
     for idx = 1:delay_in_minutes
+        ws.check_battery();
         pause(60);
+
         % check in every 15 minutes
         if mod(idx,15) == 0
             disp(sprintf('%s:%s: continuing sequence', ...
@@ -127,10 +139,15 @@ function ret = train_sequence2(ws, varargin)
 
     disp(sprintf('%s:%s: setup params', ...
                  ST(1).name, datestr(datetime(),'HH:MM:ss:FFF')));
-    amp_offset_10k_ohm = 1000;  % ~1mA
-    amp_offset_100_ohm = 5000;  % ~5mA
-    amp = amp_offset_100_ohm;   % select your load board here
-
+    amp_offset_10k_ohm = 100;   %  100uA, 1V into 10k ohms
+    amp_offset_100_ohm = 5000;  %  5mA, 0.5V into 100 ohms
+    
+    if ws.get_device_id() == 1          % micro stim
+        amp = amp_offset_10k_ohm;
+    elseif ws.get_device_id() == 0      % macro stim
+        amp = amp_offset_100_ohm;
+    end
+    
     % Configure train delay differently for each channel
     stagger = 100;  % us
     td = [stagger:stagger:stagger*channel_list_len];
@@ -145,21 +162,28 @@ function ret = train_sequence2(ws, varargin)
                         'Run', ws.run_once ... % Single train mode
                         );
     ws.set_stim(command, channel_list);  % set the parameters
-    
 
     % Alternative way to set the train delays:
     if 0
         ws.set_TD(td, channel_list);
     end
     
-    if length(varargin) == 1
-        loops = cell2mat(varargin{1});
-    else
+    if isempty(cell2mat(varargin{1}))
         loops = 1;
+    else
+        loops = cell2mat(varargin{1});
     end
 
+    % 150us to 400us in 5us steps
+    pw_min = 200;
+    pw_step_size = 5;
+    pw_num_steps = 50;
+    pw_max = pw_min + pw_step_size*pw_num_steps;
+    
     for loop = 1:loops
-        for pw_offset = 150:5:400  % 150us to 400us in 5us steps
+        ws.check_battery();
+
+        for pw_offset = pw_min:pw_step_size:pw_max
             % varying pw per channel
             pw = pw_offset + [-50:10:(channel_list_len-1)*10-50];
             
@@ -213,18 +237,27 @@ function ret = train_sequence3(ws, varargin)
                         );
     ws.set_stim(command, channel_list);  % set the parameters
     
-    max_10k_ohm_load = 1700;  % ~1.7mA, max for 17v rail
-    max_100_ohm_load = 32000; % ~32mA (very high)
-    max = max_100_ohm_load;  % select your load board here
+    % set limits very high
+    max_10k_ohm_load = 400;  % 400uA, 4V into 10k ohms
+    max_100_ohm_load = 32000; % 32mA, 3.2V into 100 ohms
+    
+    if ws.get_device_id() == 1         % micro stim
+        max = max_10k_ohm_load;
+    elseif ws.get_device_id() == 0     % macro stim
+        max = max_100_ohm_load;
+    end    
+    
     step = round((max-0)/50); % 50 steps
     
-    if length(varargin) == 1
-        loops = cell2mat(varargin{1});
-    else
+    if isempty(cell2mat(varargin{1}))
         loops = 1;
+    else
+        loops = cell2mat(varargin{1});
     end
 
     for loop = 1:loops
+        ws.check_battery();
+
         for amp_offset = 0:step:max
             % varying amplitude per channel, within a step range
             amp = amp_offset + [0:step/channel_list_len:step-(step/channel_list_len)];
@@ -261,10 +294,15 @@ function ret = time_meas(ws, dbg_lvl, varargin)
     
     disp(sprintf('%s:%s: setup params', ...
                  ST(1).name, datestr(datetime(),'HH:MM:ss:FFF')));
-    amp_offset_10k_ohm = 1000;  % ~1mA
-    amp_offset_100_ohm = 5000;  % ~5mA
-    amp = amp_offset_100_ohm;   % select your load board here
+    amp_offset_10k_ohm = 100;   % 100uA, 1V into 10k ohms
+    amp_offset_100_ohm = 5000;  % 5mA, 0.5V into 100 ohms
 
+    if ws.get_device_id() == 1          % micro stim
+        amp = amp_offset_10k_ohm;
+    elseif ws.get_device_id() == 0      % macro stim
+        amp = amp_offset_100_ohm;
+    end    
+    
     % Configure train delay differently for each channel
     stagger = 100;  % us
     td = [stagger:stagger:stagger*channel_list_len];
@@ -281,12 +319,12 @@ function ret = time_meas(ws, dbg_lvl, varargin)
     ws.set_stim(command, channel_list);  % set the parameters
 
     % for testing reduced channel count updates
-    channel_list = 1:8; %ws.num_channels;  % all channels
+    channel_list = 1:ws.num_channels;  % all channels
     channel_list_len = length(channel_list);
-    
-    
-    num_iter = 100;
-    if length(varargin) == 1
+        
+    if isempty(cell2mat(varargin{1}))
+        num_iter = 100;
+    else
         num_iter = cell2mat(varargin{1});
     end
     
@@ -308,6 +346,7 @@ function ret = time_meas(ws, dbg_lvl, varargin)
     
     for idx = 1:num_iter
         ws.set_stim(command, channel_list);
+        %pause(0.025);
     end
     
     ret{1} = ws.time_meas_host;
