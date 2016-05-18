@@ -22,7 +22,7 @@ function bmi_fes_stim_params = bmi_fes_stim_params_defaults(varargin)
 %                           should = 1;    
 %                       second row). 
 %   'cathode_map'       : electrodes that function as cathodes for each
-%                           muscle. (first row), and how the current will
+%                           muscle (first row), and how the current will
 %                           be distributed among them (the sum for each
 %                           muscle should = 1; second row). If blank, the
 %                           stimulation is monopolar    
