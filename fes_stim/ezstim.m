@@ -61,27 +61,28 @@ end
 if strcmp(stim_params.stimulator,'gv')
     stim_string         = stim_params_to_stim_string( stim_params );
 elseif strcmp(stim_params.stimulator,'ws')
-    stim_cmd            = stim_params_to_stim_cmd_ws( stim_params );
-    % channels to stimulate
-    ch_list             = reshape(stim_params.elect_list,1,numel(stim_params.elect_list));
+    
+    [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params );
+%     % channels to stimulate
+%     ch_list             = reshape(stim_params.elect_list,1,numel(stim_params.elect_list));
     % the stim_cmd is brokendown into a seris of commands because of
     % limitations in single command size 
-    for i = 1:length(stim_cmd)
-        ws.set_stim(stim_cmd(i),ch_list);
-    end
-    
-    % check if we are doing monopolar or bipolar stimulation. Set polarity
-    % accordingly
-    % -- if stim_params.elect_list has to rows that means bipolar
-    if size(stim_params.elect_list,1) == 2
-        ws.set_PL( 1, ch_list(1:2:numel(ch_list)-1) );
-        ws.set_PL( 0, ch_list(2:2:numel(ch_list)) );
+    if length(ch_list) == 1
+        for i = 1:length(stim_cmd)
+            ws.set_stim(stim_cmd(i),ch_list{1});
+        end
     else
-        ws.set_PL( 1, ch_list );
+        for i = 1:length(ch_list) 
+            for ii = 1:length(stim_cmd)/2
+                ws.set_stim(stim_cmd(ii+(i-1)*length(stim_cmd)/2),ch_list{i});
+            end
+        end
     end
     
     % set to run once
-    ws.set_Run(ws.run_once,ch_list)
+    for i = 1:length(ch_list)
+        ws.set_Run(ws.run_once,ch_list{i})
+    end
 end
 
 % -------------------------------------------------------------------------
@@ -137,6 +138,7 @@ end
 if strcmp(stim_params.stimulator,'gv')
     xippmex('close');
 elseif strcmp(stim_params.stimulator,'ws')
+    pause(1);
     delete(ws);
 end
 
