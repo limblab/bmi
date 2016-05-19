@@ -1,9 +1,3 @@
-%
-% ripple, 2016
-% Brian Crofts
-%
-% wireless_stim.m wireless stim class
-%
 classdef wireless_stim < handle
     properties (Constant, Access = public)
         num_channels = 16;
@@ -35,6 +29,10 @@ classdef wireless_stim < handle
                 obj.serial.InputBufferSize = 2000;
                 obj.serial.OutputBufferSize = 2000;
                 obj.serial.Timeout = 0.1; % in seconds
+
+                %obj.serial.BytesAvailableFcnCount = 40;
+                %obj.serial.BytesAvailableFcnMode = 'byte';
+                %obj.serial.BytesAvailableFcn = @rcv_callback;
 
                 try
                     if obj.dbg_lvl >= 2
@@ -181,12 +179,6 @@ classdef wireless_stim < handle
                 obj.reg_write(obj.reg_g_global_reset.addr, 1);
             end
 
-            fpga_version = obj.reg_read(obj.reg_g_version.addr);
-            obj.fpga_major = bitand(bitshift(fpga_version, -4), hex2dec('000f'));
-            obj.fpga_minor = bitand(fpga_version, hex2dec('000f'));
-            obj.device_id = bitand(bitshift(fpga_version, -12), hex2dec('000f'));
-            obj.serial_num = bitand(bitshift(fpga_version, -8), hex2dec('000f'));
-
             obj.set_comm_timeout(comm_timeout_ms);
 
             obj.idle(0);  % exit idle power state
@@ -210,6 +202,14 @@ classdef wireless_stim < handle
                     obj.set_TrimAmp(obj.trim_cal(ch), ch);
                 end
             catch ME
+                % Initialize such that the railed outputs are balanced.
+                % otherwise the scaling reference will be adversely affected by
+                % the collective current from + or - 18V through 7.68k resistors
+                % in parallel
+                %obj.trim_cal([1:2:obj.num_channels]) = 32768-5000;
+                %obj.trim_cal([2:2:obj.num_channels]) = 32768+5000;
+                obj.trim_cal([1:obj.num_channels]) = 32768-5000;
+
                 warning('ME id=\"%s\"\nME msg=\"%s\"\n', ME.identifier, ME.message);
 
                 prompt = 'Trim calibration data not found. Would you like to run trim_calibrate? y/n [y]';
@@ -226,20 +226,18 @@ classdef wireless_stim < handle
         % display version information
         function version(obj)
             [ST, I] = dbstack();
-            dev_str = '';
-            if obj.device_id == 1
-                dev_str = 'R02612 Wireless Micro Stim';
-            elseif obj.device_id == 0
-                dev_str = 'R01763 Wireless Macro Stim';
-            end            
-            
-            disp(sprintf('***************\nripple, 2016\n***************'));
-            disp(sprintf('Device ID %d, %s', obj.device_id, dev_str));
-            disp(sprintf('Serial Number %d', obj.serial_num));
             disp(sprintf('%s version: %.2f', ST(1).file, obj.VERSION));
+
             disp(sprintf('Atmel ZigBit local version: %.2f', obj.atmel_local_version));
             disp(sprintf('Atmel ZigBit remote version: %.2f', obj.atmel_remote_version));
-            disp(sprintf('FPGA controller version: %d.%d', obj.fpga_major, obj.fpga_minor));
+
+            fpga_version = obj.reg_read(obj.reg_g_version.addr);
+            fpga_major = bitand(bitshift(fpga_version, -4), hex2dec('000f'));
+            fpga_minor = bitand(fpga_version, hex2dec('000f'));
+            device_id = bitand(bitshift(fpga_version, -12), hex2dec('000f'));
+            serial_num = bitand(bitshift(fpga_version, -8), hex2dec('000f'));
+            disp(sprintf('FPGA controller version: %d.%d', fpga_major, fpga_minor));
+            disp(sprintf('Device ID %d, Serial Number %d', device_id, serial_num));
         end
 
 
@@ -311,7 +309,6 @@ classdef wireless_stim < handle
             if nargin < 4
                 commit = true;
             end
-            cathode_uamp = obj.check_uamp_limit(cathode_uamp, channel_list);
             obj.set_param(cathode_uamp, channel_list, obj.reg_cathode_uamp, commit);
         end
         function cathode_uamp = get_CathAmp(obj, channel_list)
@@ -321,7 +318,6 @@ classdef wireless_stim < handle
             if nargin < 4
                 commit = true;
             end
-            anode_uamp = obj.check_uamp_limit(anode_uamp, channel_list);
             obj.set_param(anode_uamp, channel_list, obj.reg_anode_uamp, commit);
         end
         function anode_uamp = get_AnodAmp(obj, channel_list)
@@ -342,9 +338,14 @@ classdef wireless_stim < handle
             if nargin < 4
                 commit = true;
             end
-            temp = ~polarity;
-            polarity = ~temp;    % convert to either 1s or 0s
-            anode_first_en = ~polarity;  % invert
+            switch polarity
+              case 0
+                anode_first_en = 1;
+              case 1
+                anode_first_en = 0;
+              otherwise
+                error('invalid polarity %d. Polarity must be 0 or 1', polarity)
+            end
             obj.set_param(anode_first_en, channel_list, obj.reg_anode_first_en, commit);
         end
         function polarity = get_PL(obj, channel_list)
@@ -437,17 +438,10 @@ classdef wireless_stim < handle
             % and we want to avoid sampling a pulse
             obj.set_CathAmp(32768, channel_list, false);
             obj.set_AnodAmp(32768, channel_list, false);
-            
-            % Initialize such that the railed outputs are balanced.
-            % Otherwise the scaling reference will be adversely affected by
-            % the collective current from + or - 18V through 7.68k resistors
-            % in parallel
-            obj.set_TrimAmp(32768-5000, [1:obj.num_channels], false);
 
-            % load existing trim cal data
+            % initialize trim amp from any existing cal data
             trim_cal = obj.trim_cal;
-            % initialize channels that will be calibrated
-            trim_cal(channel_list) = 32768-5000;
+            obj.set_TrimAmp(trim_cal, [1:obj.num_channels], false);
 
             channel_list_length = length(channel_list);
 
@@ -455,6 +449,7 @@ classdef wireless_stim < handle
             obj.set_Run(obj.run_once, [1:obj.num_channels], false);
             obj.set_Run(obj.run_once_go, [1:obj.num_channels], true);  % commit settings
 
+            %keyboard();
             failsafe_thresh = 250;
 
             % keep a high threshold on the first pass to avoid swinging to the
@@ -466,7 +461,6 @@ classdef wireless_stim < handle
             %p_adj = [100, 9, 3];
             p_adj = [100, 25, 3];
 
-            fail_ch = [];
 
             for ch_idx = 1:channel_list_length
                 for p_idx = 1:num_passes
@@ -499,8 +493,6 @@ classdef wireless_stim < handle
 
                     if ~isempty(find(cal_failsafe == failsafe_thresh))
                         warning('pass %d trim cal did not converge for channel %d', p_idx, ch);
-                        fail_ch = [fail_ch ch];
-                        
                         % revert to original values
                         trim_cal(ch) = obj.trim_cal(ch);
                         obj.set_TrimAmp(trim_cal(ch), ch, true);
@@ -521,9 +513,6 @@ classdef wireless_stim < handle
             obj.trim_cal = trim_cal;
             save (obj.trim_cal_fname, 'channel_list', 'trim_cal');
 
-            if ~isempty(fail_ch)
-                warning('trim cal did not converge for channel(s): %s', sprintf(' %d', fail_ch));
-            end
             if obj.dbg_lvl >= 2
                 disp(['trim_cal =', sprintf(' %d:%d', [channel_list; trim_cal])]);
             end
@@ -736,38 +725,20 @@ classdef wireless_stim < handle
             if enter
                 % turn off the supplies in reverse order
                 obj.set_pwr(0);
-
                 % turn off all of the analog switches
                 % testbus, exhaust, electrode
                 obj.set_switch(0, 0, 0, [1:obj.num_channels]);
-
                 obj.idle_state = true;
             else
                 % turn on the supplies, 18V first then 5V
                 obj.set_pwr(1);
-
                 % turn on all of the analog switches
                 % testbus, exhaust, electrode
                 obj.set_switch(0, 0, 1, [1:obj.num_channels]);
-
                 obj.idle_state = false;
             end
         end
 
-        function low = check_battery(obj)
-            val = obj.reg_read(obj.reg_g_pwr.addr);
-            
-            low = bitand(val, 8) ~= 0;
-            if low
-                warning('%s: battery low condition detected!', ...
-                        datestr(datetime(),'dd:HH:MM:ss:FFF'));
-            end
-        end
-        
-        function device_id = get_device_id(obj)
-            device_id = obj.device_id;
-        end
-        
         % debugging functions
 
         % use in case error condition prevented clearning
@@ -780,7 +751,7 @@ classdef wireless_stim < handle
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     properties (Constant, Access = private)
-        VERSION = 1.02;
+        VERSION = 1.01;
 
         identify_board_req = 0;
         identify_board_remote_req = 0 + 128;
@@ -850,9 +821,9 @@ classdef wireless_stim < handle
         reg_g_version =         struct('addr',[64, 5]);  % read only
         % 8 independent bits: TESTSW8-1
         reg_g_testbus_sel =     struct('addr',[64, 6], 'def',0,     'min',0, 'max',255);
-        % 1 input and 2 outputs: COM3 in, COM2 out, COM1 out
-        reg_g_com =             struct('addr',[64, 7], 'def',0,     'min',0, 'max',3);
-        % 4 bits: { battery_low (input), v18_monitor (input), pwr_v5_en, pwr_v18_en }
+        % 3 outputs: COM3, COM2, COM1
+        reg_g_debug_com_out =   struct('addr',[64, 7], 'def',0,     'min',0, 'max',7);
+        % 3 bits: { v18_monitor (in only), pwr_v5_en, pwr_v18_en }
         reg_g_pwr =             struct('addr',[64, 8], 'def',0,     'min',0, 'max',3);
 
         broadcast_addr_bit = [32, 0];  % 0x2000
@@ -888,11 +859,6 @@ classdef wireless_stim < handle
         dbg_lvl
         atmel_local_version
         atmel_remote_version
-        fpga_major
-        fpga_minor
-        device_id
-        serial_num
-        
         batch_q
         idle_state
 
@@ -946,7 +912,8 @@ classdef wireless_stim < handle
 
             payload = [addr, val_a(2:4)];
             if batch
-                if (length(obj.batch_q) + length(payload)) > obj.batch_q_max_len
+                threshold = 116;
+                if length(obj.batch_q) > obj.batch_q_max_len
                     error('register write queue full at %d bytes, max %d bytes', ...
                           length(obj.batch_q), obj.batch_q_max_len);
                 end
@@ -993,7 +960,7 @@ classdef wireless_stim < handle
             % that this is a group write
             payload = [obj.reg_group_flag, addr_start, addr_end, val_a_list];
             if batch
-                if (length(obj.batch_q) + length(payload)) > obj.batch_q_max_len
+                if length(obj.batch_q) > obj.batch_q_max_len
                     error('register write queue full at %d bytes, max %d bytes', ...
                           length(obj.batch_q), obj.batch_q_max_len);
                 end
@@ -1439,30 +1406,10 @@ classdef wireless_stim < handle
                 status = 0;
             end
         end
-        
-        function new_uamp = check_uamp_limit(obj, uamp, channel_list)
-            if obj.device_id == 1  % micro stim, with 100nF blocking caps
-                mid_scale = 32768;
-                max_ua = 500;      % limit max to 500uA
-                rel_uamp = abs(uamp-mid_scale);
-                fail_indices = find(rel_uamp > max_ua);
-                
-                if ~isempty(fail_indices)
-                    warning('max amplitude exceeded on ch(s) %s with %s. Limiting to %duA',...
-                            sprintf(' %d', channel_list(fail_indices)),...
-                            sprintf(' %d', rel_uamp(fail_indices)), max_ua);
-                
-                    for fail = 1:length(fail_indices)
-                        if (uamp(fail) > (mid_scale + max_ua))
-                            uamp(fail) = mid_scale + max_ua;
-                        end
-                        if (uamp(fail) < (mid_scale - max_ua))
-                            uamp(fail) = mid_scale - max_ua;
-                        end
-                    end
-                end
-            end
-            new_uamp = uamp;
-        end
     end  % methods (Access = private)
 end % classdef wireless_stim
+
+
+function rcv_callback(obj, event)
+    disp(['rcv_callback bytes avail: ', num2str(obj.BytesAvailable)]);
+end
