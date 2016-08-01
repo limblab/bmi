@@ -89,11 +89,12 @@ end
 % stimulate
 if strcmp(stim_params.stimulator,'gv')
     xippmex('stim',stim_string);
-    drawnow;
 elseif strcmp(stim_params.stimulator,'ws')
 	%ws.set_stim(stim_cmd, stim_params.elect_list);
     ws.set_Run(ws.run_once_go,stim_params.elect_list)
 end
+disp('stimulating!')
+drawnow;
 
 
 % -------------------------------------------------------------------------
