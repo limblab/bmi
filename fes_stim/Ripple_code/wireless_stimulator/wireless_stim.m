@@ -1,3 +1,9 @@
+%
+% ripple, 2016
+% Brian Crofts
+%
+% wireless_stim.m wireless stim class
+%
 classdef wireless_stim < handle
     properties (Constant, Access = public)
         num_channels = 16;
@@ -18,45 +24,86 @@ classdef wireless_stim < handle
         % Contstructor
         %
         % serial_port_str - serial port name, e.g. 'COM4' or '/dev/ttyUSB0'"
-        function obj = wireless_stim(serial_port_str, dbg_lvl)
-            if  nargin > 0
-                obj.dbg_lvl = dbg_lvl;
-                if obj.dbg_lvl >= 2
-                    disp('wireless_stim:constructor');
-                end
-                obj.serial = serial(serial_port_str);
-                set(obj.serial, 'BaudRate', 115200);
-                obj.serial.InputBufferSize = 2000;
-                obj.serial.OutputBufferSize = 2000;
-                obj.serial.Timeout = 0.1; % in seconds
-
-                %obj.serial.BytesAvailableFcnCount = 40;
-                %obj.serial.BytesAvailableFcnMode = 'byte';
-                %obj.serial.BytesAvailableFcn = @rcv_callback;
-
-                try
-                    if obj.dbg_lvl >= 2
-                        disp([' opening serial port: ', obj.serial.Port]);
-                    end
-                    fopen(obj.serial);
-                catch ME
-                    warning('Failed to open serial port.\nME id=\"%s\"\nME msg=\"%s\"\nTrying again after 100ms.\n', ...
-                            ME.identifier, ME.message);
-                    pause(0.1);
-                    fopen(obj.serial);
-                end
-
-                obj.trim_cal = obj.reg_trim_uamp.def.*ones(1, obj.num_channels);
-                obj.idle_state = true;
-                obj.time_meas_host = [];
-                obj.time_meas_usb = [];
-                obj.message_prev_received = 1;
-                obj.message_prev_id = 0;
-                obj.message_prev_var_rcv_bytes = 0;
-                obj.time_stop = 0;
-                obj.time_start = 0;
-                obj.lat_meas_avail = 0;
+        % params struct:
+        %  serial_string - "/dev/ttyUSB0" e.g. on linux or "COM4" on Windows
+        %  dbg_lvl
+        %   1 = no trace, use for returning time meas
+        %   2 = function level trace
+        %   3 = register level trace
+        %   4 = message (wireless packet) level trace
+        %  comm_timeout_ms - -1 to disable, 0 to 65534 ms
+        %  blocking - true for synchronous message passing, false for lower
+        %            latency async message passing
+        %  zb_ch_page - 0,2,5,16,17,18,19 are valid values:
+        function obj = wireless_stim(params)
+            if nargin < 1
+                error('wireless_stim constructor: no parameter struct');
             end
+            
+            if isfield(params, 'dbg_lvl')
+                obj.dbg_lvl = params.dbg_lvl;
+            else
+                warning('wireless_stim constructor: dbg_lvl not specified, default to 0');
+                obj.dbg_lvl = 0;
+            end
+            if obj.dbg_lvl >= 2
+                disp('wireless_stim:constructor');
+            end
+            
+            if isfield(params, 'comm_timeout_ms')
+                obj.comm_timeout_ms = params.comm_timeout_ms;
+            else
+                warning('wireless_stim constructor: comm_timeout_ms specified, default to 10s');
+                obj.comm_timeout_ms = 10000;
+            end
+            
+            if isfield(params, 'blocking')
+                obj.blocking = params.blocking;
+            else
+                warning('wireless_stim constructor: blocking not specified, default to true');
+                obj.blocking = true;
+            end
+            
+            if isfield(params, 'zb_ch_page')
+                obj.zb_ch_page = params.zb_ch_page;
+            else
+                warning('wireless_stim constructor: zb_ch_page not specified, default to 2');
+                obj.zb_ch_page = 2;
+            end
+            
+            if isfield(params, 'serial_string')
+                obj.serial = serial(params.serial_string);
+            else
+                error('wireles_stim constructor: no serial string');
+            end
+            set(obj.serial, 'BaudRate', 115200);
+            obj.serial.InputBufferSize = 2000;
+            obj.serial.OutputBufferSize = 2000;
+            obj.serial.Timeout = 0.1; % in seconds
+
+            try
+                if obj.dbg_lvl >= 2
+                    disp([' opening serial port: ', obj.serial.Port]);
+                end
+                fopen(obj.serial);
+            catch ME
+                warning('Failed to open serial port.\nME id=\"%s\"\nME msg=\"%s\"\nTrying again after 100ms.\n', ...
+                        ME.identifier, ME.message);
+                pause(0.1);
+                fopen(obj.serial);
+            end
+
+            obj.trim_cal = obj.reg_trim_uamp.def.*ones(1, obj.num_channels);
+            obj.idle_state = true;
+            obj.time_meas_host = [];
+            obj.time_meas_usb = [];
+            obj.message_prev_received = 1;
+            obj.message_prev_id = 0;
+            obj.message_prev_var_rcv_bytes = 0;
+            obj.time_stop = 0;
+            obj.time_start = 0;
+            obj.lat_meas_avail = 0;
+            obj.errs = [];
         end
 
         % Destructor
@@ -65,30 +112,33 @@ classdef wireless_stim < handle
                 disp('wireless_stim:delete');
             end
             obj.lat_meas_avail = 0;
+            obj.blocking = true;
 
             % if we're deleting due to a serial port failure the disconnect
             % request will fail, so catch and close anyway
-            try
+%           try
                 obj.idle(1);
                 % global stim disable
                 obj.set_enable(0);
 
-                obj.send_message(obj.peer_disconnect_req, [0]);
-                rsp = obj.rcv_message(obj.peer_disconnect_req);
+                [rsp, err] = obj.send_message(obj.peer_disconnect_req, [0], true);
+                if err
+                    disp(['wireless_stim destructor: peer_disconnect_req failed']);
+                end
 
-                if obj.dbg_lvl >= 3
+                if obj.dbg_lvl >= 3 && length(rsp) > 0
                     disp([' peer_disconnect_req rsp:', sprintf(' %02x', rsp)]);
                 end
-            catch ME
-                warning('ME id=\"%s\"\nME msg=\"%s\"\n', ME.identifier, ME.message);
-                if isvalid(obj.serial)
-                    warning('closing serial port: %s', obj.serial.Port);
-                    fclose(obj.serial);
-                else
-                    warning('invalid serial port %s, could not close', obj.serial.Port);
-                end
-                return
-            end
+%            catch ME
+%                warning('ME id=\"%s\"\nME msg=\"%s\"\n', ME.identifier, ME.message);
+%                if isvalid(obj.serial)
+%                    warning('closing serial port: %s', obj.serial.Port);
+%                    fclose(obj.serial);
+%                else
+%                    warning('invalid serial port %s, could not close', obj.serial.Port);
+%                end
+%                return
+%            end
             if obj.dbg_lvl >= 2
                 disp([' closing serial port: ', obj.serial.Port]);
             end
@@ -101,11 +151,7 @@ classdef wireless_stim < handle
 
 
         % Initialize a wireless_stim object
-        %
-        % reset - toggle the controller's global reset which resets all
-        %         register values
-        % comm_timeout_ms - communication timeout in ms. -1 disables
-        function init(obj, reset, comm_timeout_ms)
+        function init(obj)
             if obj.dbg_lvl >= 2
                 disp('wireless_stim:init');
             end
@@ -113,9 +159,13 @@ classdef wireless_stim < handle
                 tic;  % for time measurements
             end
 
+            blocking = obj.blocking;
+            obj.blocking = true;  % sync calls in init
 
-            obj.send_message(obj.identify_board_req, [0]);
-            rsp = obj.rcv_message(obj.identify_board_req);
+            [rsp, err] = obj.send_message(obj.identify_board_req, [0], true);
+            if err
+                error('identify_board_req failed');
+            end
 
             fields = obj.parse_identify_message(rsp);
             obj.atmel_local_version = fields.ver;
@@ -130,21 +180,26 @@ classdef wireless_stim < handle
                       sprintf(', features 0x%08x', fields.feat)]);
             end
 
-            obj.send_message(obj.peer_disconnect_req, [0]);
-            rsp = obj.rcv_message(obj.peer_disconnect_req);
+            [rsp, err] = obj.send_message(obj.peer_disconnect_req, [0], true);
+            if err
+                error('peer_disconnect_req failed');
+            end
 
             if obj.dbg_lvl >= 3
                 disp([' peer_disconnect_req rsp:', sprintf(' %02x', rsp)]);
             end
-            obj.send_message(obj.perf_start_req, [1]);
-            rsp = obj.rcv_message(obj.perf_start_req);
-
+            [rsp, err] = obj.send_message(obj.perf_start_req, [1], true);
+            if err
+                error('perf_start_req failed');
+            end
             if obj.dbg_lvl >= 3
                 disp([' perf_start_req rsp:', sprintf(' %02x', rsp)]);
             end
 
-            obj.send_message(obj.identify_board_remote_req, [0]);
-            rsp = obj.rcv_message(obj.identify_board_remote_req);
+            [rsp, err] = obj.send_message(obj.identify_board_remote_req, [0], true);
+            if err
+                error('identify_board_remote_req failed');
+            end
 
             fields = obj.parse_identify_message(rsp);
             obj.atmel_remote_version = fields.ver;
@@ -164,22 +219,40 @@ classdef wireless_stim < handle
             end
             % set to channel 2 running at 1000kb/s
             obj.perf_set_param(false, 0, 2); % channel, local only!
-            obj.perf_set_param(false, 1, 17); % channel_page, local only!
+            
+            % Channel Pages:
+            %  0: 20kbps ch0 868.3MHz, 40kbps ch1-10 902-928MHz, BPSK
+            %  2: 100kbps ch0 868.3MHz, 250kbps ch1-10 902-928MHz, O-QPSK
+            %  5: 250kbps 779-787MHz O-QPSK
+            %  16: 200kbps ch0 868.3MHz, 500kbps ch1-10 902-928MHz, O-QPSK
+            %  17: 400kbps ch0 868.3MHz, 1Mbps ch1-10 902-928MHz, O-QPSK
+            %  18: 500kbps 779-787MHz O-QPSK
+            %  19: 1Mbps 779-787MHz O-QPSK
+            if ~ismember(obj.zb_ch_page, [0,2,5,16,17,18,19])
+                warning('invalid zigbee channel page specified %d, defaulting to 2', obj.zb_ch_page);
+                obj.zb_ch_page = 2;
+            end
+            obj.perf_set_param(false, 1, obj.zb_ch_page); % channel_page, local only!
             if obj.dbg_lvl >= 2
                 obj.perf_display_params(false);
                 obj.perf_display_params(true);
             end
 
             if obj.atmel_local_version > 3.3
-                obj.lat_meas_avail = 1;
+                %obj.lat_meas_avail = 1;
+                obj.lat_meas_avail = 0;
             end
 
-            if reset
-                warning('resetting stim, all registers will be loaded with defaults');
-                obj.reg_write(obj.reg_g_global_reset.addr, 1);
-            end
+            disp(['resetting stim, all registers will be loaded with defaults']);
+            obj.reg_write(obj.reg_g_global_reset.addr, 1);
 
-            obj.set_comm_timeout(comm_timeout_ms);
+            fpga_version = obj.reg_read(obj.reg_g_version.addr);
+            obj.fpga_major = bitand(bitshift(fpga_version, -4), hex2dec('000f'));
+            obj.fpga_minor = bitand(fpga_version, hex2dec('000f'));
+            obj.device_id = bitand(bitshift(fpga_version, -12), hex2dec('000f'));
+            obj.serial_num = bitand(bitshift(fpga_version, -8), hex2dec('000f'));
+
+            obj.set_comm_timeout(obj.comm_timeout_ms);
 
             obj.idle(0);  % exit idle power state
 
@@ -202,14 +275,6 @@ classdef wireless_stim < handle
                     obj.set_TrimAmp(obj.trim_cal(ch), ch);
                 end
             catch ME
-                % Initialize such that the railed outputs are balanced.
-                % otherwise the scaling reference will be adversely affected by
-                % the collective current from + or - 18V through 7.68k resistors
-                % in parallel
-                %obj.trim_cal([1:2:obj.num_channels]) = 32768-5000;
-                %obj.trim_cal([2:2:obj.num_channels]) = 32768+5000;
-                obj.trim_cal([1:obj.num_channels]) = 32768-5000;
-
                 warning('ME id=\"%s\"\nME msg=\"%s\"\n', ME.identifier, ME.message);
 
                 prompt = 'Trim calibration data not found. Would you like to run trim_calibrate? y/n [y]';
@@ -221,23 +286,27 @@ classdef wireless_stim < handle
                     obj.trim_calibrate([1:obj.num_channels]);
                 end
             end
+            
+            obj.blocking = blocking;
         end
 
         % display version information
         function version(obj)
             [ST, I] = dbstack();
+            dev_str = '';
+            if obj.device_id == 1
+                dev_str = 'R02612 Wireless Micro Stim';
+            elseif obj.device_id == 0
+                dev_str = 'R01763 Wireless Macro Stim';
+            end            
+            
+            disp(sprintf('***************\nripple, 2016\n***************'));
+            disp(sprintf('Device ID %d, %s', obj.device_id, dev_str));
+            disp(sprintf('Serial Number %d', obj.serial_num));
             disp(sprintf('%s version: %.2f', ST(1).file, obj.VERSION));
-
             disp(sprintf('Atmel ZigBit local version: %.2f', obj.atmel_local_version));
             disp(sprintf('Atmel ZigBit remote version: %.2f', obj.atmel_remote_version));
-
-            fpga_version = obj.reg_read(obj.reg_g_version.addr);
-            fpga_major = bitand(bitshift(fpga_version, -4), hex2dec('000f'));
-            fpga_minor = bitand(fpga_version, hex2dec('000f'));
-            device_id = bitand(bitshift(fpga_version, -12), hex2dec('000f'));
-            serial_num = bitand(bitshift(fpga_version, -8), hex2dec('000f'));
-            disp(sprintf('FPGA controller version: %d.%d', fpga_major, fpga_minor));
-            disp(sprintf('Device ID %d, Serial Number %d', device_id, serial_num));
+            disp(sprintf('FPGA controller version: %d.%d', obj.fpga_major, obj.fpga_minor));
         end
 
 
@@ -309,6 +378,7 @@ classdef wireless_stim < handle
             if nargin < 4
                 commit = true;
             end
+            cathode_uamp = obj.check_uamp_limit(cathode_uamp, channel_list);
             obj.set_param(cathode_uamp, channel_list, obj.reg_cathode_uamp, commit);
         end
         function cathode_uamp = get_CathAmp(obj, channel_list)
@@ -318,6 +388,7 @@ classdef wireless_stim < handle
             if nargin < 4
                 commit = true;
             end
+            anode_uamp = obj.check_uamp_limit(anode_uamp, channel_list);
             obj.set_param(anode_uamp, channel_list, obj.reg_anode_uamp, commit);
         end
         function anode_uamp = get_AnodAmp(obj, channel_list)
@@ -338,14 +409,9 @@ classdef wireless_stim < handle
             if nargin < 4
                 commit = true;
             end
-            switch polarity
-              case 0
-                anode_first_en = 1;
-              case 1
-                anode_first_en = 0;
-              otherwise
-                error('invalid polarity %d. Polarity must be 0 or 1', polarity)
-            end
+            temp = ~polarity;
+            polarity = ~temp;    % convert to either 1s or 0s
+            anode_first_en = ~polarity;  % invert
             obj.set_param(anode_first_en, channel_list, obj.reg_anode_first_en, commit);
         end
         function polarity = get_PL(obj, channel_list)
@@ -427,6 +493,8 @@ classdef wireless_stim < handle
 
         function trim_cal = trim_calibrate(obj, channel_list)
             failure = 0;
+            blocking = obj.blocking;  % sync calls in trim cal
+            obj.blocking = true;
 
             % disconnect the output electrode to avoid interactions with the
             % output cap and load
@@ -438,10 +506,17 @@ classdef wireless_stim < handle
             % and we want to avoid sampling a pulse
             obj.set_CathAmp(32768, channel_list, false);
             obj.set_AnodAmp(32768, channel_list, false);
+            
+            % Initialize such that the railed outputs are balanced.
+            % Otherwise the scaling reference will be adversely affected by
+            % the collective current from + or - 18V through 7.68k resistors
+            % in parallel
+            obj.set_TrimAmp(32768-5000, [1:obj.num_channels], false);
 
-            % initialize trim amp from any existing cal data
+            % load existing trim cal data
             trim_cal = obj.trim_cal;
-            obj.set_TrimAmp(trim_cal, [1:obj.num_channels], false);
+            % initialize channels that will be calibrated
+            trim_cal(channel_list) = 32768-5000;
 
             channel_list_length = length(channel_list);
 
@@ -449,7 +524,6 @@ classdef wireless_stim < handle
             obj.set_Run(obj.run_once, [1:obj.num_channels], false);
             obj.set_Run(obj.run_once_go, [1:obj.num_channels], true);  % commit settings
 
-            %keyboard();
             failsafe_thresh = 250;
 
             % keep a high threshold on the first pass to avoid swinging to the
@@ -461,6 +535,7 @@ classdef wireless_stim < handle
             %p_adj = [100, 9, 3];
             p_adj = [100, 25, 3];
 
+            fail_ch = [];
 
             for ch_idx = 1:channel_list_length
                 for p_idx = 1:num_passes
@@ -493,6 +568,8 @@ classdef wireless_stim < handle
 
                     if ~isempty(find(cal_failsafe == failsafe_thresh))
                         warning('pass %d trim cal did not converge for channel %d', p_idx, ch);
+                        fail_ch = [fail_ch ch];
+                        
                         % revert to original values
                         trim_cal(ch) = obj.trim_cal(ch);
                         obj.set_TrimAmp(trim_cal(ch), ch, true);
@@ -513,9 +590,14 @@ classdef wireless_stim < handle
             obj.trim_cal = trim_cal;
             save (obj.trim_cal_fname, 'channel_list', 'trim_cal');
 
+            if ~isempty(fail_ch)
+                warning('trim cal did not converge for channel(s): %s', sprintf(' %d', fail_ch));
+            end
             if obj.dbg_lvl >= 2
                 disp(['trim_cal =', sprintf(' %d:%d', [channel_list; trim_cal])]);
             end
+            
+            obj.blocking = blocking;
         end
 
         % get ADC config register value and conversion data
@@ -679,8 +761,10 @@ classdef wireless_stim < handle
         %
         % timeout_ms - timeout. -1 indicates timeout is disabled
         %              Default is 10,000ms
+        %              Max is 65534ms
         function set_comm_timeout(obj, timeout_ms)
             if timeout_ms == -1
+                warning('comm timeout disabled -- stim may remain enabled on comm failure!');
                 obj.reg_write(obj.reg_g_comm_timeout_ms.addr, obj.reg_g_comm_timeout_ms.max);
                 return
             end
@@ -725,25 +809,51 @@ classdef wireless_stim < handle
             if enter
                 % turn off the supplies in reverse order
                 obj.set_pwr(0);
+
                 % turn off all of the analog switches
                 % testbus, exhaust, electrode
                 obj.set_switch(0, 0, 0, [1:obj.num_channels]);
+
                 obj.idle_state = true;
             else
                 % turn on the supplies, 18V first then 5V
                 obj.set_pwr(1);
+
                 % turn on all of the analog switches
                 % testbus, exhaust, electrode
                 obj.set_switch(0, 0, 1, [1:obj.num_channels]);
+
                 obj.idle_state = false;
             end
         end
 
+        function low = check_battery(obj)
+            val = obj.reg_read(obj.reg_g_pwr.addr);
+            
+            low = bitand(val, 8) ~= 0;
+            if low
+                warning('%s: battery low condition detected!', ...
+                        datestr(datetime(),'dd:HH:MM:ss:FFF'));
+            end
+        end
+        
+        function device_id = get_device_id(obj)
+            device_id = obj.device_id;
+        end
+        
+        function errs = get_errs(obj)
+            errs = obj.errs;
+        end
+        
         % debugging functions
 
         % use in case error condition prevented clearning
         function batch_q_clear(obj)
             obj.batch_q = [];
+        end
+        
+        function dbg_lvl = get_dbg_lvl(obj)
+            dbg_lvl = obj.dbg_lvl;
         end
 
     end  % methods (Access = public)
@@ -751,7 +861,7 @@ classdef wireless_stim < handle
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     properties (Constant, Access = private)
-        VERSION = 1.01;
+        VERSION = 1.03;
 
         identify_board_req = 0;
         identify_board_remote_req = 0 + 128;
@@ -821,9 +931,9 @@ classdef wireless_stim < handle
         reg_g_version =         struct('addr',[64, 5]);  % read only
         % 8 independent bits: TESTSW8-1
         reg_g_testbus_sel =     struct('addr',[64, 6], 'def',0,     'min',0, 'max',255);
-        % 3 outputs: COM3, COM2, COM1
-        reg_g_debug_com_out =   struct('addr',[64, 7], 'def',0,     'min',0, 'max',7);
-        % 3 bits: { v18_monitor (in only), pwr_v5_en, pwr_v18_en }
+        % 1 input and 2 outputs: COM3 in, COM2 out, COM1 out
+        reg_g_com =             struct('addr',[64, 7], 'def',0,     'min',0, 'max',3);
+        % 4 bits: { battery_low (input), v18_monitor (input), pwr_v5_en, pwr_v18_en }
         reg_g_pwr =             struct('addr',[64, 8], 'def',0,     'min',0, 'max',3);
 
         broadcast_addr_bit = [32, 0];  % 0x2000
@@ -859,8 +969,14 @@ classdef wireless_stim < handle
         dbg_lvl
         atmel_local_version
         atmel_remote_version
+        fpga_major
+        fpga_minor
+        device_id
+        serial_num
+        
         batch_q
         idle_state
+        errs
 
         time_start;
         time_stop;
@@ -868,6 +984,10 @@ classdef wireless_stim < handle
         message_prev_received;
         message_prev_id;
         message_prev_var_rcv_bytes;
+        
+        comm_timeout_ms;
+        blocking;
+        zb_ch_page;
     end
     methods %(Access = private)
         function addr_out = reg_ch_addr(obj, addr, channel, broadcast)
@@ -885,9 +1005,13 @@ classdef wireless_stim < handle
             if length(addr) ~= 2
                 error('addr must be length 2, len=%d', length(addr));
             end
-            obj.send_message(obj.spi_read_req, [addr]);
-            rsp = obj.rcv_message(obj.spi_read_req);
-
+            [rsp, err] = obj.send_message(obj.spi_read_req, [addr], true);
+            
+            if err
+                val = 0;
+                return;
+            end
+           
             val = swapbytes(typecast(uint8([0,rsp(6:8)]), 'uint32'));
             if obj.dbg_lvl >= 3
                 addr = bitand(swapbytes(typecast(uint8(rsp(4:5)), 'uint16')), hex2dec('7fff'));
@@ -912,8 +1036,7 @@ classdef wireless_stim < handle
 
             payload = [addr, val_a(2:4)];
             if batch
-                threshold = 116;
-                if length(obj.batch_q) > obj.batch_q_max_len
+                if (length(obj.batch_q) + length(payload)) > obj.batch_q_max_len
                     error('register write queue full at %d bytes, max %d bytes', ...
                           length(obj.batch_q), obj.batch_q_max_len);
                 end
@@ -922,10 +1045,9 @@ classdef wireless_stim < handle
             end
 
             % sync writes since fast path uses batching
-            obj.send_message(obj.spi_write_req, payload);
-            rsp = obj.rcv_message(obj.spi_write_req);
+            [rsp, err] = obj.send_message(obj.spi_write_req, payload, true);
 
-            if obj.dbg_lvl >= 3
+            if obj.dbg_lvl >= 3 && ~err
                 addr = bitand(swapbytes(typecast(uint8(rsp(4:5)), 'uint16')), hex2dec('7fff'));
                 disp(sprintf('wrote 0x%06x(%d) to 0x%04x', val, val, addr));
             end
@@ -960,7 +1082,7 @@ classdef wireless_stim < handle
             % that this is a group write
             payload = [obj.reg_group_flag, addr_start, addr_end, val_a_list];
             if batch
-                if length(obj.batch_q) > obj.batch_q_max_len
+                if (length(obj.batch_q) + length(payload)) > obj.batch_q_max_len
                     error('register write queue full at %d bytes, max %d bytes', ...
                           length(obj.batch_q), obj.batch_q_max_len);
                 end
@@ -969,8 +1091,7 @@ classdef wireless_stim < handle
             end
 
             % sync writes since fast path uses batching
-            obj.send_message(obj.spi_write_req, payload);
-            rsp = obj.rcv_message(obj.spi_write_req);
+            [rsp, err] = obj.send_message(obj.spi_write_req, payload, true);
 
             if obj.dbg_lvl >= 3
                 for idx = addr_start(1):addr_end(1)
@@ -983,13 +1104,13 @@ classdef wireless_stim < handle
         end
 
 
-        function reg_commit(obj)
+        function err = reg_commit(obj)
             if length(obj.batch_q) == 0
                 return;
             end
 
             % don't receive the message until ready to send again to allow async processing
-            obj.send_message(obj.spi_write_req, obj.batch_q);
+            [rsp, err] = obj.send_message(obj.spi_write_req, obj.batch_q, obj.blocking);
 
             % print information about written registers
             if obj.dbg_lvl >= 2
@@ -1059,8 +1180,10 @@ classdef wireless_stim < handle
                     param_len = param{3};
                     val = val_a(1:param_len);
 
-                    obj.send_message(cmd, [param_type, param_len, val], param_len);
-                    rsp = obj.rcv_message(cmd, param_len);
+                    [rsp, err] = obj.send_message(cmd, [param_type, param_len, val], true, param_len);
+                    if err
+                        error('perf_set_param failed for param %d', cur_param_type);
+                    end
 
                     ret_param_type = rsp(2);
                     ret_param_len = rsp(3);
@@ -1110,8 +1233,10 @@ classdef wireless_stim < handle
             for idx = 1:length(obj.perf_req_params)
                 param = obj.perf_req_params{idx}; % obtain {idx,name,len}
                 param_type = param{1};
-                obj.send_message(cmd, [param_type], param{3});
-                rsp = obj.rcv_message(cmd, param{3});
+                [rsp, err] = obj.send_message(cmd, [param_type], true, param{3});
+                if err
+                    error('perf_display_param failed for param %d', param);
+                end                
 
                 ret_param_type = rsp(2);
                 param_len = rsp(3);
@@ -1143,13 +1268,13 @@ classdef wireless_stim < handle
             fields.feat = typecast(uint8(message(pos:pos+len-1)), 'uint32');
         end
 
-        function out = rcv_message(obj, message_id, var_rcv_bytes)
+        function [out, err] = rcv_message(obj, message_id, var_rcv_bytes)
             if nargin < 3
                 var_rcv_bytes = 0;
             end
             
-
-            if 0%obj.dbg_lvl >= 1
+            err = 0;
+            if 0 % obj.dbg_lvl >= 1
                 for i = 1:1000
                     if obj.serial.BytesAvailable ~= 0 % == obj.message_id_to_rcv_bytes(message_id) + var_rcv_bytes
                         obj.time_stop = toc;
@@ -1165,22 +1290,25 @@ classdef wireless_stim < handle
 
             out = fread(obj.serial, obj.message_id_to_rcv_bytes(message_id) + var_rcv_bytes);
             rxlen = length(out);
-            if obj.dbg_lvl >= 4
-                disp(['rcv msg out =', sprintf(' %02x', out)]);
+            if obj.dbg_lvl >= 4 && rxlen > 0
+                disp([sprintf('rcv msg id 0x%02x:', message_id), sprintf(' %02x', out)]);
             end
             if rxlen == 0 %(~isempty(lastwarn))
                 obj.batch_q = [];  % clear the queue
-                error('0 length response to command 0x%02x', message_id);
+                warning('0 length response to command 0x%02x', message_id);
+                err = 1;
+                obj.errs = [obj.errs, now];
             else
-                obj.message_prev_received = 1;
-
                 % parse the payload
                 message_len = out(2);
                 payload = out(5:5+message_len-3);
                 out = payload';
                 if out(1)
-                    error('failing status 0x%02x detected in serial message: 0x%02x', ...
-                          out(1), message_id);
+                    % warn and let caller retry. track errors
+                    warning('failing status 0x%02x detected in serial message: 0x%02x', ...
+                            out(1), message_id);
+                    err = 1;
+                    obj.errs = [obj.errs, now];
                 end
             end
             if obj.dbg_lvl >= 1
@@ -1190,11 +1318,13 @@ classdef wireless_stim < handle
         end
 
         % var_rcv_bytes is optional
-        function send_message(obj, message_id, payload, var_rcv_bytes)
-            if nargin < 4
+        function [out, err] = send_message(obj, message_id, payload, blocking, var_rcv_bytes)
+            if nargin < 5
                 var_rcv_bytes = 0;
             end
-
+            out = 0;
+            err = 0;
+            
             sot = 1;
             protocol_id = 0;
             eot = 4;
@@ -1203,10 +1333,11 @@ classdef wireless_stim < handle
             
             % Check status of last send message
             if obj.message_prev_received == 0
-                obj.rcv_message(obj.message_prev_id, obj.message_prev_var_rcv_bytes);
+                obj.message_prev_received = 1;
+                [out, err] = obj.rcv_message(obj.message_prev_id, obj.message_prev_var_rcv_bytes);
             end
             if obj.dbg_lvl >= 4
-                disp(['send msg in =', sprintf(' %02x', message)]);
+                disp([sprintf('send msg id 0x%02x blk %d:', message_id, blocking), sprintf(' %02x', message)]);
             end
 
             if obj.dbg_lvl >= 1
@@ -1215,14 +1346,28 @@ classdef wireless_stim < handle
                 end
                 obj.time_start = toc;
             end
-            fwrite(obj.serial, message);
-            % Don't wait for response -- allow further processing by caller
             
-            % Save message params to check before sending the next message
-            % This allows async operation for faster latency response
-            obj.message_prev_id = message_id;
-            obj.message_prev_var_rcv_bytes = var_rcv_bytes;
-            obj.message_prev_received = 0;
+            if blocking == true  % wait for response
+                retries = 1;
+                while retries > 0
+                    fwrite(obj.serial, message);
+                    [out, err] = obj.rcv_message(message_id, var_rcv_bytes);
+                    if length(out) > 0
+                        if ~out(1)
+                            break;
+                        end
+                    end
+                    retries = retries - 1;
+                end
+            else  % blocking == false
+                fwrite(obj.serial, message);
+                % Don't wait for response -- allow further processing by caller
+                % Save message params to check before sending the next message
+                % This allows async operation for faster latency response
+                obj.message_prev_id = message_id;
+                obj.message_prev_var_rcv_bytes = var_rcv_bytes;
+                obj.message_prev_received = 0;
+            end
         end
 
         % commit is optional, true by default
@@ -1323,9 +1468,9 @@ classdef wireless_stim < handle
             % can't call send_message and rcv_message directly since this
             % function is called inside of send_message
             %
-            % obj.send_message(obj.lat_read_req, [0 0 0 0]);
-            % rsp = obj.rcv_message(obj.lat_read_req);
+            % rsp = obj.send_message(obj.lat_read_req, [0 0 0 0], true);
 
+            val_us = 0;
             sot = 1;
             protocol_id = 0;
             eot = 4;
@@ -1338,23 +1483,23 @@ classdef wireless_stim < handle
 
             out = fread(obj.serial, obj.message_id_to_rcv_bytes(obj.lat_read_req));
             rxlen = length(out);
-            if obj.dbg_lvl >= 4
+            if obj.dbg_lvl >= 4 && rxlen > 0
                 disp(['lat: out =', sprintf(' %02x', out)]);
             end
             if rxlen == 0
-                error('lat: 0 length response to command 0x%02x', message_id);
+                warning('lat: 0 length response to command 0x%02x', obj.lat_read_req);
             else
                 % parse the payload
                 message_len = out(2);
                 payload = out(5:5+message_len-3);
                 rsp = payload';
                 if rsp(1)
-                    error('lat: failing status 0x%02x detected in serial message: 0x%02x', ...
-                          rsp(1), obj.lat_read_req);
+                    warning('lat: failing status 0x%02x detected in serial message: 0x%02x', ...
+                            rsp(1), obj.lat_read_req);
+                else
+                    val_us = typecast(uint8([rsp(2:5)]), 'uint32');
                 end
             end
-
-            val_us = typecast(uint8([rsp(2:5)]), 'uint32');
             if obj.dbg_lvl >= 3
                 disp(sprintf('lat: measured %d us for previous wireless op', val_us));
             end
@@ -1406,10 +1551,30 @@ classdef wireless_stim < handle
                 status = 0;
             end
         end
+        
+        function new_uamp = check_uamp_limit(obj, uamp, channel_list)
+            if obj.device_id == 1  % micro stim, with 100nF blocking caps
+                mid_scale = 32768;
+                max_ua = 500;      % limit max to 500uA
+                rel_uamp = abs(uamp-mid_scale);
+                fail_indices = find(rel_uamp > max_ua);
+                
+                if ~isempty(fail_indices)
+                    warning('max amplitude exceeded on ch(s) %s with %s. Limiting to %duA',...
+                            sprintf(' %d', channel_list(fail_indices)),...
+                            sprintf(' %d', rel_uamp(fail_indices)), max_ua);
+                
+                    for fail = 1:length(fail_indices)
+                        if (uamp(fail) > (mid_scale + max_ua))
+                            uamp(fail) = mid_scale + max_ua;
+                        end
+                        if (uamp(fail) < (mid_scale - max_ua))
+                            uamp(fail) = mid_scale - max_ua;
+                        end
+                    end
+                end
+            end
+            new_uamp = uamp;
+        end
     end  % methods (Access = private)
 end % classdef wireless_stim
-
-
-function rcv_callback(obj, event)
-    disp(['rcv_callback bytes avail: ', num2str(obj.BytesAvailable)]);
-end
