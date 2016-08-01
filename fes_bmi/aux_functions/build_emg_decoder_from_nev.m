@@ -54,8 +54,10 @@ dec_opts.PolynomialOrder = poly_order;
 if strncmp(task,'MG',2)
     % for the multigadget, there is no pos data
     bdf             = get_nev_mat_data(file4decoder,'nokin');
-else
-    bdf             = get_nev_mat_data(file4decoder);
+elseif strncmp(task,'WF',2)
+    bdf             = get_nev_mat_data(file4decoder,'nokin');
+elseif strncmp(task,'treats',6)
+    bdf             = get_nev_mat_data(file4decoder,'nokin');
 end
 
 % bin the data
@@ -90,7 +92,7 @@ train_data              = binned_data;
 train_data.emgguide     = emg_list_4_dec;
 train_data.emgdatabin   = binned_data.emgdatabin(:,emg_pos_in_bin);
 
-neuron2emg_decoder      = BuildModel( train_data, dec_opts );
+[neuron2emg_decoder,pred_data]      = BuildModel( train_data, dec_opts );
 
 
 [R2, VAF]               = mfxval( train_data, dec_opts );
