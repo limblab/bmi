@@ -4,47 +4,60 @@ clear all; close all; clc;
 %% Some high level stuff
 
 % Who is in the lab?
-monkey                  = 'Jango'; % 'Kevin'
-task                    = 'MG_PG'; % 'MG_PG', 'WF', 'WM'
+monkey                  = 'Fish'; % 'Kevin' 'Jango' 'Fish'
+task                    = 'WF'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the task you trained on
 
 % List of muscles for the decoder
-% emg_list_4_dec          = {'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDS'};
-emg_list_4_dec          = {'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDS'};
+emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; 
+% emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}; 
+% emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
+% emg_list_4_dec          = {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
 
-% Mapping of EMGs in the decoder to Electrodes in the Monkey
-% sp.EMG_to_stim_map      = [{'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDS'}; ...
-%                             {'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu'}];
-sp.EMG_to_stim_map      = [{'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDS'}; ...
-                            {'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu'}];
+% Mapping of EMGs in the decoder to the electrodes that will be stimulated.
+% First row lists which EMG, second row lists which muscle will be
+% stimulated. The EMG prediction (1,n) will be used to control the
+% stimulation of muscles in (2,n)
+sp.EMG_to_stim_map      = [{'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; ...
+                            {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}];
+% sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}; ...
+%                             {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSno', 'APB'}];
+% sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
+%                             {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'}];
+% sp.EMG_to_stim_map      = [{'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
+%                             {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'}];
 
-
+                        
 % Monopolar or bipolar stimulation
-stim_mode               = 'bipolar'; % 'bipolar'; 'monopolar'
+stim_mode               = 'monopolar'; % 'bipolar'; 'monopolar'
 
-% Grapevine or wireless stimulator
-params.output           = 'catch'; % 'catch'; 'stimulator'; 'wireless_stim';
+% Which stimulator we are using: the wireless stimulator ('wireless_stim')
+% or the grapevine ('stimulator'). If you choose 'catch' it will do online
+% predictions without stimulating; we don't need to have a stimulator
+% conencted for this
+params.output           = 'stimulator'; % 'wireless_stim'; 'catch'; 'stimulator';
 
 % file name
-params.save_name        = [monkey, '_' task '_MUblock_'];
+params.save_name        = [monkey, '_' task '_MUblock_']; % can call it _MURblock_'
 if strcmpi(params.output,'catch')
     params.save_name    = [params.save_name, 'catch_'];
 end
 
 
-% Run the code without the stimulator?
+% Run the code without the stimulator? 
+% --if we are in 'catch' this field doesn't matter
 stimulator_plugged_in   = true;
 
-% Do an online experiment, or read neural data from file
+% True: use monkey's current neural activity, or False: read neural data from file 
 params.online           = true;
 
 % Percentage of catch trials
-sp.perc_catch_trials    = 10;
+sp.perc_catch_trials    = 15;
 
 
 % Save the data
 params.save_data        = true;
 
-% and folder name
+% and folder name - change accordingly!
 if ispc
 	params.save_dir     = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES';
 elseif ismac
@@ -52,38 +65,32 @@ elseif ismac
 end
 
 
-% ------------------------------------------------------------------------
-%% Build the neuron-to-EMG decoder
+%% ------------------------------------------------------------------------
+% Build the neuron-to-EMG decoder
 
-% % Raw data file for the decoder
-% if ismac
-%     file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
-% elseif ispc
-% %     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151118_isoWF_001.nev';
-% %     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151117\Jango_20151125_isoWF_003.nev';
-% %     file4decoder        = 'E:\Data-lab1\TestData\_to_delete\datafile002.nev'
-%     file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160319\Jango_MG_PG_20160319_T3_001.nev';
-% end
-%  
-% 
-% % order of the static non-linearity
-% poly_order              = 3;
-% 
-% % Build decoder
-% N2E                     = build_emg_decoder_from_nev( file4decoder, task, emg_list_4_dec, poly_order );
+% Raw data file for the decoder
+if ismac
+    file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
+elseif ispc
+    file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\07-25-2016\Fish-InLabWired-WF-KB-20160725001.ccf';
+%     file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\Jango_Treats_07272016_SN_002.nev';
+end
+ 
+
+% order of the static non-linearity
+poly_order              = 2;
+
+% Build decoder
+N2E                     = build_emg_decoder_from_nev( file4decoder, task, emg_list_4_dec, poly_order );
 
 
 
 % ------------------------------------------------------------------------
-%% If you want to use an existing decoder
+%% If want to use an existing decoder
 if ismac
     dec_file            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
 elseif ispc
-%    dec_file            =
-%    'E:\Data-lab1\12A1-Jango\CerebusData\BMIFES\20151125\Jango_20151125_isoWF_003_binned_Decoder.mat';
-%    dec_file            =
-%    'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160313\Jango_MG_PG_20160313_T3_001_decoder.mat';
-    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160319\Jango_MG_PG_20160319_T3_001_bin_Decoder.mat';
+    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160727\Jango_Treats_07272016_SN_002_N2E_Decoder.mat';
 end
 
 % If N2E is a file, this will load it
@@ -170,22 +177,64 @@ switch monkey
     % wireless stimulator
     case 'Jango'
         
-%        sp.muscles                  = {'FCRu', 'FCUr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'APB'};
-%        sp.muscles                  = {'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu'};
-        sp.muscles                  = {'FCRu', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu' };
-        
+       sp.muscles                  = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'PL', 'APB'};
+%         sp.muscles                  = {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSno', 'APB'};
+%        sp.muscles                  = {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'};        
+%         sp.muscles                  = {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'};        
         switch params.output
             % for the grapevine
             case 'stimulator' 
-%               sp.anode_map        = [{ [], [2 4 6], [], [], [], [], [], [14 16 18], [20 22 24] }; ...
-%                                       { [], [1/3 1/3 1/3], [], [], [], [], [], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
-                sp.anode_map        = [{ 1, 3, 5, }; ...
-                                        { 1, 1, 1 }];
+                sp.anode_map        = [{ [3 5 7], [9 11 13], [15 17 19], [21 23 25], [27 29 31], ...
+                                        [2 4 6], [8 10 12], [14 16 18] }; ...
+                                        { [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3], ...
+                                        [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
 
                 % define the cathodes; empty for bipolar
                 if strcmp(stim_mode,'bipolar')
-%                     sp.cathode_map  = [{ 2, 4, 6, 8, 10, 12, 14, 16}; ...
+%                     sp.cathode_map  = [{ 2, 4, 6 }; ... 
+%                                         { 1, 1, 1 }]; %bipolar not set
+%                                                       up yet for 
+%                                                       grapevine
+                elseif strcmp(stim_mode,'monopolar')
+                    sp.cathode_map  = {{ }};
+                end
+            % for the wireless stimulator
+            case 'wireless_stim'
+                sp.anode_map        = [{ 1, 2, 3, 4, 5, 6, 7, 8 }; ...
+                                        { 1, 1, 1, 1, 1, 1, 1, 1 }];
+%                 sp.anode_map        = [{ 1, 3, 5, 7, 9, 11, 13 }; ...
+%                                         { 1, 1, 1, 1, 1, 1, 1 }];
+%                 sp.anode_map        = [{ 1, 5, 7, 9, 11, 13 }; ...
+%                                         { 1, 1, 1, 1, 1, 1 }];
+                % define the cathodes; empty for bipolar
+                if strcmp(stim_mode,'bipolar')
+%                     sp.cathode_map  = [{ 2, 4, 6, 8, 10, 12, 14, 16 }; ...
 %                                         { 1, 1, 1, 1, 1, 1, 1, 1 }];
+%                     sp.cathode_map  = [{ 2, 4, 6, 8, 10, 12, 14 }; ...
+%                                         { 1, 1, 1, 1, 1, 1, 1 }];
+%                     sp.cathode_map  = [{ 2, 6, 8, 10, 12, 14 }; ...
+%                                         { 1, 1, 1, 1, 1, 1 }];
+                elseif strcmp(stim_mode,'monopolar')
+                    sp.cathode_map  = {{ }};
+                end
+        end
+    
+       case 'Fish'
+        
+       sp.muscles                  = {'FCRr', 'FCRu', 'FCU2', 'FDPu', 'FDS2', 'PL', 'PT', 'SUP', 'EDC', 'Brad', 'ECUr', 'ECUu', 'ECRb', 'EDC'};
+%         sp.muscles                  = {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSno', 'APB'};
+%        sp.muscles                  = {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'};        
+%         sp.muscles                  = {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'};        
+        switch params.output
+            % for the grapevine
+            case 'stimulator' 
+                sp.anode_map        = [{ [3 5 7], [9 11 13], [15 17 19], [21 23 25], [27 29 31], ...
+                                        [2 4 6], [8 10 12], [14 16 18] }; ...
+                                        { [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3], ...
+                                        [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
+
+                % define the cathodes; empty for monopolar
+                if strcmp(stim_mode,'bipolar')
                     sp.cathode_map  = [{ 2, 4, 6 }; ...
                                         { 1, 1, 1 }];
                 elseif strcmp(stim_mode,'monopolar')
@@ -193,22 +242,26 @@ switch monkey
                 end
             % for the wireless stimulator
             case 'wireless_stim'
-%                 sp.anode_map        = [{ 1, 3, 5, 7, 9, 11, 13, 15 }; ...
-%                                         { 1, 1, 1, 1, 1, 1, 1, 1 }];
-%                 sp.anode_map        = [{ 1, 3, 7, 9, 11, 13 }; ...
+                sp.anode_map        = [{ 1, 2, 3, 4, 5, 6, 7, 8 }; ...
+                                        { 1, 1, 1, 1, 1, 1, 1, 1 }];
+%                 sp.anode_map        = [{ 1, 3, 5, 7, 9, 11, 13 }; ...
+%                                         { 1, 1, 1, 1, 1, 1, 1 }];
+%                 sp.anode_map        = [{ 1, 5, 7, 9, 11, 13 }; ...
 %                                         { 1, 1, 1, 1, 1, 1 }];
-                sp.anode_map        = [{ 1, 3, 5, 7, 9, 13 }; ...
-                                        { 1, 1, 1, 1, 1, 1 }];
                 % define the cathodes; empty for bipolar
                 if strcmp(stim_mode,'bipolar')
-%                     sp.cathode_map  = [{ 2, 4, 8, 10, 12, 14 }; ...
-%                                         { 1, 1, 1, 1, 1, 1,  }];
-                    sp.cathode_map  = [{ 2, 4, 6, 8, 10, 14 }; ...
-                                        { 1, 1, 1, 1, 1, 1 }];
+%                     sp.cathode_map  = [{ 2, 4, 6, 8, 10, 12, 14, 16 }; ...
+%                                         { 1, 1, 1, 1, 1, 1, 1, 1 }];
+%                     sp.cathode_map  = [{ 2, 4, 6, 8, 10, 12, 14 }; ...
+%                                         { 1, 1, 1, 1, 1, 1, 1 }];
+%                     sp.cathode_map  = [{ 2, 6, 8, 10, 12, 14 }; ...
+%                                         { 1, 1, 1, 1, 1, 1 }];
                 elseif strcmp(stim_mode,'monopolar')
                     sp.cathode_map  = {{ }};
                 end
         end
+        
+        
         
     case 'Kevin'
         sp.muscles      = {'FCR1','FCR2','FCU1','FDPr','FDPu','FDS1','FDS2','PT','FCU2','ECU1','ECU2','ECR1','ECR2','EDCu'};        
@@ -222,14 +275,31 @@ end
 % The controller maps the EMG into PW or amplitude using a proportional law
 % When doing PW-modulated FES, the stim amplitude is fixed to
 % amplitude_max, and when doing amplitude-modulated FES, to PW_max
-sp.EMG_min              = [.4 .2 .3 .3 .3 .3];
-sp.EMG_max              = [1 .7 .9 .9 .9 .9];
+% sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1];
+% sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9];
+% sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
+% sp.EMG_min              = [.15 .15 .15 .15 .1 .1 .1 .15];
+sp.EMG_min              = [.15 .2 .2 .2 .15 .15 .15 .2];
+% sp.EMG_min              = [.3 .3 .3 .3 .3 .3 .3 .3];
+% sp.EMG_max              = [.6 .6 .6 .6 .6 .6 .6 .6];
+% sp.EMG_max              = [.7 .7 .7 .7 .7 .7 .7 .7];
+% sp.EMG_max              = [.8 .8 .8 .8 .8 .8 .8 .8];
+% sp.EMG_min              = [.1 .1 .1 .1 .1 .1];
+sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9 .9];
         
-sp.PW_min               = [.05 0 .05 .05 .05 .05]; % repmat( 0.05, 1, numel(sp.muscles));
-sp.PW_max               = [.4 0 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
+sp.PW_min               = [0 .15 .05 .1 .05 .1 .05 .05]; % repmat( 0.05, 1, numel(sp.muscles));
+sp.PW_max               = [0 .3 .3 .3 .3 .3 .3 .3];% repmat( 0.4, 1, numel(sp.muscles));
+% sp.PW_max               = [0 .4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
+% sp.PW_min               = [.05 .15 .05 .05 .01 .01 .05]; % repmat( 0.05, 1, numel(sp.muscles));
+% sp.PW_max               = [.4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
+% sp.PW_min               = [.05 .05 .05 .01 .01 .05]; % repmat( 0.05, 1, numel(sp.muscles));
+% sp.PW_max               = [.4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
 
-sp.amplitude_min        = repmat( 2, 1, numel(sp.muscles));
-sp.amplitude_max        = repmat( 6, 1, numel(sp.muscles));  % this is the amplitude for PW-modulated FES
+sp.amplitude_min        = repmat( 0, 1, numel(sp.muscles));
+% sp.amplitude_max        = [0 4 4 4 4 4 4 2];  % this is the max amplitude for PW-modulated FES
+sp.amplitude_max        = [0 6 6 4 6 4 6 4];  % this is the max amplitude for PW-modulated FES
+
+% sp.amplitude_max        = [6 6 6 6 6 6];  % this is the max amplitude for PW-modulated FES
 
 % set up the return mode
 sp.return               = stim_mode;
