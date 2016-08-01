@@ -5,11 +5,37 @@
 % values updated at 20 Hz. It returns the number of command updates and a
 % matrix with the latency of each command update
 %
-%   function [nbr_stim_cycles, update_t] = test_ws_battery_life( serial_string, nbr_channels )
+%   function [nbr_stim_cycles, update_t] = test_ws_battery_life( serial_string, nbr_channels, varargin )
+%
+% Inputs (optional)     : [default]
+%   serial_string       : serial USB port
+%   nbr_channels        : nbr of channels that will be stimulated
+%   (blocking)          : [false] true for synchronous communication, false
+%                           for faster asynchronous comm
+%   (zb_ch_page)        : [0] zigbee communication settings
+%
+% Outputs:
+%   nbr_stim_cycles     : nbr of stim cycles the stimulator could perform
+%                           before communication broke or battery died
+%   update_t            : time during which it was stimulating
 %
 %
 
-function [nbr_stim_cycles, update_t] = test_ws_battery_life( serial_string, nbr_channels )
+function [nbr_stim_cycles, update_t] = test_ws_battery_life( serial_string, ...
+                                        nbr_channels, varargin )
+
+
+% read optional input parameters, or set them to default values
+if nargin >= 3
+    blocking            = varargin{1};
+else
+    blocking            = false;
+end
+if nargin == 4
+    zb_ch_page          = varargin{2};
+else 
+    zb_ch_page          = 0;
+end
 
 
 % some definitions -- could be defined as fcn params
@@ -24,7 +50,8 @@ PW_max                  = 200;
 ch_list                 = 1:nbr_channels;
 % path to the stimulator's calibration file
 path_cal_ws             = 'E:\Data-lab1\Wireless_Stimulator';
-
+% path to file saving location
+save_path               = 'E:\Data-lab1\TestData\wireless_stim_tests';
 
 % go to the stimulator's calibration file directory
 cur_dir                 = pwd;
@@ -32,19 +59,24 @@ cd(path_cal_ws);
 
 
 % intialize stimulator
-ws                      = wireless_stim(serial_string, 0);
+ws_struct               = struct(...
+                            'serial_string', serial_string,...
+                            'dbg_lvl', 1, ...
+                            'comm_timeout_ms', -1, ...
+                            'blocking', blocking, ...
+                            'zb_ch_page', zb_ch_page ...
+                            ); 
 
-
+ws                      = wireless_stim(ws_struct);                        
+                        
 % try/catch helps avoid left-open serial port handles and leaving the Atmel
 % wireless modules' firmware in a bad state 
 try
     % ---------------------------------------------------------------------
     % initial config stimulator
-    
-    % comm_timeout specified in ms, or disable
-    reset               = 1;
+
     % reset FPGA stim controller
-    ws.init(reset, ws.comm_timeout_disable);
+    ws.init();
     
     % print version info, call after init
     ws.version();      
@@ -71,26 +103,26 @@ try
     % set the stimulator to run continously
     disp('starting stimulation sequence');
     ws.set_Run(ws.run_cont, 1:nbr_channels);
-%     for i = 1:nbr_channels
-%         ws.set_Run(ws.run_cont, i);
-%     end
     
 
-    % configure some of the common parameters
-    cmd{1}              = struct('TL', 100, ...        % ms
-                            'Freq', 30, ...        % Hz
-                            'PL', 1 ...           % Cathodic first
+    % configure some of the common parameters: train length, frequency,
+    % polarity and amplitude
+    cmd{1}              = struct('TL', 100, ...     % ms
+                            'Freq', 30, ...         % Hz
+                            'PL', 1 ...             % Cathodic first
                             );
     ws.set_stim(cmd, ch_list);
+    
     cmd{1}              = struct('CathAmp', 32768+amp, ...  % 16-bit DAC setting
                             'AnodAmp', 32768-amp ...% 16-bit DAC setting
                             );                    
 	ws.set_stim(cmd, ch_list);
+    
     pause(1);
 
 
     % ---------------------------------------------------------------------
-    % loop that runs the experiment
+    % loop that runs the test
 
     
     % counter to keep track of param updates
@@ -110,7 +142,7 @@ try
         
         % wait until enough time has elapsed & store latency
         elapsed_t       = toc(cur_t);
-        update_t(ctr)   = elapsed_t;
+        update_t(ctr)   = elapsed_t; %#ok<AGROW>
         while elapsed_t < interstim_t
             elapsed_t   = toc(cur_t);
         end
@@ -127,16 +159,27 @@ catch ME
         nbr_stim_cycles = 0;
         update_t        = inf;
     end
-    save(['E:\Data-lab1\TestData\wireless_stim_tests\battery_tests_' ...
-        datestr(now,'yymmdd_HHMMSS')], 'nbr_stim_cycles', 'update_t');
+    
+    % save results
+    save([save_path, '\battery_tests_' datestr(now,'yymmdd_HHMMSS')], ...
+        'nbr_stim_cycles', 'update_t');
     disp(['saving data in E:\Data-lab1\TestData\wireless_stim_tests\battery_tests_' ...
         datestr(now,'yymmdd_HHMMSS')]);
     disp(' ')
     disp(['total time stim command updates: ' num2str(nbr_stim_cycles*interstim_t/60)]);
     disp(['mean command update latency: ' num2str(mean(update_t))]);
+
+    % go back to where you were
+    cd(cur_dir);
+    
+    % return error
     rethrow(ME);
 end
 
 
+% go back to where you were
+cd(cur_dir);
+
+% and wrap up
 delete(ws);
 nbr_stim_cycles = ctr;
