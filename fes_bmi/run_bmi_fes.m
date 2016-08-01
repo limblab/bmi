@@ -197,6 +197,7 @@ try
                                                     data.stim_amp, params.bmi_fes_stim_params );
                     handles.ws.set_stim(stim_cmd, channel_list);
                 elseif strcmpi(params.output,'stimulator')
+                    stim_cmd                    = stim_elect_mapping( data.stim_PW, [], params.bmi_fes_stim_params );
                     xippmex( 'stimseq', stim_cmd );
                 end
             % if it is a catch trial, stop the stimulation
