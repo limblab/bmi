@@ -1,7 +1,7 @@
 function update_vibration_motor_duty_cycles(handles,params,new_force)
 
-    params.vibration_motors.min_duty_cycle = .5;
-    params.vibration_motors.max_duty_cycle = .99;
+    params.vibration_motors.min_duty_cycle = .1;
+    params.vibration_motors.max_duty_cycle = .999;
     
     params.vibration_motors.min_force = 0;
     params.vibration_motors.max_force = 10;
