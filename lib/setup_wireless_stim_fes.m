@@ -40,9 +40,9 @@ switch bmi_fes_params.mode
         switch bmi_fes_params.return
             case 'monopolar'
 
-                % warning because this hasn't been tested yet
-                warning('this has not been tested yet');
-                pause;
+%                 % warning because this hasn't been tested yet
+%                 warning('this has not been tested yet');
+%                 pause;
                 
                 % reorder the stim amplitude according to the channel_list
                 amp             = amp(indx_ch);
@@ -68,9 +68,12 @@ switch bmi_fes_params.mode
                     ws.set_TD( td, channel_list(ch) );
                 end
 
+                % set to run continuous
+                ws.set_Run( ws.run_cont, channel_list );
+
             case 'bipolar'
 
-                 % define arrays with the anodes and cathodes
+                % define arrays with the anodes and cathodes
                 anode_list      = [ bmi_fes_params.anode_map{1,:} ];
                 cathode_list    = [ bmi_fes_params.cathode_map{1,:} ];
                 
@@ -90,7 +93,8 @@ switch bmi_fes_params.mode
                 % read what electodes are set as anodes
                 for i = 1:numel(anode_list)
                     % Configure train delay differently for each channel
-                    % -- Stagger by 500 us, to minimize fatigue
+                    % -- Stagger by 500 us, to minimize current density at
+                    % the return
                     % Minimum TD = 50 us, to avoid problems with the waveforms
                     td          = (i-1) * 500 + 50;
                     ws.set_TD( td, anode_list(i) );
@@ -106,17 +110,17 @@ switch bmi_fes_params.mode
                     td          = (i-1) * 500 + 50;   % Minimum TD = 50 us, to avoid problems with the waveforms
                     ws.set_TD( td, cathode_list(i) );
                 end
-                % Set polarity to anodic first 
+                % Set polarity to anodic first
                 ws.set_PL( 1, cathode_list );
-           
+                
+                % set to run continuous
+                ws.set_Run( ws.run_cont, anode_list );
+                ws.set_Run( ws.run_cont, cathode_list );
         end
         
-    % For PW-modulated FES
+    % For amplitude-modulated FES
     case 'amplitude_modulation'
 
         error('amplitude-modulated FES not implemented yet');
 end
 
-% set to run continuous
-ws.set_Run( ws.run_cont, anode_list );
-ws.set_Run( ws.run_cont, cathode_list );
