@@ -160,8 +160,8 @@ try
     nbr_stim_cycles = ctr;
             
     % save results
-    save([save_path, '\battery_tests_' datestr(now,'yymmdd_HHMMSS')], ...
-        'nbr_stim_cycles', 'update_t');
+    file_name           = ['battery_tests_' datestr(now,'yymmdd_HHMMSS')];
+    save([save_path, filesep, file_name], 'nbr_stim_cycles', 'update_t','blocking','zb_ch_page');
     disp(['saving data in E:\Data-lab1\TestData\wireless_stim_tests\battery_tests_' ...
         datestr(now,'yymmdd_HHMMSS')]);
     disp(' ')
@@ -179,14 +179,17 @@ catch ME
     end
     
     % save results
-    save([save_path, '\battery_tests_' datestr(now,'yymmdd_HHMMSS')], ...
-        'nbr_stim_cycles', 'update_t');
+    file_name           = ['battery_tests_' datestr(now,'yymmdd_HHMMSS')];
+    save([save_path, filesep, file_name], 'nbr_stim_cycles', 'update_t','blocking','zb_ch_page');
     disp(['saving data in E:\Data-lab1\TestData\wireless_stim_tests\battery_tests_' ...
         datestr(now,'yymmdd_HHMMSS')]);
     disp(' ')
     disp(['total time stim command updates: ' num2str(nbr_stim_cycles*interstim_t/60)]);
     disp(['mean command update latency: ' num2str(mean(update_t))]);
 
+    % plot a histogram with the latencies
+    plot_latency_hist( update_t, save_path, file_name );
+    
     % go back to where you were
     cd(cur_dir);
     
@@ -200,21 +203,7 @@ end
 
 
 % plot a histogram with the latencies
-hst                     = histogram(update_t,0:0.001:0.15);
-max_hst                 = max(hst.Values);
-if max_hst < 10000
-    y_mean              = ceil(max_hst/1000)*1000;
-else
-    y_mean              = ceil(max_hst/10000)*10000;
-end
-figure,hold on
-histogram(update_t,0:0.001:0.15)
-plot(mean(update_t),y_mean,'.','markersize',24,'color','k')
-plot([mean(update_t)-std(update_t),mean(update_t)+std(update_t)],[y_mean,y_mean],...
-    'k','linewidth',3)
-set(gca,'FontSize',14,'TickDir','out')
-ylim([0 1.1*y_mean])
-xlabel('stim cmd update latency (s)'),ylabel('counts')
+plot_latency_hist( update_t, save_path, file_name );
 
 
 % go back to where you were
@@ -225,4 +214,36 @@ delete(ws);
 nbr_stim_cycles = ctr;
 if ishandle(keep_running)
     close(keep_running);
+end
+
+end
+
+
+
+% -------------------------------------------------------------------------
+% -------------------------------------------------------------------------
+% function for plotting the histogram of the command update latency
+
+function plot_latency_hist( update_t, save_path, file_name )
+
+hst                     = histogram(update_t,0:0.001:0.15);
+max_hst                 = max(hst.Values);
+if max_hst > 10000
+    y_mean              = ceil(max_hst/10000)*10000;
+elseif max_hst > 1000
+    y_mean              = ceil(max_hst/1000)*1000;
+else
+    y_mean              = ceil(max_hst/100)*100;
+end
+figure,hold on
+histogram(update_t,0:0.001:0.15)
+plot(mean(update_t),y_mean,'.','markersize',24,'color','k')
+plot([mean(update_t)-std(update_t),mean(update_t)+std(update_t)],[y_mean,y_mean],...
+    'k','linewidth',3)
+set(gca,'FontSize',14,'TickDir','out')
+ylim([0 1.1*y_mean])
+xlabel('stim cmd update latency (s)'),ylabel('counts')
+title(file_name,'Interpreter','none')
+saveas(gcf,[save_path, filesep, file_name '.png'])
+
 end
