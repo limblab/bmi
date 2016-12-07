@@ -166,8 +166,8 @@ try
         datestr(now,'yymmdd_HHMMSS')]);
     disp(' ')
     disp('stimulation stopped by the user');
-    disp(['total time stim command updates: ' num2str(nbr_stim_cycles*interstim_t/60)]);
-    disp(['mean command update latency: ' num2str(mean(update_t))]);
+    disp(['total time stim command updates at 20Hz: ' num2str(nbr_stim_cycles*interstim_t/60)]);
+    disp(['mean command update latency: ' num2str(mean(update_t)) ' +/- ' num2str(std(update_t))]);
     
 catch ME
     delete(ws);
@@ -240,10 +240,24 @@ histogram(update_t,0:0.001:0.15)
 plot(mean(update_t),y_mean,'.','markersize',24,'color','k')
 plot([mean(update_t)-std(update_t),mean(update_t)+std(update_t)],[y_mean,y_mean],...
     'k','linewidth',3)
-set(gca,'FontSize',14,'TickDir','out')
+set(gca,'FontSize',16,'TickDir','out')
 ylim([0 1.1*y_mean])
 xlabel('stim cmd update latency (s)'),ylabel('counts')
 title(file_name,'Interpreter','none')
 saveas(gcf,[save_path, filesep, file_name '.png'])
+
+t_axis_latency      = update_t;
+t_axis_latency(t_axis_latency<0.05) = 0.05;
+
+figure
+%plot(cumsum(update_t)/60,update_t)
+plot(cumsum(t_axis_latency)/60,update_t)
+xlabel('test time (min)')
+ylabel('latency (s)')
+set(gca,'FontSize',16,'TickDir','out')
+ylim([0 0.15])
+title(file_name,'Interpreter','none')
+saveas(gcf,[save_path, filesep, file_name '_fcn_t.png'])
+
 
 end
