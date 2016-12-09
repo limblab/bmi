@@ -32,7 +32,10 @@ switch params.output
     case 'wireless_stim'
 
         dbg_lvl     = 0; % could be made into a parameter
-        handles.ws  = wireless_stim(params.bmi_fes_stim_params.port_wireless, dbg_lvl);
+        comm_timeout_ms = -1;
+        blocking = true;
+        zb_ch_page = 17;
+        handles.ws  = wireless_stim(params.bmi_fes_stim_params.port_wireless, dbg_lvl,blocking,comm_timeout_ms,zb_ch_page);
         
         try
             % Switch to the folder that contains the calibration file

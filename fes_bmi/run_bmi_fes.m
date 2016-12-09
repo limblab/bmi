@@ -92,15 +92,14 @@ if params.online
     bin_start_t         = 0.0; % time at beginning of next bin
         
     % start cerebus file recording :
-    cbmex('fileconfig', handles.cerebus_file, '', 1);
+    cbmex('fileconfig', handles.cerebus_file, '', 1);   
     data.sys_time       = cbmex('time');
 
     % start data buffering
     cbmex('trialconfig',1,'nocontinuous');
 
-    % If using signals recorded in a file, rather than doing an online
-% experiment
-else
+    
+else  % If using pre-recorded signals in a file1
     max_cycles          = length(offline_data.timeframe);
     bin_start_t         = double(offline_data.timeframe(1));
 end
@@ -200,8 +199,7 @@ try
                     stim_cmd                    = stim_elect_mapping( data.stim_PW, [], params.bmi_fes_stim_params );
                     xippmex( 'stimseq', stim_cmd );
                 end
-            % if it is a catch trial, stop the stimulation
-            else
+            else        % if it is a catch trial, stop the stimulation
                 if strcmpi(params.output,'wireless_stim')
                     [stim_cmd, channel_list]    = stim_elect_mapping_wireless( data.stim_PW, ...
                                                     data.stim_amp, params.bmi_fes_stim_params, 'catch' );
