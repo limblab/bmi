@@ -4,12 +4,12 @@ clear all; close all; clc;
 %% Some high level stuff
 
 % Who is in the lab?
-monkey                  = 'Fish'; % 'Kevin' 'Jango' 'Fish'
+monkey                  = 'Jango'; % 'Kevin' 'Jango' 'Fish'
 task                    = 'WF'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the task you trained on
 
 % List of muscles for the decoder
-emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; 
-% emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}; 
+% emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; % Fish grasping 
+emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}; % Jango 12/11
 % emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
 % emg_list_4_dec          = {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
 
@@ -17,10 +17,10 @@ emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'};
 % First row lists which EMG, second row lists which muscle will be
 % stimulated. The EMG prediction (1,n) will be used to control the
 % stimulation of muscles in (2,n)
-sp.EMG_to_stim_map      = [{'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; ...
-                            {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}];
-% sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}; ...
-%                             {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSno', 'APB'}];
+% sp.EMG_to_stim_map      = [{'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; ...
+%                             {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}];
+sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}; ...
+                            {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}]; % Jango 12/11
 % sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
 %                             {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'}];
 % sp.EMG_to_stim_map      = [{'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
