@@ -314,6 +314,14 @@ end
 % pass the stimulation parametesr to the params struct
 params.bmi_fes_stim_params  = sp;
 
+% ------------------------------------------------------------------------
+%% Load settings from previous session
+load('');   % Filename for settings
+
+% ------------------------------------------------------------------------
+%% Save settings for future usage
+save('',params);  % fill in file name to save settings
+
 
 % ------------------------------------------------------------------------
 %% Do it!

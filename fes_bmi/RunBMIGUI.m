@@ -55,38 +55,38 @@ function RunBMIGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for RunBMIGUI
 handles.output = hObject;
 
-% Update handles structure
-guidata(hObject, handles);
-
 % defaults for settings
-handles.savedir = pwd;
+handles.handles.params.save_dir = pwd;
 
-handles.monkey = 'Jango';
-handles.stim_mode = 'monopolar'; % stimulation style
-handles.stimulator = 'stimulator';   % stimulator type
-handles.task = 'WF';
-handles.polyorder = 0;
+handles.handles.params.monkey = 'Jango';
+handles.handles.params.stim_mode = 'monopolar'; % stimulation style
+handles.params.output = 'stimulator';   % stimulator type
+handles.params.task = 'WF';
+handles.params.poly_order = 0;
 
 % defaults for sp structure
-handles.emg_list_4_dec = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'PL', 'APB'};
-handles.sp.EMG_to_stim_map = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'PL', 'APB'}; ...
+handles.params.emg_list_4_dec = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'PL', 'APB'};
+handles.stimp.EMG_to_stim_map = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'PL', 'APB'}; ...
                                     {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'PL', 'APB'}];
-handles.sp.muscles = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'PL', 'APB'};
-handles.sp.anode_map        = [{ [3 5 7], [9 11 13], [15 17 19], [21 23 25], [27 29 31], ...
+handles.stimp.muscles = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'PL', 'APB'};
+handles.stimp.anode_map        = [{ [3 5 7], [9 11 13], [15 17 19], [21 23 25], [27 29 31], ...
                                         [2 4 6], [8 10 12], [14 16 18] }; ...
                                         { [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3], ...
                                         [1/3 1/3 1/3], [1/3 1/3 1/3], [1/3 1/3 1/3] }];
-handles.sp.cathode_map  = {};
-handles.sp.EMG_min = repmat(.15,1,numel(handles.sp.muscles));
-handles.sp.EMG_max = repmat(.9,1,numel(handles.sp.muscles));
-handles.sp.PW_min = repmat( 0.05, 1, numel(handles.sp.muscles));
-handles.sp.PW_max = repmat( 0.5, 1, numel(handles.sp.muscles));
-handles.sp.amplitude_min = repmat(0,1,numel(handles.sp.muscles));
-handles.sp.amplitude_max = repmat(4,1,numel(handles.sp.muscles));
-handles.sp.return = 'stimulator';
-handles.sp.perc_catch_trials = 15;
+handles.stimp.cathode_map  = {};
+handles.stimp.EMG_min = repmat(.15,1,numel(handles.stimp.muscles));
+handles.stimp.EMG_max = repmat(.9,1,numel(handles.stimp.muscles));
+handles.stimp.PW_min = repmat( 0.05, 1, numel(handles.stimp.muscles));
+handles.stimp.PW_max = repmat( 0.5, 1, numel(handles.stimp.muscles));
+handles.stimp.amplitude_min = repmat(0,1,numel(handles.stimp.muscles));
+handles.stimp.amplitude_max = repmat(4,1,numel(handles.stimp.muscles));
+handles.stimp.return = 'stimulator';
+handles.stimp.perc_catch_trials = 15;
 
-
+% Update handles, handles.params and handles.stimp structures
+guidata(hObject, handles);
+% guidata(hObject, handles.params);
+% guidata(hObject, handles.stimp);
 
 
 
@@ -137,7 +137,8 @@ function popup_monkey_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns popup_monkey contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popup_monkey
 contents = cellstr(get(hObject,'String'));
-handles.monkey = contents{get(hObject,'Value')};
+handles.params.monkey = contents{get(hObject,'Value')};
+guidata(handles.figure1,handles);
 
 % --- Executes during object creation, after setting all properties.
 function popup_monkey_CreateFcn(hObject, eventdata, handles)
@@ -167,14 +168,15 @@ function popup_task_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 switch get(hObject,'Value')
     case 1
-        handles.task = 'WF';
+        handles.params.task = 'WF';
     case 2
-        handles.task = 'WM';
+        handles.params.task = 'WM';
     case 3
-        handles.task = 'MG_PG';
+        handles.params.task = 'MG_PG';
     case 4
-        handles.task = 'MG_PT';
+        handles.params.task = 'MG_PT';
 end
+guidata(handles.figure1,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -200,10 +202,11 @@ function popup_stimulation_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from popup_stimulation
 switch get(hObject,'Value')
     case 1
-        handles.stim_mode = 'monopolar';
+        handles.params.stim_mode = 'monopolar';
     case 2
-        handles.stim_mode = 'bipolar';
+        handles.params.stim_mode = 'bipolar';
 end
+guidata(handles.figure1,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -227,12 +230,13 @@ function popup_stimulator_Callback(hObject, eventdata, handles)
 
 switch get(hObject,'Value') % returns selected item from popup_stimulator
     case 1
-        handles.stimulator = 'stimulator';
+        handles.params.output = 'stimulator';
     case 2
-        handles.stimulator = 'wireless_stim';
+        handles.params.output = 'wireless_stim';
     case 3
-        handles.stimulator = 'catch';
+        handles.params.output = 'catch';
 end
+guidata(handles.figure1,handles);
         
 
 % --- Executes during object creation, after setting all properties.
@@ -292,8 +296,9 @@ function push_savedir_Callback(hObject, eventdata, handles)
 % hObject    handle to push_savedir (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.savedir = uigetdir(pwd,'Stimulation Save Location'); % current save locat'n
-set(handles.edit_savedir,'String',handles.savedir); % show value in text box
+handles.params.save_dir = uigetdir(pwd,'Stimulation Save Location'); % current save locat'n
+set(handles.edit_savedir,'String',handles.params.save_dir); % show value in text box
+guidata(handles.figure1,handles);
 
 
 
@@ -407,13 +412,13 @@ function push_decoder_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 if get(handles.radio_newdecoder,'Value')
-    N2E = build_emg_decoder_from_nev( get(handles.edit_newdecoder,'String'), handles.task, handles.emg_list_4_dec, handles.poly_order); %run it. We'll do error handling later
+    N2E = build_emg_decoder_from_nev( get(handles.edit_newdecoder,'String'), handles.params.task, handles.params.emg_list_4_dec, handles.params.poly_order); %run it. We'll do error handling later
 
 else
     N2E = LoadDataStruct(get(handles.edit_existingdecoder,'String')); % load N2E from existing decoder
     % This section is all stolen from call_run_bmi_fes
     if isfield(N2E, 'H')
-        emg_pos_in_dec  = zeros(1,numel(handles.emg_list_4_dec));
+        emg_pos_in_dec  = zeros(1,numel(handles.params.emg_list_4_dec));
         for i = 1:length(emg_pos_in_dec)
             % don't look at EMGs with label length longer than the label
             % you are looking for because it can give an error (e.g., if
@@ -421,24 +426,24 @@ else
             % and an FCR matlab will try to return two values)
             indx_2_look = [];
             for ii = 1:length(N2E.outnames)
-                if length(N2E.outnames{ii}) == length(handles.emg_list_4_dec{i}) 
+                if length(N2E.outnames{ii}) == length(handles.params.emg_list_4_dec{i}) 
                     indx_2_look = [indx_2_look, ii];
                 end
             end
             % find the index of the EMGs in the decoder
             emg_pos_in_dec(1,i) = indx_2_look( find( strncmp(N2E.outnames(indx_2_look),...
-                                    handles.emg_list_4_dec(i),length(handles.emg_list_4_dec{i})) ));
+                                    handles.params.emg_list_4_dec(i),length(handles.params.emg_list_4_dec{i})) ));
         end
         % Get rid of the other muscles in the decoder
         N2E.H           = N2E.H(:,emg_pos_in_dec);
-        N2E.outnames    = handles.emg_list_4_dec;
+        N2E.outnames    = handles.params.emg_list_4_dec;
     else
         error('Invalid neuron-to-emg decoder');
     end
     
     
     % save N2E in the handles structure so we can use it later
-    handles.N2E = N2E;
+    handles.params.neuron_decoder = N2E;
     
     set(handles.text_serial,'Enable','on')
     set(handles.edit_serial,'Enable','on')
@@ -448,13 +453,16 @@ else
     set(handles.push_stim,'Enable','on')
 end
 
+guidata(handles.figure1,handles);
+
 
 
 function edit_newdecoderorder_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_newdecoderorder (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.poly_order = int16(get(hObject,'String'));
+handles.params.poly_order = int16(get(hObject,'String'));
+guidata(handles.figure1,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -523,7 +531,7 @@ else
     % set saved fields from .mat file
     Names = fieldnames(sp);
     for i = 1:length(Names)
-        handles.sp = setfield(handles.sp,Names{i},sp.(Names{i}));
+        handles.stimp = setfield(handles.stimp,Names{i},sp.(Names{i}));
     end
 end
 
@@ -596,17 +604,21 @@ function push_stim_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-params.output = handles.output; % which output are we saving to?
-params.online = get(handles.check_online,'Value'); % online?
-params.save_data = params.online; % are we supposed to save the data?
-params.save_dir = handles.savedir; % directory to save everything
-handles.sp.perc_catch_trials = int16(get(handles.edit_perc,'String'));
-params.neuron_decoder = handles.N2E;
-params.mode = 'emg_only';
-params.n_emgs = numel(handles.emg_list_4_dec);
-params.display_plots = get(handles.push_plot,'Value');
-params.bmi_fes_stim_params = handles.sp;    % Everything we've written so far as sp
-params.bmi_fes_stim_params.return = handles.stim_mode;
+handles.params.output = handles.output; % which output are we saving to?
+handles.params.online = get(handles.check_online,'Value'); % online?
+handles.params.save_data = handles.params.online; % are we supposed to save the data?
+handles.stimp.perc_catch_trials = int16(get(handles.edit_perc,'String'));
+handles.params.mode = 'emg_only';
+handles.params.n_emgs = numel(handles.params.emg_list_4_dec);
+handles.params.display_plots = get(handles.push_plot,'Value');
+handles.params.bmi_fes_stim_handles.params = handles.stimp;    % Everything we've written so far as sp
+handles.params.bmi_fes_stim_handles.params.return = handles.params.stim_mode;
+
+% Save all settings for future usage
+params = handles.params;
+dt = datetime();
+params.save_name = [params.monkey, '_', params.task, datestr(dt)];
+save([params.save_dir,params.save_name,'_settings'],params); % save everything in the same location as the other files
 
 % time to run it all
-run_bmi_fes(params);
+run_bmi_fes(handles.params);
