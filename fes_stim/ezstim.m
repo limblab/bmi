@@ -38,15 +38,15 @@ if strcmp(stim_params.stimulator,'gv')
     xippmex('open');
     drawnow;
 elseif strcmp(stim_params.stimulator,'ws')
-    ws               = wireless_stim(stim_params.serial_ws,0); % connect to the stimulator, no verbose
+    ws               = wireless_stim(stim_params); % connect to the stimulator
     % try/catch helps avoid left-open serial port handles and leaving
     % the Atmel wireless modules' firmware in a bad state
     try
         % go to the folder with calibration data
         cd(stim_params.path_cal_ws);
-        ws.init(1, ws.comm_timeout_disable); % reset FPGA stim controller
+        ws.init(); % reset FPGA stim controller
     catch ME
-        delete(ws);
+        ws.delete();
         disp(datestr(datetime(),'HH:MM:ss:FFF'));
         rethrow(ME);
     end

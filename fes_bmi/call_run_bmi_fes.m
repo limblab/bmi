@@ -9,7 +9,7 @@ task                    = 'WF'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the 
 
 % List of muscles for the decoder
 % emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; % Fish grasping 
-emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}; % Jango 12/11
+emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB','PL'}; % Jango 12/11
 % emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
 % emg_list_4_dec          = {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
 
@@ -19,8 +19,8 @@ emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}
 % stimulation of muscles in (2,n)
 % sp.EMG_to_stim_map      = [{'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; ...
 %                             {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}];
-sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}; ...
-                            {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB'}]; % Jango 12/11
+sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB','PL'}; ...
+                            {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB','PL'}]; % Jango 12/11
 % sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
 %                             {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'}];
 % sp.EMG_to_stim_map      = [{'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...

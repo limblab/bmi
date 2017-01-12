@@ -23,7 +23,6 @@ classdef wireless_stim < handle
     methods (Access = public)
         % Contstructor
         %
-        % serial_port_str - serial port name, e.g. 'COM4' or '/dev/ttyUSB0'"
         % params struct:
         %  serial_string - "/dev/ttyUSB0" e.g. on linux or "COM4" on Windows
         %  dbg_lvl
@@ -53,7 +52,7 @@ classdef wireless_stim < handle
             if isfield(params, 'comm_timeout_ms')
                 obj.comm_timeout_ms = params.comm_timeout_ms;
             else
-                warning('wireless_stim constructor: comm_timeout_ms specified, default to 10s');
+                warning('wireless_stim constructor: comm_timeout_ms not specified, default to 10s');
                 obj.comm_timeout_ms = 10000;
             end
             
