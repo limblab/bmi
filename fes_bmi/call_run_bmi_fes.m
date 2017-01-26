@@ -316,7 +316,8 @@ params.bmi_fes_stim_params  = sp;
 
 % ------------------------------------------------------------------------
 %% Load settings from previous session
-load('');   % Filename for settings
+[LoadName,LoadPath,~] = uigetfile('.mat','Params file save location');
+load([LoadPath,LoadName]);   % Filename for settings
 
 % ------------------------------------------------------------------------
 %% Save settings for future usage
