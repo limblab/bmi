@@ -9,7 +9,7 @@ task                    = 'WF'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the 
 
 % List of muscles for the decoder
 % emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; % Fish grasping 
-emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB','PL'}; % Jango 12/11
+emg_list_4_dec          = {'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FDS'}; % Jango 12/11
 % emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
 % emg_list_4_dec          = {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
 
@@ -19,8 +19,8 @@ emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB',
 % stimulation of muscles in (2,n)
 % sp.EMG_to_stim_map      = [{'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; ...
 %                             {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}];
-sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB','PL'}; ...
-                            {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'APB','PL'}]; % Jango 12/11
+sp.EMG_to_stim_map      = [{'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FDS'}; ...
+                        {'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FDS'}]; % Jango Flexors only
 % sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
 %                             {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'}];
 % sp.EMG_to_stim_map      = [{'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
@@ -34,7 +34,7 @@ stim_mode               = 'monopolar'; % 'bipolar'; 'monopolar'
 % or the grapevine ('stimulator'). If you choose 'catch' it will do online
 % predictions without stimulating; we don't need to have a stimulator
 % conencted for this
-params.output           = 'stimulator'; % 'wireless_stim'; 'catch'; 'stimulator';
+params.output           = 'wireless_stim'; % 'wireless_stim'; 'catch'; 'stimulator';
 
 % file name
 params.save_name        = [monkey, '_' task '_MUblock_']; % can call it _MURblock_'
@@ -72,7 +72,7 @@ end
 if ismac
     file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
 elseif ispc
-    file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\07-25-2016\Fish-InLabWired-WF-KB-20160725001.ccf';
+    file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170124\20170124_Jango_KB_WF_flexors001.nev';
 %     file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\Jango_Treats_07272016_SN_002.nev';
 end
  
@@ -177,7 +177,7 @@ switch monkey
     % wireless stimulator
     case 'Jango'
         
-       sp.muscles                  = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSr', 'FDSu', 'PL', 'APB'};
+       sp.muscles                  = {'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FDS'};
 %         sp.muscles                  = {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSno', 'APB'};
 %        sp.muscles                  = {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'};        
 %         sp.muscles                  = {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'};        
@@ -200,10 +200,10 @@ switch monkey
                 end
             % for the wireless stimulator
             case 'wireless_stim'
-                sp.anode_map        = [{ 1, 2, 3, 4, 5, 6, 7, 8 }; ...
-                                        { 1, 1, 1, 1, 1, 1, 1, 1 }];
-%                 sp.anode_map        = [{ 1, 3, 5, 7, 9, 11, 13 }; ...
-%                                         { 1, 1, 1, 1, 1, 1, 1 }];
+%                 sp.anode_map        = [{ 1, 2, 3, 4, 5, 6, 7, 8 }; ...
+%                                         { 1, 1, 1, 1, 1, 1, 1, 1 }];
+                sp.anode_map        = [{ 1, 3, 5, 7, 9, 11, 13 }; ...
+                                        { 1, 1, 1, 1, 1, 1, 1 }];
 %                 sp.anode_map        = [{ 1, 5, 7, 9, 11, 13 }; ...
 %                                         { 1, 1, 1, 1, 1, 1 }];
                 % define the cathodes; empty for bipolar
@@ -297,7 +297,7 @@ sp.PW_max               = [0 .3 .3 .3 .3 .3 .3 .3];% repmat( 0.4, 1, numel(sp.mu
 
 sp.amplitude_min        = repmat( 0, 1, numel(sp.muscles));
 % sp.amplitude_max        = [0 4 4 4 4 4 4 2];  % this is the max amplitude for PW-modulated FES
-sp.amplitude_max        = [0 6 6 4 6 4 6 4];  % this is the max amplitude for PW-modulated FES
+sp.amplitude_max        = repmat(6,1,numel(sp.muscles));  % this is the max amplitude for PW-modulated FES
 
 % sp.amplitude_max        = [6 6 6 6 6 6];  % this is the max amplitude for PW-modulated FES
 
@@ -307,7 +307,7 @@ sp.return               = stim_mode;
 % port of the serial-usb interface for communicating with the wireless
 % stimulator
 if strncmp(params.output,'wireless_stim',13)
-    sp.port_wireless    = 'COM3';
+    sp.port_wireless    = 'COM5';
 end
 
 
