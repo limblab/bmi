@@ -72,7 +72,7 @@ end
 if ismac
     file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
 elseif ispc
-    file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170124\20170124_Jango_KB_WF_flexors001.nev';
+    file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170126\Jango_20170126_KB_WF_001.nev';
 %     file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\Jango_Treats_07272016_SN_002.nev';
 end
  
@@ -135,7 +135,7 @@ if ~params.online
         params.offline_data = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/BinnedData/behavior plasticity/20150320_Jango_WF_001_binned.mat';
     elseif ispc
 %        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160313\Jango_MG_PG_20160313_T3_001_bin.mat';
-        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160221-recordings only\Jango_20160221_WF_R10T4_001_bin.mat';
+        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170126\Jango_20170126_KB_WF_001.mat';
     end
 end
 
@@ -202,8 +202,8 @@ switch monkey
             case 'wireless_stim'
 %                 sp.anode_map        = [{ 1, 2, 3, 4, 5, 6, 7, 8 }; ...
 %                                         { 1, 1, 1, 1, 1, 1, 1, 1 }];
-                sp.anode_map        = [{ 1, 3, 5, 7, 9, 11, 13 }; ...
-                                        { 1, 1, 1, 1, 1, 1, 1 }];
+                sp.anode_map        = [{ 1, 3, 5, 7, 9, 11, 13, 15 }; ...
+                                        { 1, 1, 1, 1, 1, 1, 1, 1}];
 %                 sp.anode_map        = [{ 1, 5, 7, 9, 11, 13 }; ...
 %                                         { 1, 1, 1, 1, 1, 1 }];
                 % define the cathodes; empty for bipolar
@@ -279,16 +279,16 @@ end
 % sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9];
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
 % sp.EMG_min              = [.15 .15 .15 .15 .1 .1 .1 .15];
-sp.EMG_min              = [.15 .2 .2 .2 .15 .15 .15 .2];
+sp.EMG_min              = repmat(.15,1,8);
 % sp.EMG_min              = [.3 .3 .3 .3 .3 .3 .3 .3];
 % sp.EMG_max              = [.6 .6 .6 .6 .6 .6 .6 .6];
 % sp.EMG_max              = [.7 .7 .7 .7 .7 .7 .7 .7];
 % sp.EMG_max              = [.8 .8 .8 .8 .8 .8 .8 .8];
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1];
-sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9 .9];
+sp.EMG_max              = repmat(.9,1,8);
         
-sp.PW_min               = [0 .15 .05 .1 .05 .1 .05 .05]; % repmat( 0.05, 1, numel(sp.muscles));
-sp.PW_max               = [0 .3 .3 .3 .3 .3 .3 .3];% repmat( 0.4, 1, numel(sp.muscles));
+sp.PW_min               =  [.15 .1 .1 .05 .1 .05 .08 .1]; %[0 .15 .05 .1 .05 .1 .05 .05];;
+sp.PW_max               = [.5 .5 .5 .2 .5 .4 .4 .5]; % repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_max               = [0 .4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_min               = [.05 .15 .05 .05 .01 .01 .05]; % repmat( 0.05, 1, numel(sp.muscles));
 % sp.PW_max               = [.4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
@@ -328,5 +328,3 @@ save('',params);  % fill in file name to save settings
 %% Do it!
 
 run_bmi_fes(params);
-
-

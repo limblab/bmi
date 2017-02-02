@@ -30,12 +30,14 @@ switch params.output
         
     % for the wireless stimulator
     case 'wireless_stim'
-
-        dbg_lvl     = 0; % could be made into a parameter
-        comm_timeout_ms = -1;
-        blocking = true;
-        zb_ch_page = 17;
-        handles.ws  = wireless_stim(params.bmi_fes_stim_params.port_wireless, dbg_lvl,blocking,comm_timeout_ms,zb_ch_page);
+% 
+%         dbg_lvl     = 0; % could be made into a parameter
+%         comm_timeout_ms = -1;
+%         blocking = true;
+%         zb_ch_page = 17;
+%         
+        stim_params = struct('dbg_lvl',1,'comm_timeout_ms',-1,'blocking',true,'zb_ch_page',17,'serial_string',params.bmi_fes_stim_params.port_wireless)
+        handles.ws  = wireless_stim(stim_params);
         
         try
             % Switch to the folder that contains the calibration file
@@ -43,14 +45,15 @@ switch params.output
             cd( params.bmi_fes_stim_params.path_cal_ws );
             
             % comm_timeout specified in ms, or disable
-            handles.ws.init( 1, handles.ws.comm_timeout_disable ); % 1 = reset FPGA stim controller
-            
+%             handles.ws.init( 1, handles.ws.comm_timeout_disable ); % 1 = reset FPGA stim controller
+            handles.ws.init();
+
             handles.ws.version();      % print version info, call after init
             
             % TEMP: go back to the folder you were
             cd(cur_dir)
             
-            if dbg_lvl ~= 0
+            if stim_params.dbg_lvl ~= 0
                 % retrieve & display settings from all channels
                 channel_list    = 1:handles.ws.num_channels;
                 commands        = handles.ws.get_stim(channel_list);

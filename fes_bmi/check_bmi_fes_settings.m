@@ -151,7 +151,7 @@ muscles_to_stim                 = params.bmi_fes_stim_params.EMG_to_stim_map(2,p
 pos_muscles_to_stim             = zeros(1,nbr_emgs_decoder);
 
 for i = 1:nbr_emgs_decoder
-    pos_muscles_to_stim(i)      = find( strncmp( muscles_to_stim{i}, params.bmi_fes_stim_params.muscles, length(muscles_to_stim{i}) ) );
+    pos_muscles_to_stim(i)      = find( strcmp( muscles_to_stim{i}, params.bmi_fes_stim_params.muscles) );
 end
 
 for i = 1:length(params_to_check)
