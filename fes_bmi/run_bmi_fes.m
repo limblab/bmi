@@ -217,7 +217,7 @@ try
                 end
             end
 
-            handles.ffes   = stim_fig( handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec' );
+            handles.ffes   = stim_fig( handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch);
             
             
             % ------------------------------------------------------------
@@ -474,11 +474,11 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
                 data.tgt_on   = true;
                 % fprintf('CT_on\n');
                 % increase trial counter
-                data.trial_ctr  = data.trial_ctr + 1;
+%                 data.trial_ctr  = data.trial_ctr + 1;
                 % check if this is a catch trial, if we have catch trials
                 % at all
                 if params.bmi_fes_stim_params.perc_catch_trials
-                    if ~isempty(find(data.catch_trial_indx == data.trial_ctr,1))
+                    if  randi(100) <= params.bmi_fes_stim_params.perc_catch_trials; % random number [1:100] <= catch trial percentage?
                         % if it is set the flag to no FES
                         data.fes_or_catch = 0;
                         fprintf('*~*~*~catch trial~*~*~*\n');
@@ -566,12 +566,6 @@ end
 %%
 %
 % Get new words from cerebus
-%
-%   function [new_words, new_target, db_buf] = get_new_words(new_ts,new_words,db_buf)
-%
-% Inputs:
-%   
-%
 
 function [new_words, new_target, db_buf] = get_new_words(new_ts,new_words,db_buf)
     if ~isempty(new_ts)

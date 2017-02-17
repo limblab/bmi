@@ -9,7 +9,7 @@
 %   state               : 'init' / 'exec' to initialize the figure or during
 %                           execution
 
-function fig_handle = stim_fig( fig_handle , stim_PW, stim_amp, bmi_fes_stim_params, mode )
+function fig_handle = stim_fig( fig_handle , stim_PW, stim_amp, bmi_fes_stim_params, mode, stim_or_catch)
 
 
 if strcmp(mode,'init')
@@ -18,11 +18,12 @@ if strcmp(mode,'init')
     
     % label the muscles to use different colors
     fig_handle.ext_muscles  = strncmp(bmi_fes_stim_params.muscles,'E',1);
-    fig_handle.flex_muscles = strncmp(bmi_fes_stim_params.muscles,'F',1) | strncmp(bmi_fes_stim_params.muscles,'PL',2);
+    fig_handle.flex_muscles = (strncmp(bmi_fes_stim_params.muscles,'F',1) | strncmp(bmi_fes_stim_params.muscles,'PL',2)) & ~strcmp(bme_fes_stim_params.muscles,'FPB');
     
     fig_handle.hand_muscles = strncmp(bmi_fes_stim_params.muscles,'ADL',3);
     fig_handle.hand_muscles = fig_handle.hand_muscles | strncmp(bmi_fes_stim_params.muscles,'APB',3);
     fig_handle.hand_muscles = fig_handle.hand_muscles | strncmp(bmi_fes_stim_params.muscles,'APL',3);
+    fig_handle.hand_muscles = fig_handle.hand_muscles | strncmp(bmi_fes_stim_params.muscles,'FPB',3);
     
     fig_handle.other_muscles = strncmp(bmi_fes_stim_params.muscles,'Brad',4);
     fig_handle.other_muscles = fig_handle.other_muscles | strncmp(bmi_fes_stim_params.muscles,'Sup',3);
@@ -71,22 +72,30 @@ if strcmp(mode,'init')
 elseif strcmp(mode,'exec')
 
     if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
-
+        title('PW stimulation values')
+        
+        % update PW plotting based on muscle type
         if ~isempty(fig_handle.ext_muscles)
             fig_handle.ph_ext.YData     = stim_PW(fig_handle.ext_muscles);
         end
-        
+
         if ~isempty(fig_handle.flex_muscles)
             fig_handle.ph_flex.YData    = stim_PW(fig_handle.flex_muscles);
         end
-        
+
         if ~isempty(fig_handle.hand_muscles)
             fig_handle.ph_hand.YData    = stim_PW(fig_handle.hand_muscles);
         end
-        
+
         if ~isempty(fig_handle.other_muscles)
             fig_handle.ph_other.YData   = stim_PW(fig_handle.other_muscles);
         end
+        
+        % Label on the title if this is a catch trial
+        if ~stim_or_catch
+            title('CATCH TRIAL')
+        end
+        
     else
         % ToDo
     end

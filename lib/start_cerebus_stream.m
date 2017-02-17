@@ -2,6 +2,7 @@ function handles = start_cerebus_stream(params,handles,xpc)
 
 % Cerebus Stream via Central
 connection = cbmex('open',1);
+
 if ~connection
     echoudp('off');
     if exist('xpc','var')

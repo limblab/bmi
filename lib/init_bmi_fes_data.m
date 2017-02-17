@@ -20,10 +20,11 @@ else
     offline_data = []; 
 end
 
-% create an array with 1 and 0 symbolizing the fes and catch trials, in
-% blocks of 100
-catch_trials        = randi(50,round(params.bmi_fes_stim_params.perc_catch_trials/2),1)';
-catch_trials        = sort(catch_trials);
+% old implementation of catch trial, changed -KLB
+% % create an array with 1 and 0 symbolizing the fes and catch trials, in
+% % blocks of 100
+% catch_trials        = randi(50,round(params.bmi_fes_stim_params.perc_catch_trials/2),1)';
+% catch_trials        = sort(catch_trials);
 
 data = struct(  'spikes'      , zeros(spike_buf_size,params.n_neurons),...
                 'analog'      , [],...
@@ -36,8 +37,9 @@ data = struct(  'spikes'      , zeros(spike_buf_size,params.n_neurons),...
                 'stim_PW'     , zeros(1,params.n_emgs),...
                 'stim_amp'    , zeros(1,params.n_emgs),...
                 'fes_or_catch', 1, ... % flag for doing or not doing FES
-                'catch_trial_indx', catch_trials, ... % trial numbers that will be catch
-                'trial_ctr'   , 0, ... % for the catch vs FES trials
+                % old catch trial implementation method. changed.
+%                 'catch_trial_indx', catch_trials, ...     % trial numbers that will be catch
+%                 'trial_ctr'   , 0, ... % for the catch vs FES trials
                 'tgt_on'      , false,...
                 'tgt_bin'     , NaN,...
                 'tgt_ts'      , NaN,...
