@@ -6,13 +6,13 @@ else
     spike_buf_size = params.n_lag;
 end
 
-if ~params.online
-    if ~isstruct(params.offline_data)
+if ~params.online % if we're not running this online
+    if ~isstruct(params.offline_data) % if params is a file instead of a struct 
         offline_data = LoadDataStruct(params.offline_data);
     else
         offline_data = params.offline_data;
     end
-    params.n_neurons = size(offline_data.neuronIDs,1);
+    params.n_neurons = size(offline_data.neuronIDs,1); % 
     params.neuronIDs = offline_data.neuronIDs;
     params.binsize   = offline_data.timeframe(2)-offline_data.timeframe(1);
     params.ave_fr    = mean(mean(offline_data.spikeratedata));
@@ -20,11 +20,13 @@ else
     offline_data = []; 
 end
 
-% old implementation of catch trial, changed -KLB
 % % create an array with 1 and 0 symbolizing the fes and catch trials, in
-% % blocks of 100
-% catch_trials        = randi(50,round(params.bmi_fes_stim_params.perc_catch_trials/2),1)';
-% catch_trials        = sort(catch_trials);
+% blocks of 100
+if params.bmi_fes_stim_params.per_catch_trials) < 1 % checks if given as decimal instead of integer
+    params.bmi_fes_stim_params.per_catch_trials = params.bmi_fes_stim_params.per_catch_trials*100;
+end
+catch_trials        = randperm(100,ceil(params.bmi_fes_stim_params.perc_catch_trials))'; % trials out of 100 with catch trials
+catch_trials        = sort(catch_trials); % sort them. Not sure why, but figured I'd just leave that here
 
 data = struct(  'spikes'      , zeros(spike_buf_size,params.n_neurons),...
                 'analog'      , [],...
@@ -37,9 +39,7 @@ data = struct(  'spikes'      , zeros(spike_buf_size,params.n_neurons),...
                 'stim_PW'     , zeros(1,params.n_emgs),...
                 'stim_amp'    , zeros(1,params.n_emgs),...
                 'fes_or_catch', 1, ... % flag for doing or not doing FES
-                % old catch trial implementation method. changed.
-%                 'catch_trial_indx', catch_trials, ...     % trial numbers that will be catch
-%                 'trial_ctr'   , 0, ... % for the catch vs FES trials
+                'catch_trial_indx', catch_trials, ...     % trial numbers that will be catch
                 'tgt_on'      , false,...
                 'tgt_bin'     , NaN,...
                 'tgt_ts'      , NaN,...

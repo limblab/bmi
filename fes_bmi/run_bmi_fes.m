@@ -140,7 +140,7 @@ try
             
             % get a new prediction by transforming the data into a row
             % vector and multiply by the decoder 
-            pred        = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
+            pred_new        = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
             
             % apply the static non-linearity, if there is one
             if isfield(neuron_decoder,'P')
@@ -217,7 +217,14 @@ try
                 end
             end
 
-            handles.ffes   = stim_fig( handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch);
+            % Plot the stimulation value
+            % We're gonna try doing this using a parallel pool, see if this
+            % can reduce processing time
+            if ishandle(ParFig)
+                handles.ffes = fetchOutputs(ParFig);
+            end                
+            ParFig = batch(@stim_fig,1,{handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch});
+%             handles.ffes   = stim_fig( handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch);
             
             
             % ------------------------------------------------------------
@@ -465,7 +472,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
                 data.tgt_on   = true;
             end
             % new word CT_ON?
-            if new_words(i,2) == w.CT_On
+            if new_words(i,2) == w.CT_On  % "w" is the word definitions. It's defined in Words()
                 data.tgt_id   = 0;
                 data.tgt_ts   = new_words(i,1);
                 %Center target, always at [0 0];
@@ -473,12 +480,10 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
                 data.tgt_bin  = bin_count;
                 data.tgt_on   = true;
                 % fprintf('CT_on\n');
-                % increase trial counter
-%                 data.trial_ctr  = data.trial_ctr + 1;
                 % check if this is a catch trial, if we have catch trials
                 % at all
                 if params.bmi_fes_stim_params.perc_catch_trials
-                    if  randi(100) <= params.bmi_fes_stim_params.perc_catch_trials; % random number [1:100] <= catch trial percentage?
+                    if  find(mod(data.trial_count,100) == data.catch_trial_indx); % random number [1:100] <= catch trial percentage?
                         % if it is set the flag to no FES
                         data.fes_or_catch = 0;
                         fprintf('*~*~*~catch trial~*~*~*\n');
