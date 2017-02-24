@@ -51,7 +51,7 @@ stimulator_plugged_in   = true;
 params.online           = true;
 
 % Percentage of catch trials
-sp.perc_catch_trials    = 15;
+sp.perc_catch_trials    = 100;
 
 
 % Save the data
@@ -68,62 +68,64 @@ end
 %% ------------------------------------------------------------------------
 % Build the neuron-to-EMG decoder
 
-% Raw data file for the decoder
-if ismac
-    file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
-elseif ispc
-    file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170126\Jango_20170126_KB_WF_001.nev';
-%     file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\Jango_Treats_07272016_SN_002.nev';
+AlreadyBuiltDecoder=0;
+if AlreadyBuiltDecoder == 0
+%    Raw data file for the decoder
+    if ismac
+        file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
+    elseif ispc
+        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170224\20170224_Jango_KB_PG_001.nev';
+        %     file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\Jango_Treats_07272016_SN_002.nev';
+    end
+    
+    
+    % order of the static non-linearity
+    poly_order              = 2;
+    
+    % Build decoder
+    N2E                     = build_emg_decoder_from_nev( file4decoder, task, emg_list_4_dec, poly_order );
 end
- 
-
-% order of the static non-linearity
-poly_order              = 2;
-
-% Build decoder
-N2E                     = build_emg_decoder_from_nev( file4decoder, task, emg_list_4_dec, poly_order );
-
 
 
 % ------------------------------------------------------------------------
-%% If want to use an existing decoder
-if ismac
-    dec_file            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
-elseif ispc
-    dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160727\Jango_Treats_07272016_SN_002_N2E_Decoder.mat';
-end
-
-% If N2E is a file, this will load it
-if ~isstruct(dec_file)
-    N2E                 = LoadDataStruct(dec_file);
-    
-    % Find the muscles which EMGs we want to decode in the decoder file,
-    % and get rid of the muscles we don't care about (i.e. not included in
-    % emg_list_4_dec)
-    if isfield(N2E, 'H')
-        emg_pos_in_dec  = zeros(1,numel(emg_list_4_dec));
-        for i = 1:length(emg_pos_in_dec)
-            % don't look at EMGs with label length longer than the label
-            % you are looking for because it can give an error (e.g., if
-            % you are looking for the position of FCR and there is an FCRl
-            % and an FCR matlab will try to return two values)
-            indx_2_look = [];
-            for ii = 1:length(N2E.outnames)
-                if length(N2E.outnames{ii}) == length(emg_list_4_dec{i}) 
-                    indx_2_look = [indx_2_look, ii];
-                end
-            end
-            % find the index of the EMGs in the decoder
-            emg_pos_in_dec(1,i) = indx_2_look( find( strncmp(N2E.outnames(indx_2_look),...
-                                    emg_list_4_dec(i),length(emg_list_4_dec{i})) ));
-        end
-        % Get rid of the other muscles in the decoder
-        N2E.H           = N2E.H(:,emg_pos_in_dec);
-        N2E.outnames    = emg_list_4_dec;
-    else
-        error('Invalid neuron-to-emg decoder');
-    end
-end
+% %% If want to use an existing decoder
+% if ismac
+%     dec_file            = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/Decoders/20150320_Jango_WF_001_binned_Decoder.mat';
+% elseif ispc
+%     dec_file            = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160727\Jango_Treats_07272016_SN_002_N2E_Decoder.mat';
+% end
+% 
+% % If N2E is a file, this will load it
+% if ~isstruct(dec_file)
+%     N2E                 = LoadDataStruct(dec_file);
+%     
+%     % Find the muscles which EMGs we want to decode in the decoder file,
+%     % and get rid of the muscles we don't care about (i.e. not included in
+%     % emg_list_4_dec)
+%     if isfield(N2E, 'H')
+%         emg_pos_in_dec  = zeros(1,numel(emg_list_4_dec));
+%         for i = 1:length(emg_pos_in_dec)
+%             % don't look at EMGs with label length longer than the label
+%             % you are looking for because it can give an error (e.g., if
+%             % you are looking for the position of FCR and there is an FCRl
+%             % and an FCR matlab will try to return two values)
+%             indx_2_look = [];
+%             for ii = 1:length(N2E.outnames)
+%                 if length(N2E.outnames{ii}) == length(emg_list_4_dec{i}) 
+%                     indx_2_look = [indx_2_look, ii];
+%                 end
+%             end
+%             % find the index of the EMGs in the decoder
+%             emg_pos_in_dec(1,i) = indx_2_look( find( strncmp(N2E.outnames(indx_2_look),...
+%                                     emg_list_4_dec(i),length(emg_list_4_dec{i})) ));
+%         end
+%         % Get rid of the other muscles in the decoder
+%         N2E.H           = N2E.H(:,emg_pos_in_dec);
+%         N2E.outnames    = emg_list_4_dec;
+%     else
+%         error('Invalid neuron-to-emg decoder');
+%     end
+% end
 
 
 % ------------------------------------------------------------------------
@@ -153,6 +155,7 @@ end
 
 % ------------------------------------------------------------------------
 %% Define some BMI parameters
+
 
 
 % Assign the decoder we loaded
@@ -279,7 +282,7 @@ end
 % sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9];
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
 % sp.EMG_min              = [.15 .15 .15 .15 .1 .1 .1 .15];
-sp.EMG_min              = repmat(.15,1,8);
+sp.EMG_min              = repmat(.1,1,8);
 % sp.EMG_min              = [.3 .3 .3 .3 .3 .3 .3 .3];
 % sp.EMG_max              = [.6 .6 .6 .6 .6 .6 .6 .6];
 % sp.EMG_max              = [.7 .7 .7 .7 .7 .7 .7 .7];
@@ -316,12 +319,12 @@ params.bmi_fes_stim_params  = sp;
 
 % ------------------------------------------------------------------------
 %% Load settings from previous session
-[LoadName,LoadPath,~] = uigetfile('.mat','Params file save location');
-load([LoadPath,LoadName]);   % Filename for settings
+%[LoadName,LoadPath,~] = uigetfile('.mat','Params file save location');
+%load([LoadPath,LoadName]);   % Filename for settings
 
 % ------------------------------------------------------------------------
 %% Save settings for future usage
-save('',params);  % fill in file name to save settings
+%save('',params);  % fill in file name to save settings
 
 
 % ------------------------------------------------------------------------

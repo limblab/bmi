@@ -22,8 +22,8 @@ end
 
 % % create an array with 1 and 0 symbolizing the fes and catch trials, in
 % blocks of 100
-if params.bmi_fes_stim_params.per_catch_trials) < 1 % checks if given as decimal instead of integer
-    params.bmi_fes_stim_params.per_catch_trials = params.bmi_fes_stim_params.per_catch_trials*100;
+if params.bmi_fes_stim_params.perc_catch_trials < 1 % checks if given as decimal instead of integer
+    params.bmi_fes_stim_params.perc_catch_trials = params.bmi_fes_stim_params.perc_catch_trials*100;
 end
 catch_trials        = randperm(100,ceil(params.bmi_fes_stim_params.perc_catch_trials))'; % trials out of 100 with catch trials
 catch_trials        = sort(catch_trials); % sort them. Not sure why, but figured I'd just leave that here

@@ -140,7 +140,7 @@ try
             
             % get a new prediction by transforming the data into a row
             % vector and multiply by the decoder 
-            pred_new        = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
+            pred        = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
             
             % apply the static non-linearity, if there is one
             if isfield(neuron_decoder,'P')
@@ -220,11 +220,11 @@ try
             % Plot the stimulation value
             % We're gonna try doing this using a parallel pool, see if this
             % can reduce processing time
-            if ishandle(ParFig)
-                handles.ffes = fetchOutputs(ParFig);
-            end                
-            ParFig = batch(@stim_fig,1,{handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch});
-%             handles.ffes   = stim_fig( handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch);
+%             if ishandle(ParFig)
+%                 handles.ffes = fetchOutputs(ParFig);
+%             end                
+%             ParFig = batch(@stim_fig,1,{handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch});
+            handles.ffes   = stim_fig( handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch);
             
             
             % ------------------------------------------------------------

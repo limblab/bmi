@@ -18,7 +18,7 @@ if strcmp(mode,'init')
     
     % label the muscles to use different colors
     fig_handle.ext_muscles  = strncmp(bmi_fes_stim_params.muscles,'E',1);
-    fig_handle.flex_muscles = (strncmp(bmi_fes_stim_params.muscles,'F',1) | strncmp(bmi_fes_stim_params.muscles,'PL',2)) & ~strcmp(bme_fes_stim_params.muscles,'FPB');
+    fig_handle.flex_muscles = (strncmp(bmi_fes_stim_params.muscles,'F',1) | strncmp(bmi_fes_stim_params.muscles,'PL',2)) & ~strcmp(bmi_fes_stim_params.muscles,'FPB');
     
     fig_handle.hand_muscles = strncmp(bmi_fes_stim_params.muscles,'ADL',3);
     fig_handle.hand_muscles = fig_handle.hand_muscles | strncmp(bmi_fes_stim_params.muscles,'APB',3);
@@ -33,7 +33,7 @@ if strcmp(mode,'init')
     % create plot
     fig_handle.ah           = axes('Parent',fig_handle.fh);
     hold on
-    
+
     if ~isempty(find(fig_handle.ext_muscles,1))
         
         fig_handle.ph_ext   = plot( fig_handle.ah, find( fig_handle.ext_muscles ), ...
@@ -93,7 +93,7 @@ elseif strcmp(mode,'exec')
         
         % Label on the title if this is a catch trial
         if ~stim_or_catch
-            title('CATCH TRIAL')
+         fig_handle.ah.Title.String='catch trial';
         end
         
     else

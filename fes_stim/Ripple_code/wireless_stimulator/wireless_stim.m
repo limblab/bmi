@@ -457,6 +457,7 @@ classdef wireless_stim < handle
               case obj.run_once_go
                 obj.set_param(1, [1:obj.num_channels], obj.reg_single_mode_go, commit);
               case obj.run_cont
+                fprintf('Run Continuously');
                 obj.set_param(0, channel_list, obj.reg_single_mode_en, false);
                 obj.set_param(1, channel_list, obj.reg_stim_en, commit);
               otherwise
