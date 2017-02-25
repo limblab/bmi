@@ -4,8 +4,8 @@ clear all; close all; clc;
 %% Some high level stuff
 
 % Who is in the lab?
-monkey                  = 'Jango'; % 'Kevin' 'Jango' 'Fish'
-task                    = 'WF'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the task you trained on
+monkey                  = 'Jango'; % 'Jango' 'Fish'
+task                    = 'MG_PG'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the task you trained on -- update this or catch trials won't work!
 
 % List of muscles for the decoder
 % emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; % Fish grasping 
@@ -265,10 +265,7 @@ switch monkey
         end
         
         
-        
-    case 'Kevin'
-        sp.muscles      = {'FCR1','FCR2','FCU1','FDPr','FDPu','FDS1','FDS2','PT','FCU2','ECU1','ECU2','ECR1','ECR2','EDCu'};        
-        % sp.anode_map    
+
 end
 
 
@@ -313,6 +310,7 @@ if strncmp(params.output,'wireless_stim',13)
     sp.port_wireless    = 'COM5';
 end
 
+sp.task = task;
 
 % pass the stimulation parametesr to the params struct
 params.bmi_fes_stim_params  = sp;

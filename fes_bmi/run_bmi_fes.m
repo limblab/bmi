@@ -45,7 +45,7 @@ end
 bin_count               = 0;
 reached_cycle_t         = false;
 % cursor_pos = [0 0];
-w                       = Words;
+w                       = Words(params.bmi_fes_stim_params.task);
 handles                 = [];
 
 % data structure to store inputs --do not use the second argument because
