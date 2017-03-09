@@ -24,13 +24,14 @@ continuous              = false;
 
 if nargin == 1   
     stim_params         = varargin{1}; 
-end
-if nargin>1 
+elseif nargin>1 
+    stim_params         = varargin{1};
     continuous          = varargin{2}; 
 end
 
 % fill the rest of the parameters, or load defaults
 stim_params             = stim_params_defaults( stim_params );
+monbi = size(stim_params.elect_list,1); % for dividing up commands; two if bipolar, 1 if mono
 
 % -------------------------------------------------------------------------
 % start communication with the stimulator
@@ -73,8 +74,8 @@ elseif strcmp(stim_params.stimulator,'ws')
         end
     else
         for i = 1:length(ch_list) 
-            for ii = 1:length(stim_cmd)/2
-                ws.set_stim(stim_cmd(ii+(i-1)*length(stim_cmd)/2),ch_list{i});
+            for ii = 1:length(stim_cmd)/monbi
+                ws.set_stim(stim_cmd(ii+(i-1)*length(stim_cmd)/monbi),ch_list{i});
             end
         end
     end
@@ -142,4 +143,3 @@ elseif strcmp(stim_params.stimulator,'ws')
     pause(1);
     delete(ws);
 end
-

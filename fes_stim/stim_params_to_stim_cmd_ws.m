@@ -82,7 +82,7 @@ end
 % struct arrays with param settings
 % -- to avoid communcation problems, and since introducing a delay is not
 % critical, the commands are sent for groups of 8 channels
-if nbr_elects < 8
+if nbr_elects < 9
     stim_cmd{1}         	= struct(   'TL',      stim_params.tl );
     stim_cmd{2}             = struct(   'Freq',    stim_params.freq );
     stim_cmd{3}             = struct(   'CathAmp', 32768+stim_params.amp*1000 );
@@ -91,7 +91,7 @@ if nbr_elects < 8
     stim_cmd{6}             = struct(   'AnodDur', stim_params.pw*1000 );
     stim_cmd{7}             = struct(   'TD',      stim_params.delay );
 else
-    % If we are doing bipolar stim, the commans for the return electrodes
+    % If we are doing bipolar stim, the commands for the return electrodes
     % are the same as for the active electrodes
     if size(stim_params.elect_list,1) == 2 
         stim_cmd{1}         = struct(   'TL',      stim_params.tl );
@@ -157,8 +157,10 @@ else
 end
 
 % turn ch_list into a struct for sending the commands
-if nbr_elects < 8
-    ch_list_struct{1}       = ch_list(:);              
+
+if nbr_elects < 9
+    ch_list_struct{1}       = ch_list(1,:);              
+
 else
     if size(stim_params.elect_list,1) == 2 
         ch_list_struct{1}   = ch_list(1,:);              
