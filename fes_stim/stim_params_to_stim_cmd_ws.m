@@ -33,7 +33,7 @@
 % 
 % -------------------------------------------------------------------------
 % NOTE !!!: the current version of the wireless stimulator firmware doesn't
-% support setting the polarity as an array so this has to be habdled in 
+% support setting the polarity as an array so this has to be handled in 
 %
 
 function [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params )
@@ -158,7 +158,7 @@ end
 
 % turn ch_list into a struct for sending the commands
 if nbr_elects < 8
-    ch_list_struct{1}       = ch_list(1);              
+    ch_list_struct{1}       = ch_list(:);              
 else
     if size(stim_params.elect_list,1) == 2 
         ch_list_struct{1}   = ch_list(1,:);              
