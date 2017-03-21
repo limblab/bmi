@@ -51,7 +51,7 @@ stimulator_plugged_in   = true;
 params.online           = true;
 
 % Percentage of catch trials
-sp.perc_catch_trials    = 100;
+sp.perc_catch_trials    = 15;
 
 
 % Save the data
@@ -74,7 +74,7 @@ if AlreadyBuiltDecoder == 0
     if ismac
         file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
     elseif ispc
-        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170224\20170224_Jango_KB_PG_001.nev';
+        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170317\Jango_MG_KB_001.nev';
         %     file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\Jango_Treats_07272016_SN_002.nev';
     end
     
@@ -205,7 +205,7 @@ switch monkey
             case 'wireless_stim'
 %                 sp.anode_map        = [{ 1, 2, 3, 4, 5, 6, 7, 8 }; ...
 %                                         { 1, 1, 1, 1, 1, 1, 1, 1 }];
-                sp.anode_map        = [{ 1, 3, 5, 7, 9, 11, 13, 15 }; ...
+                sp.anode_map        = [{ 2, 3, 5, 8, 9, 12, 13, 15 }; ...
                                         { 1, 1, 1, 1, 1, 1, 1, 1}];
 %                 sp.anode_map        = [{ 1, 5, 7, 9, 11, 13 }; ...
 %                                         { 1, 1, 1, 1, 1, 1 }];
@@ -279,7 +279,7 @@ end
 % sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9];
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
 % sp.EMG_min              = [.15 .15 .15 .15 .1 .1 .1 .15];
-sp.EMG_min              = repmat(.1,1,8);
+sp.EMG_min              = repmat(.05,1,8);
 % sp.EMG_min              = [.3 .3 .3 .3 .3 .3 .3 .3];
 % sp.EMG_max              = [.6 .6 .6 .6 .6 .6 .6 .6];
 % sp.EMG_max              = [.7 .7 .7 .7 .7 .7 .7 .7];
@@ -287,8 +287,9 @@ sp.EMG_min              = repmat(.1,1,8);
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1];
 sp.EMG_max              = repmat(.9,1,8);
         
-sp.PW_min               =  [.15 .1 .1 .05 .1 .05 .08 .1]; %[0 .15 .05 .1 .05 .1 .05 .05];;
-sp.PW_max               = [.5 .5 .5 .2 .5 .4 .4 .5]; % repmat( 0.4, 1, numel(sp.muscles));
+%sp.PW_min               =  [.15 .1 .1 .05 .1 .05 .08 .1]; %[0 .15 .05 .1 .05 .1 .05 .05];;
+sp.PW_min               =  repmat(.05,1,8);
+sp.PW_max               = repmat(.25,1,8); % repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_max               = [0 .4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_min               = [.05 .15 .05 .05 .01 .01 .05]; % repmat( 0.05, 1, numel(sp.muscles));
 % sp.PW_max               = [.4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
@@ -297,7 +298,7 @@ sp.PW_max               = [.5 .5 .5 .2 .5 .4 .4 .5]; % repmat( 0.4, 1, numel(sp.
 
 sp.amplitude_min        = repmat( 0, 1, numel(sp.muscles));
 % sp.amplitude_max        = [0 4 4 4 4 4 4 2];  % this is the max amplitude for PW-modulated FES
-sp.amplitude_max        = repmat(6,1,numel(sp.muscles));  % this is the max amplitude for PW-modulated FES
+sp.amplitude_max        = repmat(8,1,numel(sp.muscles));  % this is the max amplitude for PW-modulated FES
 
 % sp.amplitude_max        = [6 6 6 6 6 6];  % this is the max amplitude for PW-modulated FES
 
@@ -316,14 +317,6 @@ sp.task = task;
 params.bmi_fes_stim_params  = sp;
 
 % ------------------------------------------------------------------------
-%% Load settings from previous session
-%[LoadName,LoadPath,~] = uigetfile('.mat','Params file save location');
-%load([LoadPath,LoadName]);   % Filename for settings
-
-% ------------------------------------------------------------------------
-%% Save settings for future usage
-%save('',params);  % fill in file name to save settings
-
 
 % ------------------------------------------------------------------------
 %% Do it!
