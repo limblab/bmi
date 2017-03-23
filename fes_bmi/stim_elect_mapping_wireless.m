@@ -24,22 +24,22 @@ end
 % because of how the zigbee communication works. If not using some
 % channels, just add zeroes
 ch_list                         = 1:16;
+stim_PW                         = 1000*Stim_PW;     % Pulse width converted
 
-
-switch bmi_fes_stim_params.mode
-    
-    % For PW-modulated FES
-    case 'PW_modulation'
+% switch bmi_fes_stim_params.mode
+%     
+%     % For PW-modulated FES
+%     case 'PW_modulation'
         
-        % converts input PWs from ms to us (those are the units the wireless
-        % stimulator takes
-        if ~catch_trial
-            stim_PW             = stim_PW*1000;
-        % if it's a catch trial, make all PWs zero
-        else
-            stim_PW             = zeros(1,length(stim_PW));
-        end
-        
+%         % converts input PWs from ms to us (those are the units the wireless
+%         % stimulator takes
+%         if ~catch_trial
+%             stim_PW             = stim_PW*1000;
+%         % if it's a catch trial, make all PWs zero
+%         else
+%             stim_PW             = zeros(1,length(stim_PW));
+%         end
+%         
         switch bmi_fes_stim_params.return
             
             case 'monopolar'
@@ -66,6 +66,8 @@ switch bmi_fes_stim_params.mode
                 % create the stimulation command. 
                 cmd{1}          = struct('CathDur', PW_cmd, ...
                                     'AnodDur', PW_cmd); 
+                cmd{2}          = struct('CathAmp', Stim_Amp, ...
+                                    'AnodAmp', Stim_Amp);
                 
             case 'bipolar'
                 
@@ -97,13 +99,13 @@ switch bmi_fes_stim_params.mode
                                     'AnodDur', PW_cmd);
         end
        
-    % For amplitude-modulated FES
-    case 'amplitude_modulation'
-        
-        % converts input PWs from ms to us (those are the units the wireless
-        % stimulator takes
-        stim_amp                = stim_amp*1000;
-        
-        error('amplitude-modulated FES not implemented yet');
+%     % For amplitude-modulated FES
+%     case 'amplitude_modulation'
+%         
+%         % converts input PWs from ms to us (those are the units the wireless
+%         % stimulator takes
+%         stim_amp                = stim_amp*1000;
+%         
+%         error('amplitude-modulated FES not implemented yet');
 end
 

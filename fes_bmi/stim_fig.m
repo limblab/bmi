@@ -72,7 +72,6 @@ if strcmp(mode,'init')
 elseif strcmp(mode,'exec')
 
     if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
-        title('PW stimulation values')
         
         % update PW plotting based on muscle type
         if ~isempty(fig_handle.ext_muscles)
@@ -92,11 +91,11 @@ elseif strcmp(mode,'exec')
         end
         
         % Label on the title if this is a catch trial
-        if ~stim_or_catch
-         fig_handle.ah.Title.String='catch trial';
+        if stim_or_catch && strcmp(fig_handle.ah.Title.String,'catch trial')
+            fig_handle.ah.Title.String = 'PW stimulation values';
+        elseif ~stim_or_catch && strcmp(fig_handle.ah.Title.String,'PW stimulation values')
+            fig_handle.ah.Title.String = 'catch trial';
         end
         
-    else
-        % ToDo
     end
 end

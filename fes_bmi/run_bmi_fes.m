@@ -113,10 +113,14 @@ end
 t_buf                   = tic; 
 drawnow;
 
+profile on -historyoff
+
 %% Run cycle
 try
     while( ishandle(handles.keep_running) && ...
             ( params.online || ~params.online && bin_count < max_cycles) )
+        
+        plt = 1; % runs plot only every other time
         
         % when a full cycle has elapsed
         if (reached_cycle_t)
@@ -164,7 +168,7 @@ try
             % for a neuron-to-EMG decoder followed by an EMG-to-force decoder    
             elseif strcmp(params.mode,'emg_cascade')
                 % apply sigmoid?
-                if params.sigmoid pred = sigmoid(pred,'direct'); end
+                if params.sigmoid_pred == sigmoid(pred,'direct'); end
 %                 % remove negative emg preds
 %                 pred(pred<0) = 0;
                 % store new emg preds
@@ -194,22 +198,19 @@ try
                 if strcmpi(params.output,'wireless_stim')
                     [stim_cmd, channel_list]    = stim_elect_mapping_wireless( data.stim_PW, ...
                                                     data.stim_amp, params.bmi_fes_stim_params );
-                    handles.ws.set_stim(stim_cmd, channel_list);
+                    for which_cmd = 1:length(stim_cmd)
+                        handles.ws.set_stim(stim_cmd(which_cmd), channel_list);
+                    end
                 elseif strcmpi(params.output,'stimulator')
                     stim_cmd                    = stim_elect_mapping( data.stim_PW, [], params.bmi_fes_stim_params );
                     xippmex( 'stimseq', stim_cmd );
                 end
             else        % if it is a catch trial, stop the stimulation
                 if strcmpi(params.output,'wireless_stim')
-                    [stim_cmd, channel_list]    = stim_elect_mapping_wireless( data.stim_PW, ...
-                                                    data.stim_amp, params.bmi_fes_stim_params, 'catch' );
-                    handles.ws.set_stim(stim_cmd, channel_list);
-                    % ToDo: get this into a function
-                    switch params.bmi_fes_stim_params.mode
-                        case 'PW_modulation'
-                            data.stim_PW        = zeros(1,length(data.stim_PW));
-                        case 'amplitude_modulation'
-                            data.stim_amp       = zeros(1,length(data.stim_amp));
+                    [stim_cmd, channel_list]    = stim_elect_mapping_wireless( 0, ...
+                                                    0, params.bmi_fes_stim_params, 'catch' );
+                    for which_cmd = 1:length(stim_cmd)
+                        handles.ws.set_stim(stim_cmd(which_cmd), channel_list);
                     end
                         
                 elseif strcmpi(params.output,'stimulator')
@@ -218,14 +219,12 @@ try
             end
 
             % Plot the stimulation value
-            % We're gonna try doing this using a parallel pool, see if this
-            % can reduce processing time
-%             if ishandle(ParFig)
-%                 handles.ffes = fetchOutputs(ParFig);
-%             end                
-%             ParFig = batch(@stim_fig,1,{handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch});
-            handles.ffes   = stim_fig( handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch);
-            
+            if plt == 1
+                plt = 0;
+                handles.ffes   = stim_fig( handles.ffes, data.stim_PW, data.stim_amp, params.bmi_fes_stim_params, 'exec', data.fes_or_catch);
+            elseif plt == 0
+                plt = 1;
+            end            
             
             % ------------------------------------------------------------
             %% Save and display progress
@@ -332,6 +331,7 @@ try
     end
     echoudp('off');
     fclose('all');
+    profile view
     if ishandle(handles.keep_running)
         close(handles.keep_running);
     end
