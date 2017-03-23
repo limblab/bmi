@@ -74,7 +74,7 @@ if AlreadyBuiltDecoder == 0
     if ismac
         file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
     elseif ispc
-        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170317\Jango_MG_KB_001.nev';
+        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170323\20170323_Jango_KB_PG_001.nev';
         %     file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\Jango_Treats_07272016_SN_002.nev';
     end
     
@@ -279,17 +279,17 @@ end
 % sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9];
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
 % sp.EMG_min              = [.15 .15 .15 .15 .1 .1 .1 .15];
-sp.EMG_min              = [];
+sp.EMG_min              = [.1, .08, .1, .1, .08, .05, .08, .05, .2];
 % sp.EMG_min              = [.3 .3 .3 .3 .3 .3 .3 .3];
 % sp.EMG_max              = [.6 .6 .6 .6 .6 .6 .6 .6];
 % sp.EMG_max              = [.7 .7 .7 .7 .7 .7 .7 .7];
 % sp.EMG_max              = [.8 .8 .8 .8 .8 .8 .8 .8];
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1];
-sp.EMG_max              = repmat(.9,1,8);
+sp.EMG_max              = repmat(.7,1,9);
         
 %sp.PW_min               =  [.15 .1 .1 .05 .1 .05 .08 .1]; %[0 .15 .05 .1 .05 .1 .05 .05];;
 sp.PW_min               =  [.08 .12 .06 .08 .06 .09 .12 .1 .14];
-sp.PW_max               = [.28 .28 .28 .28 .2 .28 .28 .28 .28]; % repmat( 0.4, 1, numel(sp.muscles));
+sp.PW_max               = [.28 .28 .28 .28 .2 .28 .28 .28 .22]; % repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_max               = [0 .4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_min               = [.05 .15 .05 .05 .01 .01 .05]; % repmat( 0.05, 1, numel(sp.muscles));
 % sp.PW_max               = [.4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));

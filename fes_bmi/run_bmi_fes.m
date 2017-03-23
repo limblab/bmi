@@ -113,7 +113,7 @@ end
 t_buf                   = tic; 
 drawnow;
 
-profile on -historyoff
+profile on
 
 %% Run cycle
 try

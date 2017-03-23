@@ -24,7 +24,8 @@ end
 % because of how the zigbee communication works. If not using some
 % channels, just add zeroes
 ch_list                         = 1:16;
-stim_PW                         = 1000*Stim_PW;     % Pulse width converted
+stim_PW                         = 1000*stim_PW;     % Pulse width converted
+stim_amp                        = 1000*stim_amp;
 
 % switch bmi_fes_stim_params.mode
 %     
@@ -62,12 +63,16 @@ stim_PW                         = 1000*Stim_PW;     % Pulse width converted
                 % --the wireless stimulator expect a 16-channel command
                 PW_cmd          = zeros(1,length(ch_list));
                 PW_cmd(elecs_this_muscle)   = stim_PW;
+                amp_cmd_an         = repmat(32768,1,length(ch_list));
+                amp_cmd_cat        = repmat(32768,1,length(ch_list));
+                amp_cmd_an(elecs_this_muscle)  = 32768-stim_amp;
+                amp_cmd_cat(elecs_this_muscle)  = 32768+stim_amp;
                 
                 % create the stimulation command. 
                 cmd{1}          = struct('CathDur', PW_cmd, ...
                                     'AnodDur', PW_cmd); 
-                cmd{2}          = struct('CathAmp', Stim_Amp, ...
-                                    'AnodAmp', Stim_Amp);
+                cmd{2}          = struct('CathAmp', amp_cmd_cat, ...
+                                    'AnodAmp', amp_cmd_an );
                 
             case 'bipolar'
                 
