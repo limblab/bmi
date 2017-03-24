@@ -345,7 +345,7 @@ try
     end
     echoudp('off');
     fclose('all');
-    profile view
+    profile viewer
     if ishandle(handles.keep_running)
         close(handles.keep_running);
     end
