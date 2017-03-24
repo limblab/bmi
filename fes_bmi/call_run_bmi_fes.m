@@ -321,4 +321,11 @@ params.bmi_fes_stim_params  = sp;
 % ------------------------------------------------------------------------
 %% Do it!
 
-run_bmi_fes(params);
+try
+    run_bmi_fes(params);
+catch ME
+    if strcmp(ME.identifier,'MATLAB:serial:fopen:opfailed')
+        fclose(instrfind);
+        run_bmi_fes(params);
+    end
+end
