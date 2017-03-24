@@ -56,8 +56,8 @@ handles                 = [];
 %% Setup figures
 
 % message box to stop the experiment at any time
-handles.keep_running    = msgbox('Click ''ok'' to stop the BMI','BMI Controller');
-set(handles.keep_running,'Position',[200 700 125 52]);
+handles.keep_running    = RunStop_run_bmi_fes(); % opens a figure to control the FES
+set(handles.keep_running,'Position',[200 700 250 90]);
 
 if params.display_plots
     % handle for the FES figure
@@ -116,11 +116,25 @@ drawnow;
 profile on
 
 %% Run cycle
+keep_running_data = guidata(handles.keep_running); % data from the keep running gui
+halt_flag = keep_running_data.Stop; % the stop flag
 try
-    while( ishandle(handles.keep_running) && ...
+    while( ~halt_flag && ...
             ( params.online || ~params.online && bin_count < max_cycles) )
         
+        % get new data from the keep running gui.
+        % theres_got_to_be_a_better_way.billymays
         plt = 1; % runs plot only every other time
+        keep_running_data = guidata(handles.keep_running);
+        halt_flag = keep_running_data.Stop;
+        pause_flag = keep_running_data.Pause;
+        
+        % pause if we clicked pause
+        if pause_flag
+            keyboard();
+            keep_running_data.Pause = 0;
+            guidata(handles.keep_running,keep_running_data);            
+        end
         
         % when a full cycle has elapsed
         if (reached_cycle_t)
