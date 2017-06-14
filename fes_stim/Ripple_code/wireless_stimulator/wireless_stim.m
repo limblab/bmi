@@ -922,7 +922,7 @@ classdef wireless_stim < handle
         %            - global register address if global bit is set
         % bits  12:8 - channel address, mask = 0x1f00
         % bit     13 - broadcast channel address, 0x2000
-        % bit     14 - global register bit, 0x4000
+        % bit     14 - global register bit, 0x4000t
         reg_g_global_reset =    struct('addr',[64, 0], 'def',0,     'min',0, 'max',1);
         reg_g_stim_en =         struct('addr',[64, 1], 'def',0,     'min',0, 'max',1);
         reg_g_comm_timeout_ms = struct('addr',[64, 2], 'def',10000, 'min',0, 'max',65535);  % 10s 0x2710 0xffff 16 bits

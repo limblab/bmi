@@ -164,7 +164,7 @@ try
             % get a new prediction by transforming the data into a row
             % vector and multiply by the decoder 
             pred        = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
-            
+             
             % apply the static non-linearity, if there is one
             if isfield(neuron_decoder,'P')
                 nonlinearity = zeros(1,length(pred));
