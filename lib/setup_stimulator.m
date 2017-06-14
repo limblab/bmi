@@ -36,7 +36,7 @@ switch params.output
 %         blocking = true;
 %         zb_ch_page = 17;
 %         
-        stim_params = struct('dbg_lvl',1,'comm_timeout_ms',-1,'blocking',false,'zb_ch_page',17,'serial_string',params.bmi_fes_stim_params.port_wireless)
+        stim_params = struct('dbg_lvl',1,'comm_timeout_ms',-1,'blocking',true,'zb_ch_page',17,'serial_string',params.bmi_fes_stim_params.port_wireless)
         handles.ws  = wireless_stim(stim_params);
         
         try

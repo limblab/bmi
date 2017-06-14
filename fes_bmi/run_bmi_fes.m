@@ -130,9 +130,14 @@ try
         pause_flag = keep_running_data.Pause;
         
         % pause if we clicked pause
-        if pause_flag
-            keyboard();
+        if pause_flag 
             keep_running_data.Pause = 0;
+            [stim_cmd, channel_list]    = stim_elect_mapping_wireless(zeros(1,9), ...
+                        data.stim_amp, params.bmi_fes_stim_params );
+            for which_cmd = 1:length(stim_cmd)
+                handles.ws.set_stim(stim_cmd(which_cmd), channel_list);
+            end
+            keyboard();
             guidata(handles.keep_running,keep_running_data);            
         end
         

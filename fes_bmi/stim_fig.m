@@ -68,6 +68,7 @@ if strcmp(mode,'init')
     
     xlabel('muscle')
     ylabel('PW (us)')
+    fig_handle.ah.Title.String = 'PW stimulation values';
     
 elseif strcmp(mode,'exec')
 

@@ -71,8 +71,8 @@ stim_amp                        = 1000*stim_amp;
                 % create the stimulation command. 
                 cmd{1}          = struct('CathDur', PW_cmd, ...
                                     'AnodDur', PW_cmd); 
-                cmd{2}          = struct('CathAmp', amp_cmd_cat, ...
-                                    'AnodAmp', amp_cmd_an );
+%                 cmd{2}          = struct('CathAmp', amp_cmd_cat, ...
+%                                     'AnodAmp', amp_cmd_an );
                 
             case 'bipolar'
                 
