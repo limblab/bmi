@@ -1570,7 +1570,7 @@ classdef wireless_stim < handle
                         end
                         if (uamp(fail) < (mid_scale - max_ua))
                             uamp(fail) = mid_scale - max_ua;
-                        end
+                        end 
                     end
                 end
             end
