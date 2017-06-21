@@ -16,12 +16,15 @@ stim_params.PW = .1;
 
 ws = wireless_stim(stim_params);
 try 
+    curdir = pwd;
     cd(stim_params.path_cal_ws);
     ws.init();
+    cd(curdir);
 catch
     ws.delete();
     disp(datestr(datetime(),'HH:MM:SS:FFF'))
     error('Could not connect to stimulator')
+    cd pwd;
 end
 % wait until it's set up...
 drawnow();
@@ -48,7 +51,7 @@ drawnow();
 % cbmex('trialconfig',0); % avoid buffering, since we're only gonna putting things in the files
 % 
 % muscle = 'FPB2';
-FN_base = 'Z:\data\Jango_12a1\ElectrodeCharacterization\20170322\';
+FN_base = 'E:\Data-lab1\12H2-Fish\CerebusData\ElectrodeChar\20170619\';
 % FN = [FN_base, muscle];
 % cbmex('fileconfig',FN,'',1) % start recording a file named FN
 
@@ -56,9 +59,9 @@ FN_base = 'Z:\data\Jango_12a1\ElectrodeCharacterization\20170322\';
 FNexcel = [FN_base, 'Classification']; % set this up in the same folder as the CBmex file
 % sheet = muscle; % wiggity wiggity whaaaat?
 
-electrode = {'FCUr_1', 'FCUr_2', 'FCUu_1', 'FCUu_2',...
-    'FDPr_1', 'FDPr_2', 'FDSr_1', 'FDSr_2', 'FDSu_1', 'FDSu_2', 'PL_1', 'PL_2'...
-    'FDS_1', 'APB_2'};
+electrode = {'FCR1_1', 'FCR1_2', 'FCR2_1', 'FCR2_2',...
+    'FCU1_1', 'FCU1_2', 'FCU2_1', 'FCU2_2', 'FDP1_1', 'FDP1_2',...
+    'FDP2_1', 'FDP2_2','FDS1_1', 'FDS1_2', 'FDS2_1', 'FDS2_2'};
 
 % xlrange = cell();
 for i = 1:1000
@@ -68,82 +71,133 @@ xlrangei = 1;
 % xlswrite(FNexcel,{'Time' 'Pulse Width', 'Amplitude','Response'},sheet,xlrange{xlrangei});
 
 
+%% find the desired current at 300 us pulse width
+PW = .4;  % 400 us pulse width
+amp = [1:8]; % 1-7 mA
+
+stim_amps = zeros(16,1); % empty array for each electrode of the desired amps
+
+% do this for each electrode
+for i = 2
+    h_start = msgbox(['Start electrode ' num2str(i)]);
+    while ishandle(h_start)
+        pause(.01)
+    end
+    
+    h_stim = msgbox('Hit ''ok'' when you feel the top');
+
+    for a = 1:length(amp)
+        if ishandle(h_stim)
+            stim_params.amp = amp(a);
+            stim_params.pw = PW; 
+            stim_params.elect_list = i;
+            stim_amps = amp(a);
+
+            fprintf('\n%.2f\n',amp(a));
+        else
+            break
+        end
+        
+        [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+        for k = 1:length(stim_cmd)
+            ws.set_stim(stim_cmd(k),ch_list{:});
+        end
+        
+        for ii = 1:length(ch_list)
+            ws.set_Run(ws.run_cont,ch_list{ii})
+        end
+        
+        pause(2)
+
+        
+    end
+    
+    % reset everything to zeros
+    stim_params.amp = 0;
+    stim_params.pw = 0; 
+    stim_params.elect_list = [1:2:15,2:2:16];
+
+    [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+    for k = 1:length(stim_cmd)
+        for kk = 1:length(ch_list);
+            ws.set_stim(stim_cmd(k),ch_list{kk});
+        end
+    end
+
+end 
+
+
+stim_params.amp = 0;
+stim_params.pw = 0; 
+stim_params.elect_list = [1:2:15,2:2:16];
+
+[stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+for k = 1:length(stim_cmd)
+    for kk = 1:length(ch_list);
+        ws.set_stim(stim_cmd(k),ch_list{kk});
+    end
+end
 
 %% set up a vector of all possible amplitudes and pulse widths
-PW = [0:.01:.3]; % list of pulse widths
-amp = [6, 8]; % list of amplitudes
+PW = [.1:.05:.4]; % list of pulse widths
 
+% xlrangei = 1;
 
-% [PW,amp] = meshgrid(PW,amp); % meshgrids
-% PW = PW(:); % turn back to vector
-% amp = amp(:); % same here
-% rn = (randperm(length(PW)));
-% PW = PW(rn);
-% amp = amp(rn);
+xlswrite(FNexcel,{'Muscle','Threshold','Amplitude'},xlrange{1});
+for ii = 1
+    fprintf('%s\n',electrode{ii});
+    stim_params.elect_list = ii;
 
-xlrangei = 1;
-% xlswrite(FNexcel,{'Muscle','Pulse Width', 'Amplitude'},'Low',xlrange{xlrangei});
-% xlswrite(FNexcel,{'Muscle','Pulse Width', 'Amplitude'},'High',xlrange{xlrangei});
-for ii = 2:length(electrode)+1
-    fprintf('%c',electrode{mod(ii,16)+1});
-    stim_params.elect_list = mod(ii,16)+1;
-    xlswrite(FNexcel,{'Muscle','Pulse Width', 'Amplitude'},['Low_' electrode{mod(ii,16)+1}],xlrange{xlrangei});
-    xlswrite(FNexcel,{'Muscle','Pulse Width', 'Amplitude'},['High_' electrode{mod(ii,16)+1}],xlrange{xlrangei});
-    for jj = 1:length(amp)
-        h_wait = msgbox([int2str(amp(jj)) ' mA']);
-        while(ishandle(h_wait))
-            drawnow()
-        end
-        h_low = msgbox('can you feel it?','Mr Krabs?'); % set up a msgbox for the minimum
-        lh = false; % flag for whether we're testing low or high threshold
-        xlrangei = xlrangei+1;
-        restart_loop = 0;
-        j = 1;
-        while ~restart_loop && j<length(PW)
-            stim_params.amp = amp(jj); stim_params.pw = PW(j); % run through amps and PWs
-            [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+    h_wait = msgbox(['Electrode for ' electrode{ii}]);
+    while(ishandle(h_wait))
+        drawnow()
+    end
+    
+    h_low = msgbox('Can you feel it?');
+    flg_end = false; % do we end the loop?
+    th = 0; % initial threshold value
+    
+    for jj = 1:length(PW)
 
-            fprintf('.\n')
+            stim_params.amp = stim_amps; % set current amplitude
+            stim_params.pw = PW(jj); % set current pulse width
+                        
+            if ~ishandle(h_low)
+                break;
+            end
+        
+        [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+        fprintf('\n%.2f\n',PW(jj))
             
-            for k = 1:length(ch_list) 
-                for kk = 1:length(stim_cmd)
-                    ws.set_stim(stim_cmd(kk),ch_list{k});
-                end
-            end
-
-        %     only turn this on for debugging. We want to run blind to do a proper
-        %     psychometric curve
-        %     fprintf('PWM: %.2f amp: %.2f \n',PW(j),amp(j)); 
-
-            % set to run
-            for i = k:length(ch_list)
-                ws.set_Run(ws.run_cont,ch_list{k})
-            end
-    %         ws.set_Run(ws.run_once_go,ch_list);
-    %         t = cbmex('time');
-            drawnow;
-
-            if ~ishandle(h_low)&&~lh
-                h_hi = msgbox('I have seen the top!');
-                lh = true;
-                xlswrite(FNexcel,{electrode{mod(ii,16)+1},PW(j),amp(jj)},['Low_' electrode{mod(ii,16)+1}],xlrange{xlrangei});
-            elseif lh && ~ishandle(h_hi)
-                xlswrite(FNexcel,{electrode{mod(ii,16)+1},PW(j),amp(jj)},['High_' electrode{mod(ii,16)+1}],xlrange{xlrangei});
-                restart_loop = 1;
-            end
-
-            pause(1) % give us time for the next one
-            drawnow;
-            j = j+1;
-        end
-        stim_params.amp = 0.001; stim_params.pw = 0.001; % set everything to zero between amps
-        [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params );
         for k = 1:length(ch_list) 
             for kk = 1:length(stim_cmd)
                 ws.set_stim(stim_cmd(kk),ch_list{k});
             end
-                ws.set_Run(ws.run_cont,ch_list{k})
         end
+
+        % set to run
+        for ch = 1:length(ch_list)
+            ws.set_Run(ws.run_cont,ch_list{ch})
+        end
+
+        drawnow;
+        th = PW(jj); % set the threshold anew
+
+        pause(5) % give us time for the next one
+ 
+    end
+    xlswrite(FNexcel,{electrode{ii},th,amp(ii)},xlrange{ii+1});
+end
+
+% set everything to zero to clean up
+stim_params.amp = 0;
+stim_params.pw = 0; 
+stim_params.elect_list = [1:2:15,2:2:16];
+
+[stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+for k = 1:length(stim_cmd)
+    for kk = 1:length(ch_list);
+        ws.set_stim(stim_cmd(k),ch_list{kk});
     end
 end
 

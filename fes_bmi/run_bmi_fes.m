@@ -56,8 +56,8 @@ handles                 = [];
 %% Setup figures
 
 % message box to stop the experiment at any time
-handles.keep_running    = msgbox('Click ''ok'' to stop the BMI','BMI Controller');
-set(handles.keep_running,'Position',[200 700 125 52]);
+handles.keep_running    = RunStop_run_bmi_fes(); % opens a figure to control the FES
+set(handles.keep_running,'Position',[200 700 250 90]);
 
 if params.display_plots
     % handle for the FES figure
@@ -116,11 +116,30 @@ drawnow;
 profile on
 
 %% Run cycle
+keep_running_data = guidata(handles.keep_running); % data from the keep running gui
+halt_flag = keep_running_data.Stop; % the stop flag
 try
-    while( ishandle(handles.keep_running) && ...
+    while( ~halt_flag && ...
             ( params.online || ~params.online && bin_count < max_cycles) )
         
+        % get new data from the keep running gui.
+        % theres_got_to_be_a_better_way.billymays
         plt = 1; % runs plot only every other time
+        keep_running_data = guidata(handles.keep_running);
+        halt_flag = keep_running_data.Stop;
+        pause_flag = keep_running_data.Pause;
+        
+        % pause if we clicked pause
+        if pause_flag 
+            keep_running_data.Pause = 0;
+            [stim_cmd, channel_list]    = stim_elect_mapping_wireless(zeros(1,9), ...
+                        data.stim_amp, params.bmi_fes_stim_params );
+            for which_cmd = 1:length(stim_cmd)
+                handles.ws.set_stim(stim_cmd(which_cmd), channel_list);
+            end
+            keyboard();
+            guidata(handles.keep_running,keep_running_data);            
+        end
         
         % when a full cycle has elapsed
         if (reached_cycle_t)
@@ -145,7 +164,7 @@ try
             % get a new prediction by transforming the data into a row
             % vector and multiply by the decoder 
             pred        = [1 rowvec(data.spikes(1:params.n_lag,:))']*neuron_decoder.H;
-            
+             
             % apply the static non-linearity, if there is one
             if isfield(neuron_decoder,'P')
                 nonlinearity = zeros(1,length(pred));
@@ -331,7 +350,7 @@ try
     end
     echoudp('off');
     fclose('all');
-    profile view
+    profile viewer
     if ishandle(handles.keep_running)
         close(handles.keep_running);
     end
