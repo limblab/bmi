@@ -9,7 +9,7 @@ task                    = 'WF'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the 
 
 % List of muscles for the decoder
 % emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; % Fish grasping 
-emg_list_4_dec          = {'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FDS','APB'}; % Jango 12/11
+emg_list_4_dec          = {'FCRr','FCUr','FCUu','FDPr','FDSr','FDSu','PT'}; % Jango 12/11
 % emg_list_4_dec          = {'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
 % emg_list_4_dec          = {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'PL', 'FDS'}; 
 
@@ -19,8 +19,8 @@ emg_list_4_dec          = {'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FDS
 % stimulation of muscles in (2,n)
 % sp.EMG_to_stim_map      = [{'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; ...
 %                             {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}];
-sp.EMG_to_stim_map      = [{'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FDS','APB'}; ...
-                        {'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FDS','APB'}]; % Jango Flexors only
+sp.EMG_to_stim_map      = [{'FCRr','FCUr','FCUu','FDPr','FDSr','FDSu','PT'}; ...
+                        {'FCRr','FCUr','FCUu','FDPr','FDSr','FDSu','PT'}]; % Jango Flexors only
 % sp.EMG_to_stim_map      = [{'FCRr', 'FCUu', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
 %                             {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'}];
 % sp.EMG_to_stim_map      = [{'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
@@ -28,7 +28,7 @@ sp.EMG_to_stim_map      = [{'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FD
 
                         
 % Monopolar or bipolar stimulation
-stim_mode               = 'monopolar'; % 'bipolar'; 'monopolar'
+stim_mode               = 'bipolar'; % 'monopolar'; 'bipolar'
 
 % Which stimulator we are using: the wireless stimulator ('wireless_stim')
 % or the grapevine ('stimulator'). If you choose 'catch' it will do online
@@ -74,8 +74,7 @@ if AlreadyBuiltDecoder == 0
     if ismac
         file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
     elseif ispc
-        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170427\20170427_Jango_WFIso_R10T4_KB_001.nev';
-        %     file4decoder        = 'E:\Data-lab1\12H2-Fish\Cerebus Data\CerebusData\InLab\Jango_Treats_07272016_SN_002.nev';
+        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170705\20170705_Jango_PG_KBSN_001';
     end
     
     
@@ -83,7 +82,7 @@ if AlreadyBuiltDecoder == 0
     poly_order              = 2;
     
     % Build decoder
-    N2E                     = build_emg_decoder_from_nev( file4decoder, task, emg_list_4_dec, poly_order );
+    [N2E,PredData]          = build_emg_decoder_from_nev( file4decoder, task, emg_list_4_dec, poly_order );
 end
 
 
@@ -137,7 +136,7 @@ if ~params.online
         params.offline_data = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/BinnedData/behavior plasticity/20150320_Jango_WF_001_binned.mat';
     elseif ispc
 %        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160313\Jango_MG_PG_20160313_T3_001_bin.mat';
-        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170126\Jango_20170126_KB_WF_001.mat';
+        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170703\Jango_WF_KB_001.mat';
     end
 end
 
@@ -180,7 +179,7 @@ switch monkey
     % wireless stimulator
     case 'Jango'
         
-       sp.muscles                  = {'FCRr','FCUr','FCUu','FDPr','FDPu','FDSr','FDSu','FDS','APB'};
+       sp.muscles                  = {'FCRr','FCUr','FCUu','FDPr','FDSr','FDSu','PT'};
 %         sp.muscles                  = {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSno', 'APB'};
 %        sp.muscles                  = {'FCRr', 'FCUr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'};        
 %         sp.muscles                  = {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'};        
@@ -199,20 +198,21 @@ switch monkey
 %                                                       up yet for 
 %                                                       grapevine
                 elseif strcmp(stim_mode,'monopolar')
-                    sp.cathode_map  = {{ }};
+                    sp.cathode_map  = {{ 1, 3, 5, 7, 9, 11, 13}
+                                        {1, 1, 1, 1, 1, 1, 1}};
                 end
             % for the wireless stimulator
             case 'wireless_stim'
 %                 sp.anode_map        = [{ 1, 2, 3, 4, 5, 6, 7, 8 }; ...
 %                                         { 1, 1, 1, 1, 1, 1, 1, 1 }];
-                sp.anode_map        = [{ 2, 4, 6, 8, 9, 12, 13, 15, 16}; ...
-                                        { 1, 1, 1, 1, 1, 1, 1, 1, 1}];
+                sp.anode_map        = [{ 2, 4, 6, 8, 10, 12, 14}; ...
+                                        { 1, 1, 1, 1, 1, 1, 1}];
 %                 sp.anode_map        = [{ 1, 5, 7, 9, 11, 13 }; ...
 %                                         { 1, 1, 1, 1, 1, 1 }];
                 % define the cathodes; empty for bipolar
                 if strcmp(stim_mode,'bipolar')
-%                     sp.cathode_map  = [{ 2, 4, 6, 8, 10, 12, 14, 16 }; ...
-%                                         { 1, 1, 1, 1, 1, 1, 1, 1 }];
+                    sp.cathode_map  = [{ 1, 3, 5, 7, 9, 11, 13}
+                                        {1, 1, 1, 1, 1, 1, 1}];
 %                     sp.cathode_map  = [{ 2, 4, 6, 8, 10, 12, 14 }; ...
 %                                         { 1, 1, 1, 1, 1, 1, 1 }];
 %                     sp.cathode_map  = [{ 2, 6, 8, 10, 12, 14 }; ...
@@ -275,30 +275,28 @@ end
 % The controller maps the EMG into PW or amplitude using a proportional law
 % When doing PW-modulated FES, the stim amplitude is fixed to
 % amplitude_max, and when doing amplitude-modulated FES, to PW_max
-% sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1];
+% sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
 % sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9];
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
-% sp.EMG_min              = [.15 .15 .15 .15 .1 .1 .1 .15];
-sp.EMG_min              = [.2 .2 .2 .2 .2 .2 .2 .2 1];
-% sp.EMG_min              = [.3 .3 .3 .3 .3 .3 .3 .3];
+sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .35];
+% sp.EMG_min              = [.1 .15 .45 .3 .15 .1 .2 .15];
+% sp.EMG_min              = [.3 .3 .4 .5 .3 .3 .3 .3];
+% sp.EMG_min              = repmat(.4,1,numel(sp.muscles));
 % sp.EMG_max              = [.6 .6 .6 .6 .6 .6 .6 .6];
 % sp.EMG_max              = [.7 .7 .7 .7 .7 .7 .7 .7];
-% sp.EMG_max              = [.8 .8 .8 .8 .8 .8 .8 .8];
+sp.EMG_max              = [.8 .8 .8 .8 .8 .8 .8];
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1];
-sp.EMG_max              =[.7 .7 .7 .7 .7 .7 .7 .7 1];
+% sp.EMG_max              =repmat(1,1,numel(sp.muscles));
         
 %sp.PW_min               =  [.15 .1 .1 .05 .1 .05 .08 .1]; %[0 .15 .05 .1 .05 .1 .05 .05];;
-sp.PW_min               =  [.08 .12 .06 .08 .06 .09 .12 .1 .14];
-sp.PW_max               = [.28 .28 .28 .28 .2 .28 .28 .28 .22]; % repmat( 0.4, 1, numel(sp.muscles));
+sp.PW_min               =  [.1 .1 .1 .15 .1 .1 .1];
+sp.PW_max               = [.4 .4 .4 .4 .4 .4 .4]; % repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_max               = [0 .4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
-% sp.PW_min               = [.05 .15 .05 .05 .01 .01 .05]; % repmat( 0.05, 1, numel(sp.muscles));
-% sp.PW_max               = [.4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
-% sp.PW_min               = [.05 .05 .05 .01 .01 .05]; % repmat( 0.05, 1, numel(sp.muscles));
-% sp.PW_max               = [.4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
+
 
 sp.amplitude_min        = repmat( 0, 1, numel(sp.muscles));
 % sp.amplitude_max        = [0 4 4 4 4 4 4 2];  % this is the max amplitude for PW-modulated FES
-sp.amplitude_max        = repmat(8,1,numel(sp.muscles));  % this is the max amplitude for PW-modulated FES
+sp.amplitude_max        = repmat(6,1,numel(sp.muscles));  % this is the max amplitude for PW-modulated FES
 
 % sp.amplitude_max        = [6 6 6 6 6 6];  % this is the max amplitude for PW-modulated FES
 

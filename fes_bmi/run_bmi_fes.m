@@ -56,7 +56,7 @@ handles                 = [];
 %% Setup figures
 
 % message box to stop the experiment at any time
-handles.keep_running    = RunStop_run_bmi_fes(); % opens a figure to control the FES
+handles.keep_running    = msgbox('Press ''ok'' to stop'); % opens a figure to control the FES
 set(handles.keep_running,'Position',[200 700 250 90]);
 
 if params.display_plots
@@ -113,33 +113,33 @@ end
 t_buf                   = tic; 
 drawnow;
 
-profile on
+% profile on
 
 %% Run cycle
-keep_running_data = guidata(handles.keep_running); % data from the keep running gui
-halt_flag = keep_running_data.Stop; % the stop flag
+% keep_running_data = guidata(handles.keep_running); % data from the keep running gui
+% halt_flag = keep_running_data.Stop; % the stop flag
 try
-    while( ~halt_flag && ...
-            ( params.online || ~params.online && bin_count < max_cycles) )
+    plt = 1
+    while( ishandle(handles.keep_running) && (params.online || (~params.online && bin_count < max_cycles)))
         
-        % get new data from the keep running gui.
-        % theres_got_to_be_a_better_way.billymays
-        plt = 1; % runs plot only every other time
-        keep_running_data = guidata(handles.keep_running);
-        halt_flag = keep_running_data.Stop;
-        pause_flag = keep_running_data.Pause;
-        
-        % pause if we clicked pause
-        if pause_flag 
-            keep_running_data.Pause = 0;
-            [stim_cmd, channel_list]    = stim_elect_mapping_wireless(zeros(1,9), ...
-                        data.stim_amp, params.bmi_fes_stim_params );
-            for which_cmd = 1:length(stim_cmd)
-                handles.ws.set_stim(stim_cmd(which_cmd), channel_list);
-            end
-            keyboard();
-            guidata(handles.keep_running,keep_running_data);            
-        end
+%         % get new data from the keep running gui.
+%         % theres_got_to_be_a_better_way.billymays
+%         plt = 1; % runs plot only every other time
+%         keep_running_data = guidata(handles.keep_running);
+%         halt_flag = keep_running_data.Stop;
+%         pause_flag = keep_running_data.Pause;
+%         
+%         % pause if we clicked pause
+%         if pause_flag 
+%             keep_running_data.Pause = 0;
+%             [stim_cmd, channel_list]    = stim_elect_mapping_wireless(zeros(1,9), ...
+%                         data.stim_amp, params.bmi_fes_stim_params );
+%             for which_cmd = 1:length(stim_cmd)
+%                 handles.ws.set_stim(stim_cmd(which_cmd), channel_list);
+%             end
+%             keyboard();
+%             guidata(handles.keep_running,keep_running_data);            
+%         end
         
         % when a full cycle has elapsed
         if (reached_cycle_t)
@@ -226,6 +226,9 @@ try
                 end
             else        % if it is a catch trial, stop the stimulation
                 if strcmpi(params.output,'wireless_stim')
+                    data.stim_PW = repmat(0,1,8);
+                    data.stim_amp = repmat(0,1,8);
+                    
                     [stim_cmd, channel_list]    = stim_elect_mapping_wireless( 0, ...
                                                     0, params.bmi_fes_stim_params, 'catch' );
                     for which_cmd = 1:length(stim_cmd)
@@ -350,7 +353,7 @@ try
     end
     echoudp('off');
     fclose('all');
-    profile viewer
+%     profile viewer
     if ishandle(handles.keep_running)
         close(handles.keep_running);
     end
@@ -445,7 +448,7 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
             offline_data.words(:,1) < data.sys_time+params.binsize,:);
         new_target          = offline_data.targets.corners(offline_data.targets.corners(:,1)>= data.sys_time & ...
             offline_data.targets.corners(:,1)< data.sys_time+params.binsize,2:end);
-        data.curs_act       = offline_data.cursorposbin(bin_count,:);
+%         data.curs_act       = offline_data.cursorposbin(bin_count,:);
     end
 
     data.spikes             = [new_spikes'; data.spikes(1:end-1,:)];
