@@ -11,8 +11,10 @@ clear all; clc; close all;
 %% Set up the stimulator etc.
 stim_params = stim_params_defaults;
 stim_params.elect_list = [1:2:15;2:2:16];
-stim_params.amp = 2.5;
-stim_params.PW = .1;
+stim_params.amp = 0;
+stim_params.pw = 0;
+stim_params.comm_timeout_ms = -1;
+stim_params.pol = 1;
 
 ws = wireless_stim(stim_params);
 try 
@@ -51,27 +53,35 @@ drawnow();
 % cbmex('trialconfig',0); % avoid buffering, since we're only gonna putting things in the files
 % 
 % muscle = 'FPB2';
-FN_base = 'E:\Data-lab1\12A1-Jango\CerebusData\EMG_stim\20170626\';
+FN_base = 'E:\Data-lab1\12A1-Jango\CerebusData\EMG_stim\20170711\';
 % FN = [FN_base, muscle];
 % cbmex('fileconfig',FN,'',1) % start recording a file named FN
 
+%% -------------------------------------------------------
+% Everything in the next few sections is for monopolar. Keep that in
+% mind...
+
 %% Set up an excel file to record the values etc.
-FNexcel = [FN_base, 'Characterization_group1']; % set this up in the same folder as the CBmex file
+FNexcel = [FN_base, 'Characterization']; % set this up in the same folder as the CBmex file
 % FNexcel = [FN_base, 'Classification_group2'];
 
-if exist([FNexcel '.xlsx'],'file')
-    error('Excel file already exists. Don''t write over that shiz')
-end
+% if exist([FNexcel '.xlsx'],'file')
+%     error('Excel file already exists. Don''t write over that shiz')
+% end
 
-% Jango 06202017 group 1
-% electrode = {'FCR1_1', 'FCR1_2', 'FCR2_1', 'FCR2_2',...
-%     'FCU1_1', 'FCU1_2', 'FCU2_1', 'FCU2_2', 'FDP1_1', 'FDP1_2',...
-%     'FDP2_1', 'FDP2_2','FDS1_1', 'FDS1_2', 'FDS2_1', 'FDS2_2'};
-% % Jango 06202017 group 2
-electrode = {'PT_1', 'PT_2', 'PL_1', 'PL_2' ,...
-    'APB_1', 'APB_2', 'FPB_1', 'FPB_2', 'FDS_1', 'FDS_2'};%,...
-   % 'EPL_1', ',EPL_2', 'ECU1_1', 'ECU1_2', 'ECU2_1', 'ECU2_2'};
+% Jango 20170711 monopolar group 1
+% electrode = {'FCRu_1', 'FCRu_2', 'FCRr_1', 'FCRr_2',...
+%     'FCUr_1', 'FCUr_2', 'FCUu_1', 'FCUu_2', 'FDPr_1', 'FDPr_2',...
+%     'FDPu_1', 'FDPu_2','FDSr_1', 'FDSr_2', 'FDSu_1', 'FDSu_2'};
+% % Jango 20170711 bipolar group 2
+% electrode = {'PT_1', 'PT_2', 'PL_1', 'PL_2' ,...
+%     'APB_1', 'APB_2', 'FPB_1', 'FPB_2', 'FDS_1', 'FDS_2'};
 
+% Jango 20170711 Bipolar group 1
+electrode = {'FCRu', 'FCRr' 'FCUr', 'FCUu', 'FDPr',...
+    'FDPu','FDSr', 'FDSu'};
+% % Jango 20170711 Bipolar group 2
+% electrode = {'PT', 'PL', 'APB', 'FPB', 'FDS'};
 
 
 % xlrange = cell();
@@ -81,9 +91,10 @@ end
 xlrangei = 1;
 
 
-%% find the desired current at 300 us pulse width
-PW = .4;  % 400 us pulse width
-amp = [1:8]; % 1-7 mA
+
+%% find the desired current at 1800 us pulse width
+PW = 1.8;  % 1800 us pulse width
+amp = [.2:.2:1.8]; % .2:1.8 mA
 
 stim_amps = zeros(16,1); % empty array for each electrode of the desired amps
 
@@ -149,9 +160,9 @@ for k = 1:length(stim_cmd)
 end
 
 %% set up a vector of all possible amplitudes and pulse widths
-PW = [0:.05:.4]; % list of pulse widths
+PW = [0:.05:.5]; % list of pulse widths
 
-SheetName = 'ThresholdV1_Group2';
+SheetName = 'Threshold_Group1';
 xlswrite(FNexcel,{'Muscle','Threshold','Amplitude'},SheetName,xlrange{1});
 for ii = 1:length(electrode)
     fprintf('%s\n',electrode{ii});
@@ -214,6 +225,96 @@ for ii = 1:length(electrode)
 end
 
 % set everything to zero to clean up
+stim_params.amp = 0;
+stim_params.pw = 0; 
+stim_params.elect_list = [1:2:15;2:2:16];
+
+[stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+for k = 1:length(stim_cmd)
+    for kk = 1:length(ch_list);
+        ws.set_stim(stim_cmd(k),ch_list{kk});
+    end
+end
+
+
+
+
+%% ------------------------------------------------------------------
+% Everything for the next couple of sections is for bipolar stim. Keep that
+% in mind.
+
+%% turn all the electrodes to run continuously
+
+stim_params.amp = 0;
+stim_params.pw = 0; 
+stim_params.elect_list = [1:2:15;2:2:16];
+
+[stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+for k = 1:length(stim_cmd)
+    for kk = 1:length(ch_list);
+        ws.set_stim(stim_cmd(k),ch_list{kk});
+    end
+end
+
+ws.set_Run(ws.run_cont,ch_list{:})
+
+%% find the desired current at 1800 us pulse width
+PW = 1.8;  % 1800 us pulse width
+amp = [.2:.2:1.8]; % .2:1.8 mA
+stim_params.elect_list = [1:2:15;2:2:16];
+
+% do this for each electrode
+for i = 1:length(electrode)
+    h_start = msgbox(['Start electrode ' electrode{i}]);
+    while ishandle(h_start)
+        pause(.01)
+    end
+    
+    h_stim = msgbox('Hit ''ok'' when you feel the top');
+
+    for a = 1:length(amp)
+        stim_params.amp = zeros(1,8);
+        stim_params.pw = zeros(1,8);
+        
+        if ishandle(h_stim)
+            stim_params.amp(i) = amp(a);
+            stim_params.pw(i) = PW; 
+            stim_amps(i) = amp(a);
+
+            fprintf('\n%.2f mA\n',amp(a));
+        else
+            break
+        end
+        
+        [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+        for kk = 1:length(ch_list)
+            for k = 1:length(stim_cmd)/2
+                ws.set_stim(stim_cmd(k+(kk-1)*length(stim_cmd)/2),ch_list{kk}); %first send the anodes, then the cathodes , capish?
+            end
+        end
+        
+
+        
+        pause(2)
+
+        
+    end
+    
+    % reset everything to zeros
+    stim_params.amp = 0;
+    stim_params.pw = 0; 
+
+    [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+    for k = 1:length(stim_cmd)
+        ws.set_stim(stim_cmd(k),ch_list{1});
+    end
+    
+    if ishandle(h_stim) % close it if we never felt the top, yo!
+        close(h_stim)
+    end
+end 
+
+
 stim_params.amp = 0;
 stim_params.pw = 0; 
 stim_params.elect_list = [1:2:15;2:2:16];
