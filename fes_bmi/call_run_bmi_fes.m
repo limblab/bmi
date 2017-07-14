@@ -48,10 +48,10 @@ end
 stimulator_plugged_in   = true;
 
 % True: use monkey's current neural activity, or False: read neural data from file 
-params.online           = true;
+params.online           = false;
 
 % Percentage of catch trials
-sp.perc_catch_trials    = 20;
+sp.perc_catch_trials    = 0;
 
 
 % Save the data
@@ -278,7 +278,7 @@ end
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
 % sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9];
 % sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
-sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .35];
+sp.EMG_min              = [.3 .3 .3 .3 .3 .3 .3];
 % sp.EMG_min              = [.1 .15 .45 .3 .15 .1 .2 .15];
 % sp.EMG_min              = [.3 .3 .4 .5 .3 .3 .3 .3];
 % sp.EMG_min              = repmat(.4,1,numel(sp.muscles));
@@ -289,7 +289,7 @@ sp.EMG_max              = [.8 .8 .8 .8 .8 .8 .8];
 % sp.EMG_max              =repmat(1,1,numel(sp.muscles));
         
 %sp.PW_min               =  [.15 .1 .1 .05 .1 .05 .08 .1]; %[0 .15 .05 .1 .05 .1 .05 .05];;
-sp.PW_min               =  [.1 .1 .1 .15 .1 .1 .1];
+sp.PW_min               =  [.05 .05 .05 .05 .05 .05 .05];
 sp.PW_max               = [.4 .4 .4 .4 .4 .4 .4]; % repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_max               = [0 .4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
 

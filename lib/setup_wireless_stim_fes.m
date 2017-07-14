@@ -27,10 +27,12 @@ switch bmi_fes_params.mode
         % pass the values for all sixteen channels
         chs_cmd         = 1:ws.num_channels;
         
-        % set train duration, stim freq and run mode 
+        % set train duration, stim freq and train delay 
         % ToDo: check if TL and Run are necessary if we are then doing cont
-        ws.set_TL( 100, chs_cmd );
+        % (hint: they're not)
+%         ws.set_TL( 100, chs_cmd );
         ws.set_Freq( bmi_fes_params.freq , chs_cmd );
+        ws.set_TD( 50,chs_cmd ); % minimum allowed is 50 us -- see below for additional notes on this KB 07/14/2017
                                 
         % set pulse width to zero
         ws.set_AnodDur( 0, chs_cmd );
@@ -59,14 +61,16 @@ switch bmi_fes_params.mode
                 
                 % set polarity for all channels 
                 ws.set_PL( 1, chs_cmd )
-                
-                % Configure train delay differently for each channel
-                % -- Stagger by 500 us, to minimize fatigue
-                % Minimum TD = 50 us, to avoid problems with the waveforms
-                for ch = 1:channel_list_len
-                    td          = ( ch - 1 ) * 500 + 50;
-                    ws.set_TD( td, channel_list(ch) );
-                end
+
+% --- changed this so they all stimulate at the same time so we can reduce
+% the length of the stim artifacts ------ KB 07/14/2017
+%                 % Configure train delay differently for each channel
+%                 % -- Stagger by 500 us, to minimize fatigue
+%                 % Minimum TD = 50 us, to avoid problems with the waveforms
+%                 for ch = 1:channel_list_len
+%                     td          = ( ch - 1 ) * 500 + 50;
+%                     ws.set_TD( td, channel_list(ch) );
+%                 end
 
                 % set to run continuous
                 ws.set_Run( ws.run_cont, channel_list );
@@ -91,25 +95,25 @@ switch bmi_fes_params.mode
                 
                 % Set polarity for the anodes...
                 % read what electodes are set as anodes
-                for i = 1:numel(anode_list)
-                    % Configure train delay differently for each channel
-                    % -- Stagger by 500 us, to minimize current density at
-                    % the return
-                    % Minimum TD = 50 us, to avoid problems with the waveforms
-                    td          = (i-1) * 500 + 50;
-                    ws.set_TD( td, anode_list(i) );
-                end
+%                 for i = 1:numel(anode_list)
+%                     % Configure train delay differently for each channel
+%                     % -- Stagger by 500 us, to minimize current density at
+%                     % the return
+%                     % Minimum TD = 50 us, to avoid problems with the waveforms
+%                     td          = (i-1) * 500 + 50;
+%                     ws.set_TD( td, anode_list(i) );
+%                 end
                 % Set polarity to anodic first
                 ws.set_PL( 0, anode_list );
                 
-                % ... and for the cathodes
-                % read what electodes are set as cathodes
-                for i = 1:numel(cathode_list)
-                    % Configure train delay differently for each channel
-                    % -- Stagger by 500 us, to minimize fatigue
-                    td          = (i-1) * 500 + 50;   % Minimum TD = 50 us, to avoid problems with the waveforms
-                    ws.set_TD( td, cathode_list(i) );
-                end
+%                 % ... and for the cathodes
+%                 % read what electodes are set as cathodes
+%                 for i = 1:numel(cathode_list)
+%                     % Configure train delay differently for each channel
+%                     % -- Stagger by 500 us, to minimize fatigue
+%                     td          = (i-1) * 500 + 50;   % Minimum TD = 50 us, to avoid problems with the waveforms
+%                     ws.set_TD( td, cathode_list(i) );
+%                 end
                 % Set polarity to anodic first
                 ws.set_PL( 1, cathode_list );
                 

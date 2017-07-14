@@ -53,7 +53,7 @@ drawnow();
 % cbmex('trialconfig',0); % avoid buffering, since we're only gonna putting things in the files
 % 
 % muscle = 'FPB2';
-FN_base = 'E:\Data-lab1\12A1-Jango\CerebusData\EMG_stim\20170711\';
+FN_base = 'E:\Data-lab1\12A1-Jango\CerebusData\EMG_stim\20170712\';
 % FN = [FN_base, muscle];
 % cbmex('fileconfig',FN,'',1) % start recording a file named FN
 
@@ -62,7 +62,7 @@ FN_base = 'E:\Data-lab1\12A1-Jango\CerebusData\EMG_stim\20170711\';
 % mind...
 
 %% Set up an excel file to record the values etc.
-FNexcel = [FN_base, 'Characterization']; % set this up in the same folder as the CBmex file
+FNexcel = [FN_base, 'Characterization.xlsx']; % set this up in the same folder as the CBmex file
 % FNexcel = [FN_base, 'Classification_group2'];
 
 % if exist([FNexcel '.xlsx'],'file')
@@ -78,10 +78,10 @@ FNexcel = [FN_base, 'Characterization']; % set this up in the same folder as the
 %     'APB_1', 'APB_2', 'FPB_1', 'FPB_2', 'FDS_1', 'FDS_2'};
 
 % Jango 20170711 Bipolar group 1
-electrode = {'FCRu', 'FCRr' 'FCUr', 'FCUu', 'FDPr',...
-    'FDPu','FDSr', 'FDSu'};
+% electrode = {'FCRu', 'FCRr' 'FCUr', 'FCUu', 'FDPr',...
+%     'FDPu','FDSr', 'FDSu'};
 % % Jango 20170711 Bipolar group 2
-% electrode = {'PT', 'PL', 'APB', 'FPB', 'FDS'};
+electrode = {'PT', 'PL', 'APB', 'FPB', 'FDS'};
 
 
 % xlrange = cell();
@@ -93,8 +93,8 @@ xlrangei = 1;
 
 
 %% find the desired current at 1800 us pulse width
-PW = 1.8;  % 1800 us pulse width
-amp = [.2:.2:1.8]; % .2:1.8 mA
+PW = .4;  % 1800 us pulse width
+amp = [0:.5:6]; % .2:1.8 mA
 
 stim_amps = zeros(16,1); % empty array for each electrode of the desired amps
 
@@ -128,7 +128,7 @@ for i = 1:length(electrode)
             ws.set_Run(ws.run_cont,ch_list{ii})
         end
         
-        pause(2)
+        pause(.5)
 
         
     end
@@ -160,9 +160,9 @@ for k = 1:length(stim_cmd)
 end
 
 %% set up a vector of all possible amplitudes and pulse widths
-PW = [0:.05:.5]; % list of pulse widths
+PW = [0:.01:.3]; % list of pulse widths
 
-SheetName = 'Threshold_Group1';
+SheetName = 'Group2';
 xlswrite(FNexcel,{'Muscle','Threshold','Amplitude'},SheetName,xlrange{1});
 for ii = 1:length(electrode)
     fprintf('%s\n',electrode{ii});
@@ -199,7 +199,7 @@ for ii = 1:length(electrode)
 
         drawnow;
 
-        pause(2) % give us time for the next one
+        pause(.5) % give us time for the next one
  
     end
     
@@ -216,10 +216,13 @@ for ii = 1:length(electrode)
         ws.set_Run(ws.run_cont,ch_list{ch})
     end
     
-    xlswrite(FNexcel,{electrode{ii},th,stim_amps(ii)},SheetName,xlrange{ii+1}); % write it to the excel sheet
+
     
     if ishandle(h_low) % did we ever click yes?
         close(h_low)
+        xlswrite(FNexcel,{electrode{ii},'N/A',stim_amps(ii)},SheetName,xlrange{ii+1}); % write it to the excel sheet
+    else
+        xlswrite(FNexcel,{electrode{ii},th,stim_amps(ii)},SheetName,xlrange{ii+1}); % write it to the excel sheet
     end
     
 end
@@ -259,8 +262,8 @@ end
 ws.set_Run(ws.run_cont,ch_list{:})
 
 %% find the desired current at 1800 us pulse width
-PW = 1.8;  % 1800 us pulse width
-amp = [.2:.2:1.8]; % .2:1.8 mA
+PW = .4;  % 1800 us pulse width
+amp = [0:.5:6]; % .2:1.8 mA
 stim_params.elect_list = [1:2:15;2:2:16];
 
 % do this for each electrode
@@ -295,7 +298,7 @@ for i = 1:length(electrode)
         
 
         
-        pause(2)
+        pause(.5)
 
         
     end
@@ -325,6 +328,89 @@ for k = 1:length(stim_cmd)
         ws.set_stim(stim_cmd(k),ch_list{kk});
     end
 end
+
+
+%% set up a vector of all possible amplitudes and pulse widths
+PW = [0:.01:.3]; % list of pulse widths
+
+SheetName = 'Bipolar_Threshold_group2';
+xlswrite(FNexcel,{'Muscle','Threshold','Amplitude'},SheetName,xlrange{1});
+for ii = 1:length(electrode)
+    fprintf('%s\n',electrode{ii});
+
+    h_wait = msgbox(['Electrode for ' electrode{ii}]);
+    while(ishandle(h_wait))
+        drawnow()
+    end
+    
+    h_low = msgbox('Can you feel it?');
+    flg_end = false; % do we end the loop?
+    
+    for jj = 1:length(PW)
+        th = PW(jj); % set the threshold anew
+
+        stim_params.amp = zeros(1,8); % empty everything up
+        stim_params.pw = zeros(1,8); % empty everything up
+        stim_params.pw(ii) = PW(jj); % except for the desired channels
+        stim_params.amp(ii) = stim_amps(ii); % load from 
+
+
+
+        if ~ishandle(h_low)
+            break;
+        end
+        
+        fprintf('%.2f us',PW(jj)); 
+        [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+        for kk = 1:length(ch_list)
+            for k = 1:length(stim_cmd)/2
+                ws.set_stim(stim_cmd(k+(kk-1)*length(stim_cmd)/2),ch_list{kk}); %first send the anodes, then the cathodes , capish?
+            end
+        end
+
+        % set to run
+
+        drawnow;
+
+        pause(.5) % give us time for the next one
+ 
+    end
+    
+    % set everything back to zero
+    stim_params.amp = 0;
+    stim_params.pw = 0;
+    [stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+    for kk = 1:length(ch_list)
+        for k = 1:length(stim_cmd)/2
+            ws.set_stim(stim_cmd(k+(kk-1)*length(stim_cmd)/2),ch_list{kk}); %first send the anodes, then the cathodes , capish?
+        end
+    end
+
+    
+    if ishandle(h_low) % did we ever click yes?
+        close(h_low)
+        xlswrite(FNexcel,{electrode{ii},'N/A',stim_amps(ii)},SheetName,xlrange{ii+1}); % write it to the excel sheet
+    else
+        xlswrite(FNexcel,{electrode{ii},th,stim_amps(ii)},SheetName,xlrange{ii+1}); % write it to the excel sheet
+    end
+    
+end
+
+% set everything to zero to clean up
+stim_params.amp = 0;
+stim_params.pw = 0; 
+stim_params.elect_list = [1:2:15;2:2:16];
+
+[stim_cmd, ch_list] = stim_params_to_stim_cmd_ws( stim_params ); % convert to proper stimulation commands
+for kk = 1:length(ch_list)
+    for k = 1:length(stim_cmd)/2
+        ws.set_stim(stim_cmd(k+(kk-1)*length(stim_cmd)/2),ch_list{kk}); %first send the anodes, then the cathodes , capish?
+    end
+end
+
+
+
+
 
 %% Close everything up
 % cbmex('fileconfig',FN,'',0); % close  the file
