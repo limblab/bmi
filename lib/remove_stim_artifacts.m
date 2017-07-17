@@ -51,7 +51,7 @@ nbr_artifacts           = length(bins_w_artifacts);
 % -------------------------------------------------------------------------
 % 3. Go back and get rid of spikes
 
-% for each bin with artefact
+% for each bin with artifact
 for i = 1:nbr_artifacts
     % get the channels that had artefacts
     bin                 = bins_w_artifacts(i);

@@ -18,7 +18,7 @@
 %   neuron2emg_decoder      : decoder
 %
 
-function neuron2emg_decoder = build_emg_decoder_from_nev( varargin )
+function [neuron2emg_decoder,pred_data] = build_emg_decoder_from_nev( varargin )
 
 
 % some opts -can be made into parameters
@@ -27,6 +27,7 @@ dec_opts.PredEMGs   = 1;
 % dec_opts.plotflag   = 1;
 
 bin_opts.NormData   = true;
+bin_opts.HP = 90; % setting it a little higher to get rid of some of the 60 hz noise
 
 
 % ------------------------------------------------------------------------
@@ -63,6 +64,10 @@ end
 % bin the data
 binned_data         = convertBDF2binned(bdf,bin_opts);
 
+for i = 1:size(binned_data.emgguide)
+    qmin = quantile(binned_data.emgdatabin(:,i),.05);
+    binned_data.emgdatabin(:,i) = binned_data.emgdatabin(:,i)-qmin;
+end
 
 % ------------------------------------------------------------------------
 % find the EMGs that we want to decode, get rid of the others
@@ -115,3 +120,4 @@ set(gca,'Xtick',1:length(emg_list_4_dec))
 set(gca,'XTickLabel',emg_list_4_dec)
 set(gca,'XTickLabelRotation',45)
 ylabel('VAF'),ylim([0 1]), xlim([0 length(emg_list_4_dec)+1])
+
