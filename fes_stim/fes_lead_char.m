@@ -13,8 +13,8 @@ stim_params = stim_params_defaults;
 stim_params.elect_list = [1:2:15;2:2:16];
 stim_params.amp = 0;
 stim_params.pw = 0;
-stim_params.comm_timeout_ms = -1;
-stim_params.pol = 1;
+% stim_params.comm_timeout_ms = -1;
+% stim_params.pol = 1;
 
 ws = wireless_stim(stim_params);
 try 

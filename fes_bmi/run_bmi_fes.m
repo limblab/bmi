@@ -662,3 +662,39 @@ function [new_words, new_target, db_buf] = get_new_words(new_ts,new_words,db_buf
         db_buf = [];
     end
 end
+
+
+%% time sync -- getting the ripple and blackrock synced up
+%
+% we know that it's supposed to be around 30 ms, so mostly we need to just
+% get the offset synced up. 
+%
+% T_next = .5*(T_last+30 ms) + .5*(T_est)
+% T_est = time(#spike>thresh) iff 15 ms < time < 35 ms
+%
+%
+function tsync = timeSync(params)
+
+    cycleLength = 1000/params.bmi_fes_stim_params.freq;
+    tCycle_old = cbmex('time');
+    cbmex('trialdata',1)
+    
+    
+    for ii = 1:100
+        tCycle_new = cbmex('time')
+        dtCycle = tCycle_new-tCycle_old;
+        pause(.033-dtCycle);
+        ts_cell_array = cbmex('trialdata',1) ; % get the data
+        new_spikes = ts_cell_array(params.neuronIDs(:,1),:); % get the spikes out of the cell array
+
+    
+
+
+
+
+
+
+
+    
+    
+end
