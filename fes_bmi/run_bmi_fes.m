@@ -677,6 +677,7 @@ function tsync = timeSync(params)
 
     cycleLength = 1/params.bmi_fes_stim_params.freq; % what's our stim freq
     tCycle_old = cbmex('time');
+    tsync = tCycle_old; % initial value of tSync
     cbmex('trialdata',1)
     
     % set all of the stimulation to high
@@ -691,35 +692,43 @@ function tsync = timeSync(params)
     
     
     for ii = 1:100 % 100 cycles should be super overkill
+        % make sure that the cycle takes 1/freq
         tCycle_new = cbmex('time');
         dtCycle = tCycle_new-tCycle_old;
         pause(cycleLength-dtCycle);
-        ts_cell_array = cbmex('trialdata',1) ; % get the data
+        [ts_cell_array,tBuffer,~] = cbmex('trialdata',1) ; % get the data
+        tCycle_old = cbmex('time');
         new_spikes = ts_cell_array(params.neuronIDs(:,1),:); % get the spikes out of the cell array
         
         
-        % params for artifact removal
+        % params for artifact sync
         max_nbr_chs             = 10;
-        reject_bin_size         = 0.001;
+        bin_size                = 0.0005;
 
-
-        % -------------------------------------------------------------------------
-        % 1. Bin the threshold crossings into bins of size 'reject_bin_size'
-
+        
+        % 1. Bin the threshold crossings into bins of size 'bin_size'
+        
         % time support for binning, made equal to the length of the recorded bin
-        rejection_t             = 0:reject_bin_size:ceil(bin_dur/reject_bin_size)*reject_bin_size;
+        rejection_t             = 0:bin_size:ceil(bin_dur/bin_size)*bin_size;
         % preallocate matrix for storing bin counts
         counts                  = zeros(length(rejection_t),params.n_neurons);
         % bin the data
         for n = 1:params.n_neurons
             unit                = params.neuronIDs(n,2);
-            temp_counts         = histc(double(ts{n,unit+2})/30000,rejection_t)';
+            temp_counts         = histcounts(double(ts{n,unit+2})/30000,rejection_t)';
             if ~isempty(temp_counts)
                 counts(:,n)     = temp_counts;
             end
         end
 
-
+        % 2. Find the time where the highest number of units are
+        % simultaneously firing, start to sync the two up.
+        
+        rejection_t = rejection_t + t_Buffer;
+        counts = sum(counts,2); % total number of channels firing at once
+        [~,bin_max] = max(counts);
+        syncEstim = rejection_t(bin_max);
+        
 
 
 
