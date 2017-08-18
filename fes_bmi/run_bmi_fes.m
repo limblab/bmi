@@ -670,24 +670,54 @@ end
 % get the offset synced up. 
 %
 % T_next = .5*(T_last+30 ms) + .5*(T_est)
-% T_est = time(#spike>thresh) iff 15 ms < time < 35 ms
+% T_est = time(#spike>thresh) iff 0 ms < time < 30 ms
 %
 %
 function tsync = timeSync(params)
 
-    cycleLength = 1000/params.bmi_fes_stim_params.freq;
+    cycleLength = 1/params.bmi_fes_stim_params.freq; % what's our stim freq
     tCycle_old = cbmex('time');
     cbmex('trialdata',1)
     
+    % set all of the stimulation to high
+    [data.stim_PW, data.stim_amp]   = EMG_to_stim( ones(size(...
+        params.bmi_fes_stim_params.PW_max)),params.bmi_fes_stim_params );
+    [stim_cmd, channel_list]    = stim_elect_mapping_wireless(...
+        data.stim_PW, data.stim_amp, params.bmi_fes_stim_params );
+    for which_cmd = 1:length(stim_cmd)
+        handles.ws.set_stim(stim_cmd(which_cmd), channel_list);
+    end
     
-    for ii = 1:100
-        tCycle_new = cbmex('time')
+    
+    
+    for ii = 1:100 % 100 cycles should be super overkill
+        tCycle_new = cbmex('time');
         dtCycle = tCycle_new-tCycle_old;
-        pause(.033-dtCycle);
+        pause(cycleLength-dtCycle);
         ts_cell_array = cbmex('trialdata',1) ; % get the data
         new_spikes = ts_cell_array(params.neuronIDs(:,1),:); % get the spikes out of the cell array
+        
+        
+        % params for artifact removal
+        max_nbr_chs             = 10;
+        reject_bin_size         = 0.001;
 
-    
+
+        % -------------------------------------------------------------------------
+        % 1. Bin the threshold crossings into bins of size 'reject_bin_size'
+
+        % time support for binning, made equal to the length of the recorded bin
+        rejection_t             = 0:reject_bin_size:ceil(bin_dur/reject_bin_size)*reject_bin_size;
+        % preallocate matrix for storing bin counts
+        counts                  = zeros(length(rejection_t),params.n_neurons);
+        % bin the data
+        for n = 1:params.n_neurons
+            unit                = params.neuronIDs(n,2);
+            temp_counts         = histc(double(ts{n,unit+2})/30000,rejection_t)';
+            if ~isempty(temp_counts)
+                counts(:,n)     = temp_counts;
+            end
+        end
 
 
 
