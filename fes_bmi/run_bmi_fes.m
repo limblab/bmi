@@ -113,6 +113,12 @@ end
 t_buf                   = tic; 
 drawnow;
 
+
+%% run the sync to align the stimulator and the cerebus
+cbmex('open')
+params.tsync = timeSync(params);
+
+
 % profile on
 
 %% Run cycle
@@ -434,11 +440,11 @@ function data = get_new_data(params,data,offline_data,bin_count,bin_dur,w)
     % get the data
     if params.online
         % read and flush data buffer
-        ts_cell_array       = cbmex('trialdata',1);
+        [ts_cell_array,tBuffer,~]       = cbmex('trialdata',1);
         % get current cerebus time
         data.sys_time       = cbmex('time');
         % get new spike counts
-        new_spikes          = get_new_spikes( ts_cell_array, params, bin_dur );
+        new_spikes          = get_new_spikes( ts_cell_array, params, bin_dur, tBuffer);
         [new_words,new_target,data.db_buf] = get_new_words(ts_cell_array{151,2:3},data.db_buf);
     else
         data.sys_time       = double(offline_data.timeframe(bin_count));
@@ -560,13 +566,13 @@ end
 % it is larger than that
 %
 
-function new_spikes = get_new_spikes(ts_cell_array,params,binsize)
+function new_spikes = get_new_spikes(ts_cell_array,params,binsize,tBuffer)
 
     new_spikes              = zeros(params.n_neurons,1);
     new_ts                  = ts_cell_array(params.neuronIDs(:,1),:);
  
     % remove stim artefacts!
-    new_ts                  = remove_stim_artifacts( new_ts, params, binsize );
+    new_ts                  = remove_stim_artifacts( new_ts, params, binsize, tBuffer);
     
     %firing rate for new spikes
     for i = 1:params.n_neurons
@@ -677,7 +683,7 @@ function tsync = timeSync(params)
 
     cycleLength = 1/params.bmi_fes_stim_params.freq; % what's our stim freq
     tCycle_old = cbmex('time');
-    tsync = tCycle_old; % initial value of tSync
+    tsync = 0; % initial value of tSync
     cbmex('trialdata',1)
     
     % set all of the stimulation to high
@@ -698,7 +704,7 @@ function tsync = timeSync(params)
         pause(cycleLength-dtCycle);
         [ts_cell_array,tBuffer,~] = cbmex('trialdata',1) ; % get the data
         tCycle_old = cbmex('time');
-        new_spikes = ts_cell_array(params.neuronIDs(:,1),:); % get the spikes out of the cell array
+        ts = ts_cell_array(params.neuronIDs(:,1),:); % get the spike times out of the cell array
         
         
         % params for artifact sync
@@ -724,16 +730,24 @@ function tsync = timeSync(params)
         % 2. Find the time where the highest number of units are
         % simultaneously firing, start to sync the two up.
         
-        rejection_t = rejection_t + t_Buffer;
         counts = sum(counts,2); % total number of channels firing at once
         [~,bin_max] = max(counts);
-        syncEstim = rejection_t(bin_max);
+        syncEst = rejection_t(bin_max);
         
+        tsync = .5*(tsync+syncEst); % offset from the time of buffer reading
+    end
+    
+    tsync = tBuffer + tsync; % final version with the time of the last buffer read
 
-
-
-
-
+    % stop stimulation for the moment
+    [data.stim_PW, data.stim_amp]   = EMG_to_stim( zeros(size(...
+        params.bmi_fes_stim_params.PW_max)),params.bmi_fes_stim_params );
+    [stim_cmd, channel_list]    = stim_elect_mapping_wireless(...
+        data.stim_PW, data.stim_amp, params.bmi_fes_stim_params );
+    for which_cmd = 1:length(stim_cmd)
+        handles.ws.set_stim(stim_cmd(which_cmd), channel_list);
+    end
     
     
+
 end

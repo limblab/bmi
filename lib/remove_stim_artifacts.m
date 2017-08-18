@@ -41,6 +41,24 @@ for n = 1:params.n_neurons
 end
 
 % -------------------------------------------------------------------------
+% 2. Block stimulation artifacts
+
+% find the delay between last block time and the buffer read time
+% then get the modulo of that divided by the stim period -- subtracting
+% that from the interstim period will give us the time of the next stim.
+
+nextStim = floor((.033 - mod((tBuffer-params.tSync),.033))/reject_bin_size); % there's gotta be a cleaner way to do this
+
+if nextStim + 33 < size(counts,1) % are there going to be two stims in this bin?
+    counts(nextStim,:) = 0;
+    counts(nextStim+33,:) = 0;
+else
+    counts(nextStim,:) = 0;
+end
+
+
+
+% -------------------------------------------------------------------------
 % 2. Look for bins with spikes in more chs than 'max_nbr_chs'
 
 % number of channels with simultaneous spikes across the whole array

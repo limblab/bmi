@@ -74,7 +74,7 @@ if AlreadyBuiltDecoder == 0
     if ismac
         file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
     elseif ispc
-        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170705\20170705_Jango_PG_KBSN_001';
+        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170808\20170808_Jango_KB_PG_Wireless_002.nev';
     end
     
     
@@ -136,7 +136,7 @@ if ~params.online
         params.offline_data = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/BinnedData/behavior plasticity/20150320_Jango_WF_001_binned.mat';
     elseif ispc
 %        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20160313\Jango_MG_PG_20160313_T3_001_bin.mat';
-        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170703\Jango_WF_KB_001.mat';
+        params.offline_data = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170808\20170808_Jango_KB_PG_Wireless_001_bin.mat';
     end
 end
 
