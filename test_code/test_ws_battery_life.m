@@ -13,6 +13,9 @@
 %   (blocking)          : [false] true for synchronous communication, false
 %                           for faster asynchronous comm
 %   (zb_ch_page)        : [0] zigbee communication settings
+%   (path_cal_ws)       : [E:\Data-lab1\Wireless_Stimulator] calibration
+%                           file location
+%   (save_path)         : ['E:\Data-lab1\TestData\wireless_stim_tests']
 %
 % Outputs:
 %   nbr_stim_cycles     : nbr of stim cycles the stimulator could perform
@@ -32,11 +35,24 @@ if nargin >= 3
 else
     blocking            = false;
 end
-if nargin == 4
+if nargin >= 4
     zb_ch_page          = varargin{2};
 else 
     zb_ch_page          = 0;
 end
+if nargin >= 5
+    % path to the stimulator's calibration file
+    path_cal_ws         = varargin{3};
+else
+    path_cal_ws = 'E:\Data-lab1\Wireless_Stimulator';
+end
+if nargin == 6
+    % path to file saving location
+    save_path           = varargin{4};
+else
+    save_path           = 'E:\Data-lab1\TestData\wireless_stim_tests';
+end
+    
 
 
 % some definitions -- could be defined as fcn params
@@ -49,10 +65,6 @@ amp                     = 8000;
 PW_max                  = 200;
 % channels to stimulate
 ch_list                 = 1:nbr_channels;
-% path to the stimulator's calibration file
-path_cal_ws             = 'E:\Data-lab1\Wireless_Stimulator';
-% path to file saving location
-save_path               = 'E:\Data-lab1\TestData\wireless_stim_tests';
 
 % go to the stimulator's calibration file directory
 cur_dir                 = pwd;
@@ -134,6 +146,7 @@ try
     ctr                 = 1;
     % empty array to store stimulus update time, to keep track of latency
     update_t            = [];
+    battery_status = [];
     
     while ishandle(keep_running)
         % store current time
@@ -156,7 +169,7 @@ try
         ctr             = ctr + 1;
         drawnow;
         
-        if mod(ctr,50)
+        if ~mod(ctr,50)
             battery_status(ctr/50) = ws.check_battery; % battery low?
         end
         
