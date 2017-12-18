@@ -1,4 +1,4 @@
-%
+
 % Default stimulation parameters for grapevine stimulator or ripple's
 % wireless stimulator for use in EZstim or ICMS code.
 %   

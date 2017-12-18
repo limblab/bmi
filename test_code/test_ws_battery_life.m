@@ -22,7 +22,7 @@
 %
 %
 
-function [nbr_stim_cycles, update_t] = test_ws_battery_life( serial_string, ...
+function [nbr_stim_cycles, update_t, battery_status] = test_ws_battery_life( serial_string, ...
                                         nbr_channels, varargin )
 
 
