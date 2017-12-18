@@ -17,7 +17,7 @@
 %
 %
 
-function [stim_PW, stim_amp] = EMG_to_stim( EMG_pred, bmi_fes_stim_params )
+function [stim_PW, stim_amp] = EMG_to_stim( EMG_pred, bmi_fes_stim_params)
 
 
 nbr_emgs            = size(EMG_pred,2);
@@ -30,41 +30,43 @@ stim_amp            = zeros(1,nbr_emgs);
 % commands
 if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
     
-    for i = 1:nbr_emgs
+    for ii = 1:nbr_emgs
         
-        if EMG_pred(i) < bmi_fes_stim_params.EMG_min(i)
+        if EMG_pred(ii) < bmi_fes_stim_params.EMG_min(ii)
             
-            stim_PW(i)  = 0;
-            stim_amp(i) = 0;
-        elseif EMG_pred(i) > bmi_fes_stim_params.EMG_max(i)
+            stim_PW(ii)  = 0;
+            stim_amp(ii) = 0;
+        elseif EMG_pred(ii) > bmi_fes_stim_params.EMG_max(ii)
             
-            stim_PW(i)  = bmi_fes_stim_params.PW_max(i);
-            stim_amp(i) = bmi_fes_stim_params.amp_max(i);
+            stim_PW(ii)  = bmi_fes_stim_params.PW_max(ii);
+            stim_amp(ii) = bmi_fes_stim_params.amplitude_max(ii);
         else
-            stim_PW(i)  = ( EMG_pred(i) - bmi_fes_stim_params.EMG_min(i) )* ...
-                ( bmi_fes_stim_params.PW_max(i) - bmi_fes_stim_params.PW_min(i) ) ...
-                / ( bmi_fes_stim_params.EMG_max(i) - bmi_fes_stim_params.EMG_min(i) ) ...
-                + bmi_fes_stim_params.PW_min(i);
+            stim_PW(ii)  = ( EMG_pred(ii) - bmi_fes_stim_params.EMG_min(ii) )* ...
+                ( bmi_fes_stim_params.PW_max(ii) - bmi_fes_stim_params.PW_min(ii) ) ...
+                / ( bmi_fes_stim_params.EMG_max(ii) - bmi_fes_stim_params.EMG_min(ii) ) ...
+                + bmi_fes_stim_params.PW_min(ii);
             
-            stim_amp(i) = bmi_fes_stim_params.amp_max(i);
+            stim_amp(ii) = bmi_fes_stim_params.amp_max(ii);
         end
     end
     
 elseif strcmp(bmi_fes_stim_params,'amplitude_modulation')
     
-    for i = 1:nbr_emgs
+    for ii = 1:nbr_emgs
         
-        if EMG_pred(i) < bmi_fes_stim_params.EMG_min(i)
+        if EMG_pred(ii) < bmi_fes_stim_params.EMG_min(ii)
+            stim_amp(ii) = 0;
+            stim_PW(ii) = 0;
             
-            stim_amp(i) = 0;
-        elseif EMG_pred(i) > bmi_fes_stim_params.EMG_max(i)
+        elseif EMG_pred(ii) > bmi_fes_stim_params.EMG_max(ii)
             
-            stim_amp(i) = bmi_fes_stim_params.amplitude_max(i);
+            stim_amp(ii) = bmi_fes_stim_params.amplitude_max(ii);
+            stim_PW(ii) = bmi_fes_stim_params.PW_max;
         else
-            stim_PW(i)  = ( EMG_pred(i) - bmi_fes_stim_params.EMG_min(i) )* ...
-                ( bmi_fes_stim_params.amplitude_max(i) - bmi_fes_stim_params.amplitude_min(i) ) ...
-                / ( bmi_fes_stim_params.EMG_max(i) - bmi_fes_stim_params.EMG_min(i) ) ...
-                + bmi_fes_stim_params.amplitude_min(i);        
+            stim_PW(ii)  = ( EMG_pred(ii) - bmi_fes_stim_params.EMG_min(ii) )* ...
+                ( bmi_fes_stim_params.amplitude_max(ii) - bmi_fes_stim_params.amplitude_min(ii) ) ...
+                / ( bmi_fes_stim_params.EMG_max(ii) - bmi_fes_stim_params.EMG_min(ii) ) ...
+                + bmi_fes_stim_params.amplitude_min(ii);        
         end
     end
 end

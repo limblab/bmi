@@ -91,12 +91,12 @@ elseif strcmp(mode,'exec')
             fig_handle.ph_other.YData   = stim_PW(fig_handle.other_muscles);
         end
         
-        % Label on the title if this is a catch trial
-        if stim_or_catch && strcmp(fig_handle.ah.Title.String,'catch trial')
-            fig_handle.ah.Title.String = 'PW stimulation values';
-        elseif ~stim_or_catch && strcmp(fig_handle.ah.Title.String,'PW stimulation values')
-            fig_handle.ah.Title.String = 'catch trial';
-        end
+%         % Label on the title if this is a catch trial
+%         if stim_or_catch && strcmp(fig_handle.ah.Title.String,'catch trial')
+%             fig_handle.ah.Title.String = 'PW stimulation values';
+%         elseif ~stim_or_catch && strcmp(fig_handle.ah.Title.String,'PW stimulation values')
+%             fig_handle.ah.Title.String = 'catch trial';
+%         end
         
     end
 end

@@ -18,6 +18,7 @@
 %   nbr_stim_cycles     : nbr of stim cycles the stimulator could perform
 %                           before communication broke or battery died
 %   update_t            : time during which it was stimulating
+%   battery_status      : matrix with stored battery status
 %
 %
 
@@ -107,8 +108,7 @@ try
 
     % configure some of the common parameters: train length, frequency,
     % polarity and amplitude
-    cmd{1}              = struct('TL', 100, ...     % ms
-                            'Freq', 30, ...         % Hz
+    cmd{1}              = struct('Freq', 30, ...         % Hz
                             'PL', 1 ...             % Cathodic first
                             );
     ws.set_stim(cmd, ch_list);
@@ -155,6 +155,11 @@ try
         % update cycle ctr
         ctr             = ctr + 1;
         drawnow;
+        
+        if mod(ctr,50)
+            battery_status(ctr/50) = ws.check_battery; % battery low?
+        end
+        
     end
 
     nbr_stim_cycles = ctr;
@@ -180,7 +185,7 @@ catch ME
     
     % save results
     file_name           = ['battery_tests_' datestr(now,'yymmdd_HHMMSS')];
-    save([save_path, filesep, file_name], 'nbr_stim_cycles', 'update_t','blocking','zb_ch_page');
+    save([save_path, filesep, file_name], 'nbr_stim_cycles', 'update_t','blocking','zb_ch_page','battery_status');
     disp(['saving data in E:\Data-lab1\TestData\wireless_stim_tests\battery_tests_' ...
         datestr(now,'yymmdd_HHMMSS')]);
     disp(' ')

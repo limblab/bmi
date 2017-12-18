@@ -125,7 +125,7 @@ params.tsync = timeSync(params);
 % keep_running_data = guidata(handles.keep_running); % data from the keep running gui
 % halt_flag = keep_running_data.Stop; % the stop flag
 try
-    plt = 1
+    plt = 1;
     while( ishandle(handles.keep_running) && (params.online || (~params.online && bin_count < max_cycles)))
         
 %         % get new data from the keep running gui.
