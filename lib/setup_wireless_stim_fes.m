@@ -47,17 +47,20 @@ switch bmi_fes_params.mode
             case 'monopolar'
 
                 % reorder the stim amplitude according to the channel_list
+                if size(amp) == 1
+                   amp = repmat(amp,size(indx_ch));
+                end
                 amp             = amp(indx_ch);
                 % poulate a command for the sixteen channels, including
                 % those we won't be using --this is a requirement for
                 % zigbee communication
-                pw_cmd         = zeros(1,length(chs_cmd));
-                pw_cmd(channel_list)   = amp;
+                amp_cmd         = zeros(1,length(chs_cmd));
+                amp_cmd(channel_list)   = amp;
                 
                 % set amplitude -- done in a different command because of
                 % limitations in command length (register write in zigbee)
-                ws.set_AnodAmp( 32768-pw_cmd, chs_cmd );
-                ws.set_CathAmp( 32768+pw_cmd, chs_cmd );
+                ws.set_AnodAmp( 32768-amp_cmd, chs_cmd );
+                ws.set_CathAmp( 32768+amp_cmd, chs_cmd );
                 
                 % set polarity for all channels 
                 ws.set_PL( 1, chs_cmd )

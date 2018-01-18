@@ -46,7 +46,7 @@ if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
                 / ( bmi_fes_stim_params.EMG_max(ii) - bmi_fes_stim_params.EMG_min(ii) ) ...
                 + bmi_fes_stim_params.PW_min(ii);
             
-            stim_amp(ii) = bmi_fes_stim_params.amp_max(ii);
+            stim_amp(ii) = bmi_fes_stim_params.amplitude_max(ii);
         end
     end
     
