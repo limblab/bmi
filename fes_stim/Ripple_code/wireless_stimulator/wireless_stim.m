@@ -1289,6 +1289,7 @@ classdef wireless_stim < handle
             end
 
             out = fread(obj.serial, obj.message_id_to_rcv_bytes(message_id) + var_rcv_bytes);
+            rxlen = length(out);
             
             if obj.dbg_lvl >= 4 && rxlen > 0
                 disp([sprintf('rcv msg id 0x%02x:', message_id), sprintf(' %02x', out)]);
@@ -1300,10 +1301,7 @@ classdef wireless_stim < handle
                 obj.errs = [obj.errs, now];
             else
                 % parse the payload
-                fileID = fopen('outLog.bin','a');
-                fwrite(fileID,out);
-                fclose(fileID);
-                rxlen = length(out);
+
                 message_len = out(2);
                 payload = out(5:5+message_len-3);
                 out = payload';
