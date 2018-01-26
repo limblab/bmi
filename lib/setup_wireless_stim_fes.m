@@ -1,6 +1,7 @@
-
 function setup_wireless_stim_fes( ws, bmi_fes_params )
 
+% center value of amplitudes -- turns into amp = 0 at the stimulator
+AMP_OFFSET = 32768; % basically define it as a constant, without constants
 
 % read the channels that will be used
 switch bmi_fes_params.return
@@ -19,15 +20,11 @@ amp                     = bmi_fes_params.amplitude_max*1000;
 pw                      = bmi_fes_params.PW_max*1000;
 
 
-
 % because of how the zigbee communication is designed, you have to
 % pass the values for all sixteen channels
 chs_cmd         = 1:ws.num_channels;
 
 % set train duration, stim freq and train delay 
-% ToDo: check if TL and Run are necessary if we are then doing cont
-% (hint: they're not)
-%         ws.set_TL( 100, chs_cmd );
 ws.set_Freq( bmi_fes_params.freq , chs_cmd );
 ws.set_TD( 50,chs_cmd ); % minimum allowed is 50 us -- see below for additional notes on this KB 07/14/2017
 
@@ -51,16 +48,16 @@ switch bmi_fes_params.mode
                    amp = repmat(amp,size(indx_ch));
                 end
                 amp             = amp(indx_ch);
-                % poulate a command for the sixteen channels, including
-                % those we won't be using --this is a requirement for
+                % populate a command for the sixteen channels, including
+                % those we won't be using - this is a requirement for
                 % zigbee communication
                 amp_cmd         = zeros(1,length(chs_cmd));
                 amp_cmd(channel_list)   = amp;
                 
                 % set amplitude -- done in a different command because of
                 % limitations in command length (register write in zigbee)
-                ws.set_AnodAmp( 32768-amp_cmd, chs_cmd );
-                ws.set_CathAmp( 32768+amp_cmd, chs_cmd );
+                ws.set_AnodAmp( AMP_OFFSET -amp_cmd, chs_cmd );
+                ws.set_CathAmp( AMP_OFFSET +amp_cmd, chs_cmd );
                 
                 % set polarity for all channels 
                 ws.set_PL( 1, chs_cmd )
@@ -128,8 +125,8 @@ switch bmi_fes_params.mode
     % For amplitude-modulated FES
     case 'amplitude_modulation'
         % set amplitude to zero
-        ws.set_AnodAmp( 32768, chs_cmd ); % set to zeros
-        ws.set_CathAmp( 32768, chs_cmd );
+        ws.set_AnodAmp( AMP_OFFSET, chs_cmd ); % set to zeros
+        ws.set_CathAmp( AMP_OFFSET, chs_cmd );
         
         % Now choose between monopolar and bipolar FES 
         switch bmi_fes_params.return
@@ -141,7 +138,7 @@ switch bmi_fes_params.mode
                 % those we won't be using --this is a requirement for
                 % zigbee communication
                 pw_cmd         = zeros(1,length(chs_cmd));
-                pw_cmd(channel_list)   = amp;
+                pw_cmd(channel_list)   = pw;
                 
                 % set amplitude -- done in a different command because of
                 % limitations in command length (register write in zigbee)
