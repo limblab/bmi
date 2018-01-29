@@ -102,7 +102,11 @@ try
     
     % configure train delay for each channel. Has to be > 50us because of
     % the electronics design. We stagger the stimuli by stagg_t to minimize
-    % charge density at the return
+    % charge density at the return.
+    %
+    % Note: we're probably not going to do this with online FES, since this
+    % extends the stimulation artifact, so we need to try without stagger
+    % too.
     stagg_t             = 500; % (s)
 %     td                  = ones(1,16)*50;
     td(1:nbr_channels)  = 50 + stagg_t*(1:nbr_channels) - stagg_t;
