@@ -173,9 +173,9 @@ try
         ctr             = ctr + 1;
         drawnow;
         
-        if ~mod(ctr,50)
-            battery_status(ctr/50) = ws.check_battery; % battery low?
-        end
+%         if ~mod(ctr,50)
+%             battery_status(ctr/50) = ws.check_battery; % battery low?
+%         end
         
     end
 
