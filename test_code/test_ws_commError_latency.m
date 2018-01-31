@@ -20,7 +20,7 @@ function test_ws_commError_latency(params)
 
 
 % -- #DEFINE Constants --
-AMP_OFFSET = 23768; % 16-bit DAC offset setting
+AMP_OFFSET = 32768; % 16-bit DAC offset setting
 
 
 
@@ -46,19 +46,21 @@ operatingParams = struct(...
 if any(strfind(operatingParams.email,'@'))
     email = true;
     
+    setpref('Internet','SMTP_Server','smtp.gmail.com')
+    setpref('Internet','E_mail','limblabfesproject@gmail.com')
     setpref('Internet','SMTP_Username','limblabfesproject@gmail.com')
     setpref('Internet','SMTP_Password','ExcellentMonkey');
     props = java.lang.System.getProperties;
     props.setProperty('mail.smtp.auth','true');
     props.setProperty('mail.smtp.socketFactory.class','javax.net.ssl.SSLSocketFactory');
-    props.setProperty('mail.smtp.socketFactory.port','465')
+    props.setProperty('mail.smtp.socketFactory.port','465');
 end
 
 
 
 flds = fieldnames(params); % list of fields from input parameter structure
 for ii = 1:numel(flds) 
-    operatingParams.(flds(ii)) = params.(flds(ii)); % overwrite default values as needed
+    operatingParams.(flds{ii}) = params.(flds{ii}); % overwrite default values as needed
 end
 params = operatingParams; clear operatingParams;
 
@@ -91,7 +93,7 @@ comm_timeout_ms = comm_timeout_ms(:);
 
 
 % interstim time -- 50 ms to match the FES requirements
-interstim_t = .05
+interstim_t = .05;
 
 failures = 0; % count number of failures
 
@@ -106,33 +108,37 @@ for ii = 1:length(blocking)
     
     instrreset % flush the serial ports -- take care of any previous errors (hopefully)
     errorCode = NaN; % change to an exception if something goes wrong
+    totalTime = NaN; % length current test has occured
+    vSet = NaN;
     % set up to store any warnings
     wrns = {}; % cell array to store any warning MSG:IDs and strings
     warning(''); % clear lastwarning command
     
     sprintf('\n\n--------------------------------------------------')
     sprintf('Trial number %i of %i',ii,length(blocking))
-    sprintf('blocking: %i, comm_timeout_ms: %i, zb_ch_page: %i\n\n',blcoking(ii),comm_timeout_ms(ii),zb_ch_page(ii))
+    sprintf('blocking: %i, comm_timeout_ms: %i, zb_ch_page: %i\n\n',blocking(ii),comm_timeout_ms(ii),zb_ch_page(ii))
 
 
     % create file for timestamps
-    tsFileName = ['Comm_Timestamp_', datestr(now,'yyyymmddTHHMMSS'), '.dat']
+    tsFileName = [params.save_folder,filesep,'Comm_Timestamp_', datestr(now,'yyyymmddTHHMMSS'), '.dat'];
     tsFID = fopen(tsFileName,'w');
     
     try
         % initialize ws object
         ws  = wireless_stim(stimParams);
+        pause(1); drawnow; % adding brief pauses to allow for intialization times
         % reset FPGA controller
-        ws.init;
-        vSet = evalc(ws.version); % not sure if this is going to work, but store all the verison stuff
+        ws.init; pause(1); drawnow; % with some pauses
+        vSet = evalc('ws.version') % not sure if this is going to work, but store all the verison stuff
         vSet = strsplit(vSet,'\n');
+        vSet = vSet(4:9);
 
         % waveform delay - min 50 us required due to electronics design
         stagg_t = 50;
         ws.set_TD(stagg_t,params.ch_list)
 
         % set stimulator to run continuously
-        ws.set_run(ws.runcont,params.ch_list)
+        ws.set_Run(ws.runcont,params.ch_list)
 
         % configure train length, frequency, polarity and amplitude
         cmd{1} = struct('Freq',30,'PL',1); % cathodic first
@@ -150,9 +156,7 @@ for ii = 1:length(blocking)
             wrns{end+1,2} = msgID;
             warning('');
         end
-        
-        totalTime = NaN;
-        
+       
         
         while toc(testTic) < params.test_time*60 % while we're still running
 
@@ -186,7 +190,9 @@ for ii = 1:length(blocking)
     catch ME
         errorCode = ME;
         failures = failures+1;
-        totalTime = toc(testTic);
+        if exist('testTic','var')
+            totalTime = toc(testTic);
+        end
     end
     
     % close the file with the timestamps
@@ -196,16 +202,16 @@ for ii = 1:length(blocking)
     % create struct with all important information about test
     currStor = struct(...
         'initParams',stimParams,...
-        'chList',ch_list,...
-        'PWMax',PW_max,...
-        'amp',amp,...
+        'chList',params.ch_list,...
+        'PWMax',params.PW_max,...
+        'amp',params.amp,...
         'totalTime',totalTime,...
-        'battery',battery,...
-        'tsFile',which(tsFile),...
+        'battery',params.batt,...
+        'tsFile',which(tsFileName),...
         'knownWarnings',wrns,...
         'error',errorCode,...
         'versionInfo',vSet,...
-        'computer',getenv('ComputerName');
+        'computer',getenv('ComputerName'));
 
     % load matlab struct with info on previous data, if it exists
     if exist(params.log_file)
@@ -214,14 +220,13 @@ for ii = 1:length(blocking)
     else
         commErrorLog = currStor; % otherwise make a new struct
     end
-    save(params.log_file,commErrorLog,'-v7.3') % save the updated structure
+    save(params.log_file,'commErrorLog','-v7.3') % save the updated structure
 
 
     % send email if we want
     if email
-        if isnan(errorCode)
+        if ~strcmp(class(errorCode),'MException')
             subject = sprintf('Test %i of %i success',ii,length(blocking));
-            
         else
             subject = sprintf('Test %i of %i failed',ii,length(blocking))
         end
