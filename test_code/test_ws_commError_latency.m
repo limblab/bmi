@@ -160,11 +160,11 @@ for ii = 1:length(blocking)
         
         while toc(testTic) < params.test_time*60 % while we're still running
 
-            PW = round(rand(size(params.ch_list)*params.PW_max));
+            PW = round(rand(size(params.ch_list))*params.PW_max);
             cur_t           = tic;
             % update anode and cathode PW
-            ws.set_AnodDur( PW, ch_list);
-            ws.set_CathDur( PW, ch_list);
+            ws.set_AnodDur( PW, params.ch_list);
+            ws.set_CathDur( PW, params.ch_list);
 
             % wait until enough time has elapsed & store latency
             elapsed_t       = toc(cur_t);
@@ -198,12 +198,12 @@ for ii = 1:length(blocking)
     % close the file with the timestamps
     fclose(tsFID)
     
-    versionInfo = struct('deviceID',vSet{4},...
-        'atmelID',vSet{5},...
-        'wsVersion',vSet{6},...
-        'localVersion',vSet{7},...
-        'remoteVersion',vSet{8},...
-        'FPGAVersion',vSet{9});
+    versionInfo = struct('deviceID',vSet(1),...
+        'atmelID',vSet(2),...
+        'wsVersion',vSet(3),...
+        'localVersion',vSet(4),...
+        'remoteVersion',vSet(5),...
+        'FPGAVersion',vSet(6));
     
     
     % create struct with all important information about test
