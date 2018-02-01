@@ -89,7 +89,10 @@ end
 blocking = blocking(:); % reshape from matrix to vector
 zb_ch_page = zb_ch_page(:);
 comm_timeout_ms = comm_timeout_ms(:);
-
+permInd = randperm(length(blocking)); % create a vector of random indices
+blocking = blocking(permInd);
+zb_ch_page = zb_ch_page(permInd);
+comm_timeout_ms = comm_timeout_ms(permInd);
 
 
 % interstim time -- 50 ms to match the FES requirements
@@ -239,8 +242,8 @@ for ii = 1:length(blocking)
         end
         
         sendmail(params.email,subject,...
-            sprintf('Computer\n Total Stimulation Time: %f min\n Blocking: %i\n  comm_timeout_ms: %i\n zb_ch_page:%i',...
-            getenv('ComputerName'),totalTime,stimParams.blocking,stimParams.comm_timeout_ms,stimParams.zb_ch_page))
+            sprintf('Computer%s\n Total Stimulation Time: %f min\n Blocking: %i\n  comm_timeout_ms: %i\n zb_ch_page:%i',...
+            getenv('ComputerName'),totalTime,blocking(ii),comm_timeout_ms(ii),zb_ch_page(ii)))
     end
     
     
