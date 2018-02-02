@@ -242,8 +242,8 @@ for ii = 1:length(blocking)
         end
         
         sendmail(params.email,subject,...
-            sprintf('Computer%s\n Total Stimulation Time: %f min\n Blocking: %i\n  comm_timeout_ms: %i\n zb_ch_page:%i',...
-            getenv('ComputerName'),totalTime,blocking(ii),comm_timeout_ms(ii),zb_ch_page(ii)))
+            sprintf('Computer: %s\n Total Stimulation Time: %f min\n Blocking: %i\n  comm_timeout_ms: %i\n zb_ch_page:%i',...
+            getenv('ComputerName'),totalTime/60,blocking(ii),comm_timeout_ms(ii),zb_ch_page(ii)))
     end
     
     

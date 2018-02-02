@@ -3,7 +3,8 @@ function bmi_params = bmi_params_defaults(varargin)
 %   'adapt'         : enable adaptation (emg_cascade mode only for now)
 %   'cursor_assist' : moves the cursor to a target and back according to 'cursor_traj'
 %   'cursor_traj'   : file path and name to a structure containing the fields 'mean_paths' and 'back_paths'
-%   'decoders'      : structure containing decoder structure to store with fields 'decoder_file' and decoder_typeInitial Neuron-to-EMG decoder: 'new_zeros',
+%   'decoders'      : structure containing decoder structure to store with fields 'decoder_file' and 
+%                     decoder_type Initial Neuron-to-EMG decoder: 'new_zeros',
 %                     'new_rand', or string with decoder file name.
 %   'emg_decoder'   : file name or structure containing emg-to-force model
 %   'sigmoid'       : flag to decide whether or not to apply a sigmoid to emg preds
@@ -37,6 +38,9 @@ function bmi_params = bmi_params_defaults(varargin)
 %   'stop_task_if_x_artifacts' : 
 %   'stop_task_if_x_force' :
 %   'offset_time_constant' :
+%
+%   'cortical_recording'
+%                   : 'Plexon' or 'Blackrock' [Blackrock]
 
 N2E = 'Jango_20141203_default_N2F_decoder.mat';
 E2F = E2F_deRugy_PD(15);
