@@ -23,7 +23,7 @@ function fes_params = fes_params_defaults(varargin)
 %   'offline_data'  : binnedData file to be replayed (when 'online'=false)
 %                       [NaN]
 %   'hp_rc'         : high-pass filter time constant in seconds (0 = no filtering of preds)
-%   'pred_bounds'   : upper_bound for predictions in Hz [400]
+%   'pred_bounds'   : upper_bound for predictions in Hz [300]
 %
 %   'stim_params'   : structure containing emg-to-stim parameters and electrode to muscle mapping
 %   'decoder'       : structure containing decoder or .mat file
@@ -38,6 +38,38 @@ function fes_params = fes_params_defaults(varargin)
 %
 %   'cort_source'   : 'Plexon' or 'Blackrock' [Blackrock]
 
+
+fes_params_defaults = struct(...
+    'sigmoid',          false,...
+    'output',           'stimulator',...
+    'offline_data',     NaN,...
+    'hp_rc',            0,...
+    'pred_bounds',      300,...
+    'stim_params',      stim_params_defaults,...
+    'decoder',          neuron_decoder_default,...
+    
+%   'sigmoid'       : flag to decide whether or not to apply a sigmoid to
+%                       emg preds [false]
+%   'output'        : either 'stimulator' or 'none' [stimulator] (not
+%                       implemented)
+%   'online'        : chose between online(true) or offline(false) [true]
+%   'offline_data'  : binnedData file to be replayed (when 'online'=false)
+%                       [NaN]
+%   'hp_rc'         : high-pass filter time constant in seconds (0 = no filtering of preds)
+%   'pred_bounds'   : upper_bound for predictions in Hz [400]
+%
+%   'stim_params'   : structure containing emg-to-stim parameters and electrode to muscle mapping
+%   'decoder'       : structure containing decoder or .mat file
+%   'n_neurons'     : Number of neurons
+%   'neuronIDs'     : Array of n_neurons x 2, containing (ch_id, unit_id);
+%   'n_lag'         : Number of lags to use [10]
+%   'binsize'       : Cycle time for decoder. Has to match binsize in decoders
+%
+%   'display_plots' : Plot adaptation procedure [true]
+%   'save_dir'      : directory for saving data
+%   'save_name'     : prefix for saving files names
+%
+%   'cort_source'   : 'Plexon' or 'Blackrock' [Blackrock]
 
 bmi_params_defaults = struct( ...
     'decoders'      ,default_bmi_decoders,...
