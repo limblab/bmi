@@ -27,14 +27,14 @@ function fes_params = fes_params_defaults(varargin)
 %
 %   'stim_params'   : structure containing emg-to-stim parameters and electrode to muscle mapping
 %   'decoder'       : structure containing decoder or .mat file
-%   'n_neurons'     : Number of neurons
 %   'neuronIDs'     : Array of n_neurons x 2, containing (ch_id, unit_id);
 %   'n_lag'         : Number of lags to use [10]
-%   'binsize'       : Cycle time for decoder. Has to match binsize in decoders
+%   'binsize'       : Cycle time for decoder in ms. Has to match binsize in
+%                       decoders [50]
 %
 %   'display_plots' : Plot adaptation procedure [true]
-%   'save_dir'      : directory for saving data
-%   'save_name'     : prefix for saving files names
+%   'save_dir'      : directory for saving data ['.']
+%   'save_name'     : prefix for saving files names [date and start time]
 %
 %   'cort_source'   : 'Plexon' or 'Blackrock' [Blackrock]
 
@@ -47,98 +47,92 @@ fes_params_defaults = struct(...
     'pred_bounds',      300,...
     'stim_params',      stim_params_defaults,...
     'decoder',          neuron_decoder_default,...
-    
-%   'sigmoid'       : flag to decide whether or not to apply a sigmoid to
-%                       emg preds [false]
-%   'output'        : either 'stimulator' or 'none' [stimulator] (not
-%                       implemented)
-%   'online'        : chose between online(true) or offline(false) [true]
-%   'offline_data'  : binnedData file to be replayed (when 'online'=false)
-%                       [NaN]
-%   'hp_rc'         : high-pass filter time constant in seconds (0 = no filtering of preds)
-%   'pred_bounds'   : upper_bound for predictions in Hz [400]
-%
-%   'stim_params'   : structure containing emg-to-stim parameters and electrode to muscle mapping
-%   'decoder'       : structure containing decoder or .mat file
-%   'n_neurons'     : Number of neurons
-%   'neuronIDs'     : Array of n_neurons x 2, containing (ch_id, unit_id);
-%   'n_lag'         : Number of lags to use [10]
-%   'binsize'       : Cycle time for decoder. Has to match binsize in decoders
-%
-%   'display_plots' : Plot adaptation procedure [true]
-%   'save_dir'      : directory for saving data
-%   'save_name'     : prefix for saving files names
-%
-%   'cort_source'   : 'Plexon' or 'Blackrock' [Blackrock]
+    'neuronIDs',        [[1:96]',zeros(96,1)],...
+    'n_lag',            10,...
+    'binsize',          50,...
+    'display_plots',    true,...
+    'save_dir',         '.',...
+    'save_name',        datestr(now,'yyyymmmdd_HHMM'),...
+    'cort_source',      'Blackrock');
 
-bmi_params_defaults = struct( ...
-    'decoders'      ,default_bmi_decoders,...
-    'mode'          ,'direct',...
-    'adapt'         ,false,...
-    'cursor_assist' ,false,...
-    'cursor_traj'   ,curs_traj_default,...
-    'neuron_decoder',N2E,...
-    'emg_decoder'   ,E2F,...
-    'sigmoid'       ,false,...
-    'emg_convolve'  ,[],...
-    'emg_thresh'    ,0,...
-    'output'        ,'xpc',...
-    'online'        ,true,...
-    'realtime'      ,true,...
-    'offline_data'  ,'Jango_20141203_default_offline_data.mat',...
-    'hp_rc'         ,0,...
-    'bmi_fes_stim_params'   ,bmi_fes_stim_params_defaults,...
-    'pred_bounds'   ,[inf inf],...
-    ...
-    'n_neurons'     ,32,...
-    'neuronIDs'     ,[[1:16 33:48]' zeros(32,1)],...
-    'n_lag'         ,10,...
-    'n_emgs'        ,5,...
-    'n_lag_emg'     ,1,...
-    'n_forces'      ,2,...
-    'binsize'       ,0.05,... 
-    'db_size'       ,34,...
-    'ave_fr'        ,0,...
-    ...
-    'adapt_params'  ,adapt_params_defaults,...
-    ...
-    'display_plots' ,true,...
-    'print_out'     ,true,...
-    'save_data'     ,true,...
-    'save_dir'      ,cd,...
-    'save_name'     ,'BMI_test',...
-    ...
-    'force_offset'  ,[0 0],...
-    'stop_trial'    ,0, ...
-    'stop_task_if_x_artifacts', 10, ...
-    'stop_task_if_x_force',     0.02, ...
-    'offset_time_constant',     1.0000e+72, ...
-    'spike_chan_names', [] ...
-);
-
-
-% fill default options missing from input argument
-if nargin
-    fes_params = varargin{1};
-    if isfield(fes_params,'adapt_params')
-        % fill up the adapt_params substructure if present.
-        fes_params.adapt_params = adapt_params_defaults(fes_params.adapt_params);
-    end
-else
-    fes_params = [];
+% change how we run through through the input variables
+switch nargin
+    case 0
+        fes_params = struct; % gimme something empty so we don't throw an error later on
+    case 1
+        fes_params = varargin{1};
+    otherwise
+        if mod(nargin,2) ~= 0 % if there are an uneven number of name/value pairs
+            error('Wrong number of inputs')
+        else        % name/value pairs
+            flds = varargin(1:2:end-1); % list of names
+            vals = varargin(2:2:end);   % list of values
+            fes_params = struct;
+            for ii = 1:numel(flds) 
+                fes_params.(flds{ii}) = vals{ii}; % load into a struct, so the loading routine's consistent
+            end
+        end
 end
 
-% fill default BMI-FES params missing from input argument
-if nargin
-    if isfield(fes_params,'bmi_fes_stim_params')
-       fes_params.bmi_fes_stim_params = bmi_fes_stim_params_defaults(fes_params.bmi_fes_stim_params);
+flds = fieldnames(fes_params);
+for ii = 1:numel(flds) % check and load entered parameters
+    switch flds{ii} % checking validity of entered parameters
+        case 'sigmoid'
+            if ~islogical(fes_params.sigmoid)
+                error('sigmoid value must be true or false')
+            end
+        case 'output'
+            if ~(strcmpi(fes_params.output,'stimulator')|strcmpi(fes_params.output,'none'))
+                error('output value must be either ''stimulator'' or ''none''')
+            end
+        case 'offline_data'
+            if ~isnan(fes_params.offline_data)
+                error('offline_data hasn''t been implemented yet')
+            end
+        case 'hp_rc'
+            if fes_params.hp_rc ~= 0
+                error('hp_rc hasn''t been implemented yet')
+            end
+        case 'pred_bounds'
+            if (fes_params.pred_bounds < 0) | ~isnumeric(fes_params.pred_bounds)
+                error('pred_bounds must be a number greater than 0')
+            end
+        case 'stim_params'
+            fes_params.stim_params = stim_params_defaults(fes_params.stim_params); % load into struct, throw error as necessary
+        case 'decoder'
+            fes_params.neuron_decoder = neuron_decoder_default(fes_params.neuron_decoder); % load into struct, throw error as necessary
+        case 'neuronIDs'
+            if size(fes_params.neuronIDs,2) ~= 2 % this should throw an error if neuronIDs isn't a number
+                error('neuronIDs needs to have electrode and unit labels for each channel')
+            end
+        case 'binsize'
+            if numel(fes_params.binsize) ~= 1
+                error('binsize needs to be a scalar')
+            end
+        case 'n_lag'
+            if numel(fes_params.n_lag) ~= 1
+                error('n_lag needs to be a scalar')
+            end
+        case 'display_plots'
+            if ~islogical(fes_params.display_plots)
+                error('display_plots needs to be either true or false')
+            end
+        case 'save_dir'
+            if ~ischar(fes_params.save_dir)
+                error('save_dir needs to be a directory location -- AKA a string!')
+            end
+        case 'save_name'
+            if ~ischar(fes_params.save_name)
+                error('save_name needs to be a file name')
+            end
+        case 'cort_source'
+            if ~(strcmpi(fes_params.cort_source,'blackrock')|strcmpi(fes_params.cort_source,'plexon'))
+                error('cort_source needs to either be ''Blackrock'' or ''Plexon''')
+            end
     end
+    fes_params_defaults.(flds{ii}) = fes_params.(flds{ii});
 end
+fes_params = fes_params_defaults;
 
 
-all_param_names = fieldnames(bmi_params_defaults);
-for i=1:numel(all_param_names)
-    if ~isfield(fes_params,all_param_names(i))
-        fes_params.(all_param_names{i}) = bmi_params_defaults.(all_param_names{i});
-    end
 end
