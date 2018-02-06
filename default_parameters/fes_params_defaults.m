@@ -25,7 +25,7 @@ function fes_params = fes_params_defaults(varargin)
 %   'hp_rc'         : high-pass filter time constant in seconds (0 = no filtering of preds)
 %   'pred_bounds'   : upper_bound for predictions in Hz [300]
 %
-%   'stim_params'   : structure containing emg-to-stim parameters and electrode to muscle mapping
+%   'fes_stim_params'   : structure containing emg-to-stim parameters and electrode to muscle mapping
 %   'decoder'       : structure containing decoder or .mat file
 %   'neuronIDs'     : Array of n_neurons x 2, containing (ch_id, unit_id);
 %   'n_lag'         : Number of lags to use [10]
@@ -37,6 +37,12 @@ function fes_params = fes_params_defaults(varargin)
 %   'save_name'     : prefix for saving files names [date and start time]
 %
 %   'cort_source'   : 'Plexon' or 'Blackrock' [Blackrock]
+%
+%   'meta'          : Structure with metadata. Can be supplemented 
+%        'Animal'   : 'Rat' or 'Monkey' [Monkey]
+%        'Name'     : Animal's name
+%        'Lab'      : Lab where recording was performed ['Lab1']
+%        'Computer' : Computer name where recorded (Stored Automatically)
 
 
 fes_params_defaults = struct(...
@@ -45,15 +51,17 @@ fes_params_defaults = struct(...
     'offline_data',     NaN,...
     'hp_rc',            0,...
     'pred_bounds',      300,...
-    'stim_params',      stim_params_defaults,...
-    'decoder',          plexon_Build_Model,...
+    'fes_stim_params',      fes_stim_params_defaults,...
+    'decoder',          NaN,...
     'neuronIDs',        [[1:96]',zeros(96,1)],...
     'n_lag',            10,...
     'binsize',          50,...
     'display_plots',    true,...
     'save_dir',         '.',...
     'save_name',        datestr(now,'yyyymmmdd_HHMM'),...
-    'cort_source',      'Blackrock');
+    'cort_source',      'Blackrock',...
+    'meta',             struct('Animal','Monkey','Name','Jango',...
+                            'Lab','Lab1','Computer',getenv('ComputerName')));
 
 % change how we run through through the input variables
 switch nargin
@@ -97,10 +105,10 @@ for ii = 1:numel(flds) % check and load entered parameters
             if (fes_params.pred_bounds < 0) | ~isnumeric(fes_params.pred_bounds)
                 error('pred_bounds must be a number greater than 0')
             end
-        case 'stim_params'
-            fes_params.stim_params = stim_params_defaults(fes_params.stim_params); % load into struct, throw error as necessary
+        case 'fes_stim_params'
+            fes_params.fes_stim_params = fes_stim_params_defaults(fes_params.stim_params); % load into struct, throw error as necessary
         case 'decoder'
-            fes_params.neuron_decoder = neuron_decoder_default(fes_params.neuron_decoder); % load into struct, throw error as necessary
+            fes_params.neuron_decoder = plexon_Build_Model(fes_params.neuron_decoder); % load into struct, throw error as necessary
         case 'neuronIDs'
             if size(fes_params.neuronIDs,2) ~= 2 % this should throw an error if neuronIDs isn't a number
                 error('neuronIDs needs to have electrode and unit labels for each channel')
@@ -126,13 +134,28 @@ for ii = 1:numel(flds) % check and load entered parameters
                 error('save_name needs to be a file name')
             end
         case 'cort_source'
-            if ~(strcmpi(fes_params.cort_source,'blackrock')|strcmpi(fes_params.cort_source,'plexon'))
+            if ~(strcmpi(fes_params.cort_source,'blackrock') || strcmpi(fes_params.cort_source,'plexon'))
                 error('cort_source needs to either be ''Blackrock'' or ''Plexon''')
             end
+        case 'meta'
+            if ~isstruct(fes_params.meta)
+                error('the ''meta'' field needs to be a struct')
+            end
+            fes_params.meta.Computer = getenv('ComputerName');
     end
     fes_params_defaults.(flds{ii}) = fes_params.(flds{ii});
 end
-fes_params = fes_params_defaults;
+
+% force the user to create a neuron decoder
+if isnan(fes_params_defaults.decoder)
+    decoder_params = struct('binSize',fes_params_defaults.binsize,...
+        'filLen',fes_params_defaults.binsize*fes_params_defaults.n_lag,...
+        'polynomial',false,...
+        'chans',fes_params_defaults.neuronIDs);
+    fes_params_defaults.decoder = plexon_Build_Model(decoder_params); % setup the decoder
+end
+
+fes_params = fes_params_defaults; % load into the output structure
 
 
 end
