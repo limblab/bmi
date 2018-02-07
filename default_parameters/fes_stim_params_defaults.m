@@ -8,7 +8,7 @@ function fes_stim_params = fes_stim_params_defaults(varargin)
 %   'EMG_min'           : minimum value of the EMG predictions
 %   'EMG_max'           : maxumum value of the EMG predictions
 %   'freq'              : stimulation frequency (Hz)
-%   'mode'              : stim. mode; 'PW_modulation' or 'amplitude_modulation'
+%   'mode'              : stim mode; 'PW_modulation' or 'amplitude_modulation'
 %   'PW_max'            : maximum PW, in 'PW_modulation' mode. This PW
 %                           would be used in amplitude-modulated FES
 %   'PW_min'            : minimum PW, in 'PW_modulation' mode
