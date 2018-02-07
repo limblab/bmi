@@ -142,8 +142,8 @@ switch bmi_fes_params.mode
                 
                 % set amplitude -- done in a different command because of
                 % limitations in command length (register write in zigbee)
-                ws.set_AnodPW( pw_cmd, chs_cmd );
-                ws.set_CathPW( pw_cmd, chs_cmd );
+                ws.set_AnodDur( pw_cmd, chs_cmd );
+                ws.set_CathDur( pw_cmd, chs_cmd );
                 
                 % set polarity for all channels 
                 ws.set_PL( 1, chs_cmd )
@@ -167,8 +167,8 @@ switch bmi_fes_params.mode
                 
                 % set amplitude -- done in a different command because of
                 % limitations in command length (register write in zigbee)
-                ws.set_AnodPW( pw_cmd, chs_cmd );
-                ws.set_CathPW( pw_cmd, chs_cmd );
+                ws.set_AnodDur( pw_cmd, chs_cmd );
+                ws.set_CathDur( pw_cmd, chs_cmd );
                 
                 % Set polarity for the anodes...
                 % Set polarity to anodic first
