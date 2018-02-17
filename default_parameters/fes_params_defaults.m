@@ -106,9 +106,17 @@ for ii = 1:numel(flds) % check and load entered parameters
                 error('pred_bounds must be a number greater than 0')
             end
         case 'fes_stim_params'
-            fes_params.fes_stim_params = fes_stim_params_defaults(fes_params.stim_params); % load into struct, throw error as necessary
+            fes_params.fes_stim_params = fes_stim_params_defaults(fes_params.fes_stim_params); % load into struct, throw error as necessary
         case 'decoder'
-            fes_params.neuron_decoder = plexon_Build_Model(fes_params.neuron_decoder); % load into struct, throw error as necessary
+            % todo: add checker to make sure valid decoder is provided if
+            % already loaded
+            if ischar(fes_params.decoder)
+                decoder_params = struct('binSize',fes_params_defaults.binsize,...
+                    'filLen',fes_params_defaults.binsize*fes_params_defaults.n_lag,...
+                    'polynomial',false,...
+                    'chans',fes_params_defaults.neuronIDs);
+                fes_params.decoder = plexon_Build_Model(fes_params.decoder,decoder_params); % load into struct, throw error as necessary
+            end
         case 'neuronIDs'
             if size(fes_params.neuronIDs,2) ~= 2 % this should throw an error if neuronIDs isn't a number
                 error('neuronIDs needs to have electrode and unit labels for each channel')
@@ -151,7 +159,7 @@ for ii = 1:numel(flds) % check and load entered parameters
 end
 
 % force the user to create a neuron decoder
-if isnan(fes_params_defaults.decoder)
+if ~isstruct(fes_params_defaults.decoder)
     decoder_params = struct('binSize',fes_params_defaults.binsize,...
         'filLen',fes_params_defaults.binsize*fes_params_defaults.n_lag,...
         'polynomial',false,...
