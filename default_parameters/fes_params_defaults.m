@@ -29,8 +29,8 @@ function fes_params = fes_params_defaults(varargin)
 %   'decoder'       : structure containing decoder or .mat file
 %   'neuronIDs'     : Array of n_neurons x 2, containing (ch_id, unit_id);
 %   'n_lag'         : Number of lags to use [10]
-%   'binsize'       : Cycle time for decoder in ms. Has to match binsize in
-%                       decoders [50]
+%   'binsize'       : Cycle time for decoder in seconds. Has to match binsize in
+%                       decoders [.05]
 %
 %   'display_plots' : Plot adaptation procedure [true]
 %   'save_dir'      : directory for saving data ['.']
@@ -55,7 +55,7 @@ fes_params_defaults = struct(...
     'decoder',          NaN,...
     'neuronIDs',        [[1:96]',zeros(96,1)],...
     'n_lag',            10,...
-    'binsize',          50,...
+    'binsize',          .05,...
     'display_plots',    true,...
     'save_dir',         '.',...
     'save_name',        datestr(now,'yyyymmmdd_HHMM'),...
@@ -116,6 +116,10 @@ for ii = 1:numel(flds) % check and load entered parameters
         case 'binsize'
             if numel(fes_params.binsize) ~= 1
                 error('binsize needs to be a scalar')
+            end
+            if fes_params.binsize>1
+                warning('Binsize is over 1, so I''m assuming you entered it in ms. Switching to seconds')
+                fes_params.binsize = fes_params.binsize/1000;
             end
         case 'n_lag'
             if numel(fes_params.n_lag) ~= 1
