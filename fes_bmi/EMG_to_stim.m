@@ -50,7 +50,7 @@ if strcmp(stim_params.mode,'PW_modulation')
         end
     end
     
-elseif strcmp(stim_params,'amplitude_modulation')
+elseif strcmp(stim_params.mode,'amplitude_modulation')
     
     for ii = 1:nbr_emgs
         
@@ -61,14 +61,14 @@ elseif strcmp(stim_params,'amplitude_modulation')
         elseif EMG_pred(ii) > stim_params.EMG_max(ii)
             
             stim_amp(ii) = stim_params.amplitude_max(ii);
-            stim_PW(ii) = stim_params.PW_max;
+            stim_PW(ii) = stim_params.PW_max(ii);
         else
             stim_amp(ii)  = ( EMG_pred(ii) - stim_params.EMG_min(ii) )* ...
                 ( stim_params.amplitude_max(ii) - stim_params.amplitude_min(ii) ) ...
                 / ( stim_params.EMG_max(ii) - stim_params.EMG_min(ii) ) ...
                 + stim_params.amplitude_min(ii);
             
-            stim_PW(ii) = stim_params.amplitude_max(ii);
+            stim_PW(ii) = stim_params.PW_max(ii);
         end
     end
 end

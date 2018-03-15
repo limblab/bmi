@@ -60,7 +60,7 @@ if strcmp(mode,'init')
     end
 
     xlim([.5, numel(bmi_fes_stim_params.muscles)+.5]);
-    ylim([0, max(bmi_fes_stim_params.PW_max)]);
+
     
     fig_handle.ah.XTick     = 1:numel(bmi_fes_stim_params.muscles);
     fig_handle.ah.XTickLabel = bmi_fes_stim_params.muscles;
@@ -68,7 +68,13 @@ if strcmp(mode,'init')
     
     xlabel('muscle')
     ylabel('PW (us)')
-    fig_handle.ah.Title.String = 'PW stimulation values';
+    if strcmp(bmi_fes_stim_params.mode,'PW_modulation')
+        fig_handle.ah.Title.String = 'PW stimulation values';
+        ylim([0, max(bmi_fes_stim_params.PW_max)]);
+    elseif strcmp(bmi_fes_stim_params.mode,'amplitude_modulation')
+        fig_handle.ah.Title.String = 'Amplitude stimulation values';
+        ylim([0, max(bmi_fes_stim_params.amplitude_max)]);
+    end
     
 elseif strcmp(mode,'exec')
 
@@ -97,6 +103,25 @@ elseif strcmp(mode,'exec')
 %         elseif ~stim_or_catch && strcmp(fig_handle.ah.Title.String,'PW stimulation values')
 %             fig_handle.ah.Title.String = 'catch trial';
 %         end
+       
+
+    elseif strcmp(bmi_fes_stim_params.mode,'amplitude_modulation')
         
+        % update PW plotting based on muscle type
+        if ~isempty(fig_handle.ext_muscles)
+            fig_handle.ph_ext.YData     = stim_amp(fig_handle.ext_muscles);
+        end
+
+        if ~isempty(fig_handle.flex_muscles)
+            fig_handle.ph_flex.YData    = stim_amp(fig_handle.flex_muscles);
+        end
+
+        if ~isempty(fig_handle.hand_muscles)
+            fig_handle.ph_hand.YData    = stim_amp(fig_handle.hand_muscles);
+        end
+
+        if ~isempty(fig_handle.other_muscles)
+            fig_handle.ph_other.YData   = stim_amp(fig_handle.other_muscles);
+        end
     end
 end
