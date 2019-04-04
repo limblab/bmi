@@ -102,11 +102,7 @@ try
     
     % configure train delay for each channel. Has to be > 50us because of
     % the electronics design. We stagger the stimuli by stagg_t to minimize
-    % charge density at the return.
-    %
-    % Note: we're probably not going to do this with online FES, since this
-    % extends the stimulation artifact, so we need to try without stagger
-    % too.
+    % charge density at the return
     stagg_t             = 500; % (s)
 %     td                  = ones(1,16)*50;
     td(1:nbr_channels)  = 50 + stagg_t*(1:nbr_channels) - stagg_t;
@@ -172,7 +168,7 @@ try
         % update cycle ctr
         ctr             = ctr + 1;
         drawnow;
-        
+%         
 %         if ~mod(ctr,50)
 %             battery_status(ctr/50) = ws.check_battery; % battery low?
 %         end
@@ -202,7 +198,11 @@ catch ME
     
     % save results
     file_name           = ['battery_tests_' datestr(now,'yymmdd_HHMMSS')];
-    save([save_path, filesep, file_name], 'nbr_stim_cycles', 'update_t','blocking','zb_ch_page','battery_status');
+    % save the number of cycles, update times, stimulation parameters,
+    % battery status output, and the reason for the failure (to debug
+    % non-battery-related failures)
+%     save([save_path, filesep, file_name], 'nbr_stim_cycles', 'update_t','blocking','zb_ch_page','battery_status','ME');
+    save([save_path, filesep, file_name], 'nbr_stim_cycles', 'update_t','blocking','zb_ch_page','ME');
     disp(['saving data in E:\Data-lab1\TestData\wireless_stim_tests\battery_tests_' ...
         datestr(now,'yymmdd_HHMMSS')]);
     disp(' ')

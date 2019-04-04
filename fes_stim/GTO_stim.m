@@ -18,11 +18,11 @@ sp.freq                 = stim_freq;
 
 switch mode
     case 'bi'
-        sp.elect_list   = [5 7 9 11 2 4 6 8];
-        sp.pol          = [1 1 1 1 0 0 0 0];
+        sp.elect_list   = [2 4];
+        sp.pol          = [1 0];
     case 'mono'
-        sp.elect_list   = [5 7 9 11];
-        sp.pol          = [1 1 1 1];
+        sp.elect_list   = [2];
+        sp.pol          = [1];
 end        
 sp.pw                   = stim_pw;
 sp.amp                  = round(stim_ampl/4) ...
