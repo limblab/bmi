@@ -4,8 +4,22 @@
 % button in a msgbox. Outputs are saved in a local file
 
 
-%% clear everything to start clean
+%% clear everything, parameters for this monkey
 clear all; clc; close all;
+
+% -- Greyson --
+monkey = 'Greyson';
+ccmid = '17L2';
+% Greyson Muscle list
+% first group of 16
+% electrode = {'FDP2_1','FDP2_2','FCR2_1','FCR2_2','FCU1_1','FCU1_2','FCU2_1','FCU2_2',...
+%     'FCR1_1','FCR1_2','FDP1_1','FDP1_2','FDS1_1','FDS1_2','FDS2_1','FDS2_2'};
+% % second group of 16
+electrode = {'FDS3_1','FDS3_2','PT_1','PT_2','APB_1','APB_2','FPB_1','FPB_2',...
+  'Lum_1','Lum_2','fDI_1','fDI_2','EDC3_1','EDC3_2','SUP_1','SUP_2'}
+% % Third group of 14
+% electrode = {'ECU_1','ECU_2','ECU_3','ECR_1','ECR_2','ECR_3','EDC1_1','EDC1_2',...
+%   'EDC2_1','EDC2_2','BI_1','BI_2','TRI_1','TRI_2'}
 
 
 %% Set up the stimulator etc.
@@ -24,6 +38,7 @@ try
     cd(curdir);
 catch
     ws.delete();
+    fclose(instrfind)
     disp(datestr(datetime(),'HH:MM:SS:FFF'))
     error('Could not connect to stimulator')
     cd pwd;
@@ -39,30 +54,24 @@ drawnow();
 % cbmex('trialconfig',0); % avoid buffering, since we're only gonna putting things in the files
 % 
 % muscle = 'FPB2';
-FN_base = 'E:\Data-lab1\17L2-Greyson\StimData\20181101\';
+FN_base = ['E:\Data-lab1\',ccmid,'-',monkey,'\StimData\',datestr(today,'yyyymmdd')];
+if ~exist(FN_base)
+    mkdir(FN_base)
+end
 
 %% -------------------------------------------------------
 % Everything in the next few sections is for monopolar. Keep that in
 % mind...
 
 %% Set up an excel file to record the values etc.
-FNexcel = [FN_base, '20181101_Greyson_Electrode_Characterization.xlsx']; % set this up in the same folder as the CBmex file
+FNexcel = [FN_base, filesep, datestr(today,'yyyymmdd'),'_',monkey,'_Electrode_Characterization.xlsx']; % set this up in the same folder as the CBmex file
 % FNexcel = [FN_base, 'Classification_group2'];
 
 if exist(FNexcel,'file')
     warning('Excel file already exists. We''ll append the data in a new sheet')
 end
 
-% Greyson Muscle list
-% first group of 16
-% electrode = {'FDP2_1','FDP2_2','FCR2_1','FCR2_2','FCU1_1','FCU1_2','FCU2_1','FCU2_2',...
-%     'FCR1_1','FCR1_2','FDP1_1','FDP1_2','FDS1_1','FDS1_2','FDS2_1','FDS2_2'};
-% % second group of 16
-% electrode = {'FDS3_1','FDS3_2','PT_1','PT_2','APB_1','APB_2','FPB_1','FPB_2',...
-%   'Lum_1','Lum_2','fDI_1','fDI_2','EDC3_1','EDC3_2','SUP_1','SUP_2'}
-% % Third group of 14
-electrode = {'ECU_1','ECU_2','ECU_3','ECR_1','ECR_2','ECR_3','EDC1_1','EDC1_2',...
-  'EDC2_1','EDC2_2','BI_1','BI_2','TRI_1','TRI_2'}
+
 
 % xlrange = cell();
 for i = 1:1000
@@ -72,9 +81,9 @@ xlrangei = 1;
 
 
 
-%% find the desired current at 1800 us pulse width
+%% find the desired current at 400 us pulse width
 PW = .4;  % 400 us pulse width
-amp = [0:.5:6]; % .2:1.8 mA
+amp = [0:.5:6]; % .2:6 mA
 
 stim_amps = zeros(16,1); % empty array for each electrode of the desired amps
 
@@ -140,7 +149,7 @@ for k = 1:length(stim_cmd)
 end
 
 %% set up a vector of all possible amplitudes and pulse widths
-PW = [0:.01:.3]; % list of pulse widths
+PW = [0:.01:.4]; % list of pulse widths
 
 SheetName = ['Monopolar_',datestr(now,'dd_mm_yyyy-hh_MM')];
 xlswrite('E:\Data-lab1\17L2-Greyson\StimData\20181101\20181101_Greyson_Electrode_Characterization.xlsx',{'Muscle','Threshold','Amplitude'},SheetName,xlrange{1});
@@ -241,7 +250,7 @@ end
 
 ws.set_Run(ws.run_cont,ch_list{:})
 
-%% find the desired current at 1800 us pulse width
+%% find the desired current at 400 us pulse width
 PW = .4;  % 400 us pulse width
 amp = [0:.5:6]; % .2:1.8 mA
 stim_params.elect_list = [1:2:15;2:2:16];
