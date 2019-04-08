@@ -41,7 +41,7 @@ catch
     fclose(instrfind)
     disp(datestr(datetime(),'HH:MM:SS:FFF'))
     error('Could not connect to stimulator')
-    cd pwd;
+    cd(curdir);
 end
 % wait until it's set up...
 drawnow();
