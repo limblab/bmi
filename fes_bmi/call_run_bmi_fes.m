@@ -4,13 +4,13 @@ clear all; close all; clc;
 %% Some high level stuff
 
 % Who is in the lab?
-monkey                  = 'Greyson'
+monkey                  = 'Greyson';
 task                    = 'MG_KG'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the task you trained on -- update this or catch trials won't work!
 
 % List of muscles for the decoder
 % emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; % Fish grasping 
 % emg_list_4_dec          = {'FCRr','FCUr','FCUu','FDPr','FDSr','FDSu','PT'}; % Jango 12/11
-emg_list_4_dec          = {'FDP2', 'FCR2', 'FCU1', 'FCU2', 'FCR1', 'FDS2', 'APB', 'FPB'}; % Greyson 04/08/2019
+emg_list_4_dec          = {'FDP2', 'FCR2', 'FCU1', 'FDP3', 'FCR1', 'FDS2', 'APB', 'FPB'}; % Greyson 04/08/2019
 
 % Mapping of EMGs in the decoder to the electrodes that will be stimulated.
 % First row lists which EMG, second row lists which muscle will be
@@ -20,8 +20,8 @@ emg_list_4_dec          = {'FDP2', 'FCR2', 'FCU1', 'FCU2', 'FCR1', 'FDS2', 'APB'
 %                             {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}];
 % sp.EMG_to_stim_map      = [{'FCRr','FCUr','FCUu','FDPr','FDSr','FDSu','PT'}; ...
 %                         {'FCRr','FCUr','FCUu','FDPr','FDSr','FDSu','PT'}]; % Jango Flexors only
-sp.EMG_to_stim_map      = [{'FDP2', 'FCR2', 'FCU1', 'FCU2', 'FCR1', 'FDS2', 'APB', 'FPB'}; ...
-                            {'FDP2', 'FCR2', 'FCU1', 'FCU2', 'FCR1', 'FDS2', 'APB', 'FPB'}]; % Greyson PG/KG
+sp.EMG_to_stim_map      = [{'FDP2', 'FCR2', 'FCU1', 'FDP3', 'FCR1', 'FDS2', 'APB', 'FPB'}; ...
+                            {'FDP2', 'FCR2', 'FCU1', 'FDP3', 'FCR1', 'FDS2', 'APB', 'FPB'}]; % Greyson PG/KG
 % sp.EMG_to_stim_map      = [{'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDS', 'PL'}; ...
 %                             {'FCRr', 'FDPr', 'FDPu', 'FDSu', 'FDSu', 'PL'}];
 
@@ -58,7 +58,7 @@ params.save_data        = true;
 
 % and folder name - change accordingly!
 if ispc
-	params.save_dir     = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES';
+	params.save_dir     = 'E:\Data-lab1\17L2-Greyson\CerebusData\';
 elseif ismac
     params.save_dir     = '/Users/juangallego/Desktop/Test';
 end
@@ -73,7 +73,7 @@ if AlreadyBuiltDecoder == 0
     if ismac
         file4decoder        = '/Users/juangallego/Documents/NeuroPlast/Data/Jango/CerebusData/Plasticity/20150320_Jango_WF_001.nev';
     elseif ispc
-        file4decoder        = 'E:\Data-lab1\12A1-Jango\CerebusData\BMI-FES\20170808\20170808_Jango_KB_PG_Wireless_002.nev';
+        file4decoder        = 'E:\Data-lab1\17L2-Greyson\CerebusData\20190409\20190409_Greyson_Key_001.nev';
     end
     
     
@@ -266,7 +266,7 @@ switch monkey
                 
        case 'Greyson'
         
-       sp.muscles                  = {'FDP2', 'FCR2', 'FCU1', 'FCU2', 'FCR1', 'FDS2', 'APB', 'FPB'}; % Greyson 04/08/2019;
+       sp.muscles                  = {'FDP2', 'FCR2', 'FCU1', 'FDP3', 'FCR1', 'FDS2', 'APB', 'FPB'}; % Greyson 04/08/2019;
 
         switch params.output
             % for the grapevine
@@ -291,13 +291,13 @@ switch monkey
 %                 sp.anode_map        = [{ 1, 2, 3, 4, 5, 6, 7, 8 }; ...
 %                                         { 1, 1, 1, 1, 1, 1, 1, 1 }];
                 sp.anode_map        = [{ 2, 4, 6, 8, 10, 12, 14, 16}; ...
-                                        { 1, 1, 1, 1, 1, 1, 1}];
+                                        { 1, 1, 1, 1, 1, 1, 1, 1}];
 %                 sp.anode_map        = [{ 1, 5, 7, 9, 11, 13 }; ...
 %                                         { 1, 1, 1, 1, 1, 1 }];
                 % define the cathodes; empty for bipolar
                 if strcmp(stim_mode,'bipolar')
                     sp.cathode_map  = [{ 1, 3, 5, 7, 9, 11, 13, 15}
-                                        {1, 1, 1, 1, 1, 1, 1}];
+                                        {1, 1, 1, 1, 1, 1, 1, 1}];
 %                     sp.cathode_map  = [{ 2, 4, 6, 8, 10, 12, 14 }; ...
 %                                         { 1, 1, 1, 1, 1, 1, 1 }];
 %                     sp.cathode_map  = [{ 2, 6, 8, 10, 12, 14 }; ...
@@ -319,11 +319,11 @@ end
 % The controller maps the EMG into PW or amplitude using a proportional law
 % When doing PW-modulated FES, the stim amplitude is fixed to
 % amplitude_max, and when doing amplitude-modulated FES, to PW_max
-sp.EMG_min              = [.1 .1 .1 .1 .1 .1 .1 .1];
+sp.EMG_min              = [.05 .1 .2 .125 .18 .1 .15 .1];
 sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9 .9];
 % sp.EMG_max              =repmat(1,1,numel(sp.muscles));
         
-sp.PW_min               =  [.045 .06 .075 .05 .075 .065 .09 .1]; % Greyson 04/10/2019
+sp.PW_min               =  [.045 .06 .075 .05 .075 .065 .09 .06]; % Greyson 04/10/2019
 sp.PW_max               =  repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_max               = [0 .4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
 
@@ -347,7 +347,7 @@ if datestr(matReleaseDate) > datenum('January 01, 2017') % if the seriallist fun
     end
 else
     if strncmp(params.output,'wireless_stim',13) 
-        sp.port_wireless    = 'COM5';
+        sp.port_wireless    = 'COM18';
     end
 end
 
@@ -367,5 +367,8 @@ catch ME
     if strcmp(ME.identifier,'MATLAB:serial:fopen:opfailed')
         fclose(instrfind);
         run_bmi_fes(params);
+    else
+        rethrow(ME)
     end
+    
 end

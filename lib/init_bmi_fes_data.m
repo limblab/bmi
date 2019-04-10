@@ -84,7 +84,7 @@ data = struct(  'spikes'      , zeros(spike_buf_size,params.n_neurons),...
 
 if params.online
     cbmex('open',1);
-    data.labels = cbmex('chanlabel',1:156);
+%     data.labels = cbmex('chanlabel',1:156);
     cbmex('close')
 else
     

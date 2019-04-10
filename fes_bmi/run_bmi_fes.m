@@ -92,11 +92,13 @@ if params.online
     bin_start_t         = 0.0; % time at beginning of next bin
         
     % start cerebus file recording :
-    cbmex('fileconfig', handles.cerebus_file, '', 1);   
+    cbmex('fileconfig', handles.cerebus_file, '', 1);
+%     cbmex('analogout', 4, 'sequence', [1,0,2400,21626,1,0], 'repeats', 1);
+%     cbmex('analogout', 1, 'sequence', [150,0,100,21626,1,0], 'repeats', 8);
     data.sys_time       = cbmex('time');
 
     % start data buffering
-    cbmex('trialconfig',1,'nocontinuous');
+    cbmex('trialconfig',1);
 
     
 else  % If using pre-recorded signals in a file1
@@ -115,8 +117,8 @@ drawnow;
 
 
 %% run the sync to align the stimulator and the cerebus
-cbmex('open')
-params.tsync = timeSync(params);
+% cbmex('open')
+% params.tsync = timeSync(params);
 
 
 % profile on
@@ -352,6 +354,8 @@ try
     if params.online
         if params.save_data
             cbmex('fileconfig', handles.cerebus_file, '', 0);
+%             cbmex('analogout', 1, 'sequence', [1,0,2400,21626,1,0], 'repeats', 1);
+%             cbmex('analogout', 4, 'sequence', [150,0,100,21626,1,0], 'repeats', 8);
         end
         cbmex('close');
     else
@@ -382,6 +386,8 @@ catch e
     if params.online
         if params.save_data
             cbmex('fileconfig', handles.cerebus_file, '', 0);
+%             cbmex('analogout', 1, 'sequence', [1,0,2400,21626,1,0], 'repeats', 1);
+%             cbmex('analogout', 4, 'sequence', [150,0,100,21626,1,0], 'repeats', 8);
         end
         cbmex('close');
     else
@@ -572,7 +578,8 @@ function new_spikes = get_new_spikes(ts_cell_array,params,binsize,tBuffer)
     new_ts                  = ts_cell_array(params.neuronIDs(:,1),:);
  
     % remove stim artefacts!
-    new_ts                  = remove_stim_artifacts( new_ts, params, binsize, tBuffer);
+%     new_ts                  = remove_stim_artifacts( new_ts, params, binsize, tBuffer); % need to implement a new version to look at timing of spikes
+    new_ts                  = remove_stim_artifacts( new_ts, params, binsize);
     
     %firing rate for new spikes
     for i = 1:params.n_neurons
