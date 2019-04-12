@@ -12,14 +12,24 @@ monkey = 'Greyson';
 ccmid = '17L2';
 % Greyson Muscle list
 % first group of 16
+% monopolar
 % electrode = {'FDP2_1','FDP2_2','FCR2_1','FCR2_2','FCU1_1','FCU1_2','FCU2_1','FCU2_2',...
 %     'FCR1_1','FCR1_2','FDP1_1','FDP1_2','FDS1_1','FDS1_2','FDS2_1','FDS2_2'};
 % % second group of 16
-electrode = {'FDS3_1','FDS3_2','PT_1','PT_2','APB_1','APB_2','FPB_1','FPB_2',...
-  'Lum_1','Lum_2','fDI_1','fDI_2','EDC3_1','EDC3_2','SUP_1','SUP_2'}
+% electrode = {'FDS3_1','FDS3_2','PT_1','PT_2','APB_1','APB_2','FPB_1','FPB_2',...
+%   'Lum_1','Lum_2','fDI_1','fDI_2','EDC3_1','EDC3_2','SUP_1','SUP_2'}
 % % Third group of 14
 % electrode = {'ECU_1','ECU_2','ECU_3','ECR_1','ECR_2','ECR_3','EDC1_1','EDC1_2',...
 %   'EDC2_1','EDC2_2','BI_1','BI_2','TRI_1','TRI_2'}
+
+
+% bipolar
+% first group of 8
+% electrode = {'FDP2','FCR2','FCU1','FCU2','FCR1','FDP1','FDS1','FDS2'};
+% % second group of 8
+% electrode = {'FDS3','PT','APB','FPB','Lum','fDI','EDC3','SUP'}
+% % Third group of 6 (Remember there's a mixed ECU/ECR pair
+% electrode = {'ECU','ECR','EDC1','EDC2','BI','TRI'}
 
 
 %% Set up the stimulator etc.
@@ -152,7 +162,7 @@ end
 PW = [0:.01:.4]; % list of pulse widths
 
 SheetName = ['Monopolar_',datestr(now,'dd_mm_yyyy-hh_MM')];
-xlswrite('E:\Data-lab1\17L2-Greyson\StimData\20181101\20181101_Greyson_Electrode_Characterization.xlsx',{'Muscle','Threshold','Amplitude'},SheetName,xlrange{1});
+xlswrite(FNexcel,{'Muscle','Threshold','Amplitude'},SheetName,xlrange{1});
 for ii = 1:length(electrode)
     fprintf('%s\n',electrode{ii});
     stim_params.elect_list = ii;
@@ -322,7 +332,7 @@ end
 %% set up a vector of all possible amplitudes and pulse widths
 PW = [0:.01:.3]; % list of pulse widths
 
-SheetName = ['Bipolar_',datestr(now)];
+SheetName = ['Bipolar_',datestr(now,'dd_mm_yyyy-hh_MM')];
 xlswrite(FNexcel,{'Muscle','Threshold','Amplitude'},SheetName,xlrange{1});
 for ii = 1:length(electrode)
     fprintf('%s\n',electrode{ii});
