@@ -93,8 +93,8 @@ if params.online
         
     % start cerebus file recording :
     cbmex('fileconfig', handles.cerebus_file, '', 1);
-%     cbmex('analogout', 4, 'sequence', [1,0,2400,21626,1,0], 'repeats', 1);
-%     cbmex('analogout', 1, 'sequence', [150,0,100,21626,1,0], 'repeats', 8);
+    cbmex('analogout', 4, 'sequence', [1,0,2400,21626,1,0], 'repeats', 1);
+    cbmex('analogout', 1, 'sequence', [150,0,100,21626,1,0], 'repeats', 8);
     data.sys_time       = cbmex('time');
 
     % start data buffering
@@ -354,8 +354,8 @@ try
     if params.online
         if params.save_data
             cbmex('fileconfig', handles.cerebus_file, '', 0);
-%             cbmex('analogout', 1, 'sequence', [1,0,2400,21626,1,0], 'repeats', 1);
-%             cbmex('analogout', 4, 'sequence', [150,0,100,21626,1,0], 'repeats', 8);
+            cbmex('analogout', 1, 'sequence', [1,0,2400,21626,1,0], 'repeats', 1);
+            cbmex('analogout', 4, 'sequence', [150,0,100,21626,1,0], 'repeats', 8);
         end
         cbmex('close');
     else
@@ -386,8 +386,8 @@ catch e
     if params.online
         if params.save_data
             cbmex('fileconfig', handles.cerebus_file, '', 0);
-%             cbmex('analogout', 1, 'sequence', [1,0,2400,21626,1,0], 'repeats', 1);
-%             cbmex('analogout', 4, 'sequence', [150,0,100,21626,1,0], 'repeats', 8);
+            cbmex('analogout', 1, 'sequence', [1,0,2400,21626,1,0], 'repeats', 1);
+            cbmex('analogout', 4, 'sequence', [150,0,100,21626,1,0], 'repeats', 8);
         end
         cbmex('close');
     else

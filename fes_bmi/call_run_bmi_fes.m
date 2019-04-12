@@ -5,12 +5,12 @@ clear all; close all; clc;
 
 % Who is in the lab?
 monkey                  = 'Greyson';
-task                    = 'MG_KG'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the task you trained on -- update this or catch trials won't work!
+task                    = 'kluver'; % 'MG_PT'; % 'MG_PG', 'WF', 'WM'   %This is the task you trained on -- update this or catch trials won't work!
 
 % List of muscles for the decoder
 % emg_list_4_dec          = {'FCRr', 'FCRu', 'FCU1', 'FDPu', 'FDS2', 'PL', 'PT'}; % Fish grasping 
 % emg_list_4_dec          = {'FCRr','FCUr','FCUu','FDPr','FDSr','FDSu','PT'}; % Jango 12/11
-emg_list_4_dec          = {'FDP2', 'FCR2', 'FCU1', 'FDP3', 'FCR1', 'FDS2', 'APB', 'FPB'}; % Greyson 04/08/2019
+emg_list_4_dec          = {'FDP2', 'FCR2', 'FCU2', 'FDP3', 'ECR', 'EDC', 'APB', 'FPB'}; % Greyson 04/08/2019
 
 % Mapping of EMGs in the decoder to the electrodes that will be stimulated.
 % First row lists which EMG, second row lists which muscle will be
@@ -319,18 +319,22 @@ end
 % The controller maps the EMG into PW or amplitude using a proportional law
 % When doing PW-modulated FES, the stim amplitude is fixed to
 % amplitude_max, and when doing amplitude-modulated FES, to PW_max
-sp.EMG_min              = [.05 .1 .2 .125 .18 .1 .15 .1];
+% sp.EMG_min              = [.05 .1 .45 .125 .15 .1 .1 .75];
+sp.EMG_min              = repmat(.05,1,numel(sp.muscles));
+sp.EMG_min(3) = .25;
+% sp.EMG_min              = [.15 .15 .5 .15 .2 .15 .2 .15];
 sp.EMG_max              = [.9 .9 .9 .9 .9 .9 .9 .9];
 % sp.EMG_max              =repmat(1,1,numel(sp.muscles));
         
-sp.PW_min               =  [.045 .06 .075 .05 .075 .065 .09 .06]; % Greyson 04/10/2019
+% sp.PW_min               =  [.045 .06 .075 .05 .075 .065 .09 .06]; % Greyson 04/10/2019
+sp.PW_min               = repmat(.02,1,numel(sp.muscles));
 sp.PW_max               =  repmat( 0.4, 1, numel(sp.muscles));
 % sp.PW_max               = [0 .4 .4 .4 .4 .4 .4 .4];% repmat( 0.4, 1, numel(sp.muscles));
 
 
 sp.amplitude_min        = repmat( 0, 1, numel(sp.muscles));
-sp.amplitude_max        = [3 2.5 3 3 3.5 3 2.5 2.5];  % this is the max amplitude for PW-modulated FES
-% sp.amplitude_max        = repmat(6,1,numel(sp.muscles));  % this is the max amplitude for PW-modulated FES
+sp.amplitude_max        = [3 2.5 0 3 3.5 3 2.5 2.5];  % this is the max amplitude for PW-modulated FES
+% sp.amplitude_max        = repmat(4.5,1,numel(sp.muscles));  % this is the max amplitude for PW-modulated FES
 
 % sp.amplitude_max        = [6 6 6 6 6 6];  % this is the max amplitude for PW-modulated FES
 
